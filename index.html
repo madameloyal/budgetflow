@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BudgetFlow — Paris XXL 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══ FESTIFLOW DESIGN SYSTEM — exact token parity ═══
+   Accent palette (3 semantic + 2 brand = 5 total):
+   green #34d399 · red #f87171 · amber #fbbf24
+   purple #a855f7 (day-0) · indigo #6366f1 (day-1)
+   NO other hue is introduced anywhere.
+   ══════════════════════════════════════════════════ */
+:root {
+  --bg:#08080d; --surface:#101017; --surface-2:#16161f;
+  --border:rgba(255,255,255,0.05); --border-h:rgba(255,255,255,0.08);
+  --text:#f0f0f5; --text-muted:#a0a0b0; --text-dim:#5a5a6a;
+  --green:#34d399; --red:#f87171; --amber:#fbbf24;
+  --purple:#a855f7; --indigo:#6366f1;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-padding-top:56px}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:19px;line-height:1.55;overflow-x:hidden}
+.wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
+
+/* ── NAV ─────────────────────────────── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;margin-bottom:0}
+.nav-i{max-width:1020px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-i::-webkit-scrollbar{display:none}
+.nbrand{font-family:'Space Grotesk',sans-serif;font-size:0.68em;font-weight:700;color:var(--text-muted);letter-spacing:1px;padding:10px 16px 10px 0;white-space:nowrap;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
+.nl{padding:10px 13px;font-size:0.68em;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .2s,border-color .2s}
+.nl:hover{color:var(--text-muted)}
+.nl.on{color:#fff;border-bottom-color:var(--amber)}
+
+/* ── HEADER ──────────────────────────── */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px;padding:14px 22px;margin:12px 0 0;border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--purple),var(--indigo)) border-box}
+.htitle{font-family:'Space Grotesk',sans-serif;font-size:1.2em;font-weight:700;color:#fff}
+.hbrand{font-size:0.72em;color:var(--text-muted);font-weight:400}
+.hrr{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{font-size:0.62em;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:5px;white-space:nowrap}
+.blive{background:rgba(52,211,153,0.12);color:var(--green);display:flex;align-items:center;gap:6px}
+.blive::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.bed{background:rgba(255,255,255,0.06);color:var(--text)}
+.infobtn{font-size:0.68em;color:var(--text-dim);cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);transition:all .2s;user-select:none}
+.infobtn:hover{border-color:var(--text-muted);color:var(--text-muted)}
+.hpanel{display:none;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:12px 22px}
+.hpanel.open{display:grid}
+.hpi{display:flex;flex-direction:column;gap:2px;padding:4px 0}
+.hpl{font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.hpv{font-size:0.75em;color:var(--text-muted);font-weight:500}
+.hpv strong{color:#fff}
+.hts{font-size:0.6em;color:var(--text-muted);padding:8px 22px 12px;text-align:right;opacity:.6;margin-bottom:12px}
+
+/* ── CARDS ───────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;transition:border-color .3s,box-shadow .3s}
+/* carousel cards inside g2 must fill their cell height */
+.g2>.card{display:flex;flex-direction:column}
+.g2>.card[style*="padding:0"]{padding:0!important}
+.card:hover{border-color:rgba(168,85,247,.25);box-shadow:0 0 16px rgba(168,85,247,.1)}
+.clabel{font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:#fff}
+.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;align-items:start}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
+.mb{margin-bottom:14px}
+
+/* ── TYPOGRAPHY ──────────────────────── */
+.hero{font-size:2em;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.5px}
+.hu{font-size:.32em;font-weight:400;color:var(--text-dim);letter-spacing:0;margin-left:2px}
+.tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:.72em;font-weight:600;margin-top:6px}
+.tg{background:rgba(52,211,153,.1);color:var(--green)}
+.tr{background:rgba(248,113,113,.1);color:var(--red)}
+.tn{background:rgba(255,255,255,.04);color:var(--text-dim)}
+.ta{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);color:var(--amber)}
+.wbadge{font-size:.72em;font-weight:600;color:var(--amber);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);padding:3px 10px;border-radius:6px;letter-spacing:.5px}
+.div{height:1px;background:var(--border);margin:16px 0}
+.mrow{display:flex;justify-content:space-between;align-items:center;font-size:.85em;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.mrow:last-child{border-bottom:none}
+.mk{color:var(--text-muted)}.mv{color:#fff;font-weight:500}
+.sdiv{display:flex;align-items:center;gap:12px;margin:28px 0 14px}
+.sdl{flex:1;height:1px;background:var(--border)}
+.sdt{font-size:.63em;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);font-weight:600;white-space:nowrap}
+/* sticky dept summary bar */
+.dept-sticky{position:sticky;top:49px;z-index:90;background:rgba(8,8,13,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:8px 0 8px;margin:0 0 4px;display:flex;align-items:center;gap:16px;font-size:.72em}
+
+/* ── PROGRESS ────────────────────────── */
+.pt{height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:8px 0 4px;display:flex;gap:1px}
+.pt-seg{height:100%;border-radius:2px;transition:width .4s ease}
+.pf{height:100%;border-radius:3px;transition:width .6s ease}
+.safe{background:var(--green)}.warn{background:var(--amber)}.danger{background:var(--red)}
+
+/* ── STATUT chips — only the 3 used in file + 2 logical next steps ── */
+/* Values in Excel: ESTIMATION · EN COURS · DEVIS SIGNE
+   Technique sheet uses SIGNE / PAYÉ as column headers
+   We add: VALIDÉ · PAYÉ as forward-looking statuts              */
+.chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.59em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;cursor:default}
+.chip-est{background:rgba(255,255,255,.04);color:var(--text-dim)}
+.chip-ec{background:rgba(251,191,36,.1);color:var(--amber)}
+.chip-ds{background:rgba(99,102,241,.1);color:#818cf8}
+.chip-val{background:rgba(52,211,153,.08);color:var(--green)}
+.chip-pay{background:rgba(52,211,153,.14);color:var(--green)}
+/* S/G type badges (col D in Excel) */
+.chip-s{background:rgba(168,85,247,.07);color:#c4b5fd;font-size:.56em;padding:1px 5px;border-radius:3px}
+.chip-g{background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.56em;padding:1px 5px;border-radius:3px}
+/* réel side C/G markers (col H in Excel) */
+.chip-c{background:rgba(52,211,153,.07);color:var(--green);font-size:.56em;padding:1px 5px;border-radius:3px}
+
+/* Statut select ── purple tint to signal editability */
+.ss{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.59em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:2px 6px;-webkit-appearance:none;appearance:none;transition:all .15s}
+.ss.est{background:rgba(255,255,255,.04);color:var(--text-dim)}
+.ss.ec{background:rgba(251,191,36,.1);color:var(--amber)}
+.ss.ds{background:rgba(99,102,241,.1);color:#818cf8}
+.ss.val{background:rgba(52,211,153,.08);color:var(--green)}
+.ss.pay{background:rgba(52,211,153,.14);color:var(--green)}
+
+/* ── EDITABLE cells — clearly purple-tinted ── */
+.ce{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.85em;font-weight:500;color:#c4b5fd;text-align:right;width:100%;padding:3px 6px;transition:background .15s,border-color .15s,box-shadow .15s;min-width:70px;cursor:text}
+.ce:hover{border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.1)}
+.ce:focus{outline:none;border-color:rgba(168,85,247,.7);background:rgba(168,85,247,.14);box-shadow:0 0 0 2px rgba(168,85,247,.15)}
+@keyframes ce-saved{0%{background:rgba(52,211,153,.25);border-color:rgba(52,211,153,.6)}100%{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.18)}}
+.ce.saved{animation:ce-saved .8s ease-out forwards}
+.ce:hover{border-color:rgba(168,85,247,.38);background:rgba(168,85,247,.09)}
+.ce:focus{outline:none;border-color:var(--purple);background:rgba(168,85,247,.12);color:#e9d5ff;box-shadow:0 0 0 2px rgba(168,85,247,.12)}
+/* Read-only cells — dim, no border */
+.cro{font-size:.85em;color:var(--text-dim);text-align:right;display:block;padding:3px 6px}
+.cpos{color:var(--green);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
+.cneg{color:var(--red);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
+.cdim{color:var(--text-dim);font-size:.85em;text-align:right;display:block;padding:3px 6px}
+
+/* ── EDIT LEGEND ── */
+.eled{display:flex;align-items:center;gap:16px;font-size:.62em;color:var(--text-dim);padding:6px 12px;background:var(--surface-2);border-radius:6px;margin-bottom:10px}
+.esw{width:20px;height:13px;border-radius:3px}
+.esw.e{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3)}
+.esw.r{border:1px solid var(--border)}
+
+/* ── TABLES ──────────────────────────── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:.57em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.tbl th:first-child,.tbl th.tl{text-align:left}
+.tbl th.ec-col{color:rgba(168,85,247,.7)}
+.tbl td{padding:8px 10px;font-size:.82em;text-align:right;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;color:var(--text-muted)}
+.tbl td:first-child{text-align:left;color:#fff;font-weight:500}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.007)}
+.trow td{font-weight:700!important;color:#fff!important;background:rgba(255,255,255,.025);border-top:1px solid var(--border)!important;border-bottom:none!important}
+.shead{cursor:pointer}
+.shead td{background:var(--surface-2);font-size:.64em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:8px 10px;border-bottom:1px solid var(--border)!important}
+.shead:hover td{color:#fff}
+.obs{min-width:150px;max-width:220px;color:var(--text-dim)!important;font-size:.78em!important;font-weight:400!important}
+.obs-inp{width:100%;min-width:140px;background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:var(--text-muted);font-size:.8em;font-family:inherit}
+.twrap{overflow-x:auto}
+
+/* ── BILAN table ── */
+.btbl{width:100%;border-collapse:collapse}
+.btbl th{font-size:.57em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 12px;text-align:right;border-bottom:1px solid var(--border)}
+.btbl th:first-child{text-align:left}
+.btbl td{padding:8px 12px;font-size:.82em;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;text-align:right;color:var(--text-muted)}
+.btbl td:first-child{text-align:left;color:#fff}
+.btbl .bcat td{background:var(--surface-2);font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:6px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.btbl .btot td{font-weight:700;color:#fff;background:rgba(255,255,255,.02);border-top:1px solid var(--border)}
+.btbl .bgt td{font-weight:700;color:#fff;font-size:.9em;border-top:2px solid var(--purple)}
+.bpos{color:var(--green);font-weight:600}
+.bneg{color:var(--red);font-weight:600}
+.btbl td.ht-edit{padding:4px 6px}
+
+/* ── DEPT summary rows ── */
+.drow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s}
+.drow:hover{background:rgba(255,255,255,.02)}
+.drow:last-child{border-bottom:none}
+.dname{font-size:.73em;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);min-width:160px;flex-shrink:0}
+.dbar{flex:1;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.dfill{height:100%;border-radius:3px}
+.dnums{display:flex;gap:12px;flex-shrink:0;align-items:center}
+.dest{font-size:.7em;color:var(--text-dim);min-width:86px;text-align:right}
+.dpct{font-size:.68em;font-weight:700;min-width:34px;text-align:right}
+.decart{font-size:.65em;padding:1px 7px;border-radius:4px;margin-top:0}
+
+/* ── CHART wrapper ── */
+.cwrap{background:var(--surface-2);border-radius:12px;padding:16px}
+.ctitle{font-size:.63em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:10px}
+
+/* ── PAGES ── */
+.page{display:none;animation:fu .18s ease}
+.page.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CAROUSEL ── */
+.fc-wrap{overflow:hidden;border-radius:16px;height:100%}
+.fc-track{display:flex;transition:transform .4s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
+.fc-face{min-width:100%;width:100%;padding:28px;box-sizing:border-box;flex-shrink:0;display:flex;flex-direction:column}
+.fc-body{flex:1;min-height:0}
+.fc-body.scrollable{overflow-y:auto;max-height:260px}
+.fc-foot{padding-top:8px}
+/* Bilan carousel: cap faces so the card stays same height as its neighbours */
+#fct-av>.fc-face{max-height:360px}
+/* Details toggle */
+.details-toggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.72em;color:var(--text-muted);cursor:pointer;padding:8px 0 2px;user-select:none;transition:color .2s;width:100%;border:none;background:none;font-family:inherit}
+.details-toggle:hover{color:#fff}
+.details-toggle .arrow{font-size:0.75em;display:inline-block}
+/* Expand-all sections button — full-width Festiflow style */
+.expand-all-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px 0;margin:8px 0 4px;font-size:.68em;font-weight:600;color:var(--text-dim);background:none;border:none;border-top:1px solid var(--border);cursor:pointer;font-family:inherit;letter-spacing:.5px;text-transform:uppercase;transition:color .25s}
+.expand-all-btn:hover{color:var(--text-muted)}
+.expand-all-btn .chevron{display:inline-block;transition:transform .3s ease;font-style:normal;font-size:.85em}
+.expand-all-btn.open .chevron{transform:rotate(90deg)}
+.face-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
+.face-dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:background .25s}
+.face-dot.on{background:var(--amber)}
+.fc-title{font-size:.63em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:10px}
+
+@media(max-width:720px){
+  /* ── layout ── */
+  body{font-size:15px}
+  .wrap{padding:0 12px 60px}
+  .g2,.g3{grid-template-columns:1fr}
+  .hdr{flex-wrap:wrap;padding:12px 14px;gap:8px}
+  .hpanel{grid-template-columns:1fr 1fr;padding:10px 14px}
+  .mb{margin-bottom:10px}
+  .dept-sticky{font-size:.66em;gap:8px;padding:7px 0;flex-wrap:wrap}
+
+  /* ── tables: hide non-essential cols, allow horizontal scroll only inside .twrap ── */
+  .twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+  .tbl th:nth-child(3),.tbl td:nth-child(3),.obs{display:none}
+  .tbl th,.tbl td{padding:6px 7px;font-size:.78em}
+  .tbl td:first-child{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btbl th,.btbl td{padding:5px 7px;font-size:.75em}
+  .btbl th:nth-child(2),.btbl td:nth-child(2),
+  .btbl th:nth-child(5),.btbl td:nth-child(5){display:none}
+  .ce{min-width:54px;font-size:.8em;padding:2px 4px}
+  .dest{display:none}
+
+  /* ── cards ── */
+  .card{padding:18px 16px}
+  .fc-face{padding:18px 16px}
+  .hero{font-size:1.6em}
+
+  /* ── nav brand hidden on small screens ── */
+  .nbrand{display:none}
+}
+@media(max-width:400px){
+  .tbl th:nth-child(5),.tbl td:nth-child(5),
+  .tbl th:nth-child(6),.tbl td:nth-child(6){display:none}
+}
+</style>
+</head>
+<body>
+<div id="loading-overlay" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--indigo);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div style="color:var(--text-muted);font-size:.9em">Chargement des données…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-i">
+    <span class="nbrand">BudgetFlow</span>
+    <button class="nl on"  onclick="go('bilan',this)">Bilan P&amp;L</button>
+    <button class="nl"     onclick="go('reperages',this)">Repérages</button>
+    <button class="nl"     onclick="go('vhr',this)">VHR</button>
+    <button class="nl"     onclick="go('production',this)">Production</button>
+    <button class="nl"     onclick="go('catering',this)">Catering</button>
+    <button class="nl"     onclick="go('bar',this)">Bar / Commis</button>
+    <button class="nl"     onclick="go('artistique',this)">Artistique</button>
+    <button class="nl"     onclick="go('technique',this)">Technique</button>
+    <button class="nl"     onclick="go('sceno',this)">Scéno</button>
+    <button class="nl"     onclick="go('partenariat',this)">Partenariat</button>
+    <button class="nl"     onclick="go('communication',this)">Communication</button>
+    <button class="nl tx-tab" onclick="go('transactions',this)" style="margin-left:auto;color:var(--amber);border-color:rgba(251,191,36,.3)">⚠ Transactions</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="htitle">Paris XXL 2026</div>
+    <div class="hbrand">Madame Loyal · Paris Nord Villepinte · 13–14 mars 2026</div>
+  </div>
+  <div class="hrr">
+    <span class="badge blive">Live</span>
+    <span class="badge bed">Budget v1</span>
+    <div class="infobtn" onclick="var p=document.getElementById('hp');p.classList.toggle('open');this.textContent=p.classList.contains('open')?'Fermer ▴':'Info ▾'">Info ▾</div>
+  </div>
+</div>
+<div class="hpanel" id="hp">
+  <div class="hpi"><span class="hpl">Lieu</span><span class="hpv">Paris Nord Villepinte</span></div>
+  <div class="hpi"><span class="hpl">Capacité</span><span class="hpv"><strong>43 000</strong> · 2 jours</span></div>
+  <div class="hpi"><span class="hpl">Départements</span><span class="hpv"><strong>10</strong> postes budgétaires</span></div>
+  <div class="hpi"><span class="hpl">Sync Qonto</span><span class="hpv">07 Mars 2026 · 05:00</span></div>
+</div>
+<div class="hts">07 Mars 2026 · 05:00 <span style="margin-left:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:1.5px;color:var(--text-dim)">BudgetFlow: Budget</span></div>
+
+<!-- ═══════════ PAGE BILAN ═══════════ -->
+<div id="page-bilan" class="page on">
+
+  <!-- 3 top KPIs -->
+  <div class="g3 mb">
+    <div class="card">
+      <div class="chead"><div class="clabel">Résultat Net HT</div><span class="wbadge">Projeté</span></div>
+      <div class="hero" id="kpi-res">—</div>
+      <div id="kpi-res-tag" class="tag tg" style="margin-top:8px">—</div>
+      <div class="div"></div>
+      <div class="mrow"><span class="mk">Total Recettes HT</span><span class="mv" id="kpi-rec">—</span></div>
+      <div class="mrow"><span class="mk">Total dépenses au budget HT</span><span class="mv" id="kpi-dep">—</span></div>
+      <div class="mrow"><span class="mk">Marge brute</span><span class="mv" id="kpi-marge">—</span></div>
+    </div>
+    <div class="card">
+      <div class="chead"><div class="clabel">Engagé / Au budget</div><span class="wbadge" id="kpi-pct">0%</span></div>
+      <div class="hero" id="kpi-reel">—</div>
+      <div class="tag tn" style="margin-top:8px">Dépensé HT</div>
+      <div class="div"></div>
+      <div class="mrow"><span class="mk">Au budget total HT</span><span class="mv" id="kpi-est">—</span></div>
+      <div class="mrow"><span class="mk">Restant à engager</span><span class="mv" id="kpi-rest">—</span></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="fc-wrap" id="fc-av">
+        <div class="fc-track" id="fct-av">
+
+          <!-- FACE 0 — Pipeline (counts) -->
+          <div class="fc-face">
+            <div class="fc-body scrollable">
+              <div class="chead" style="margin-bottom:12px"><div class="clabel">Avancement</div><span class="wbadge" id="av-total-badge">—</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px" id="kpi-statuts"></div>
+              <div class="div"></div>
+              <div class="mrow"><span class="mk">Lignes EN COURS</span><span class="mv" id="kpi-ec">—</span></div>
+              <div class="mrow"><span class="mk">Lignes DEVIS SIGNÉ</span><span class="mv" id="kpi-ds">—</span></div>
+              <div class="mrow"><span class="mk">Lignes PAYÉ</span><span class="mv" id="kpi-pay">—</span></div>
+            </div>
+            <div class="fc-foot">
+              <div class="face-dots"><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span></div>
+              <button class="details-toggle" onclick="nextFace('av')"><span>Montants engagés</span><span class="arrow">▶</span></button>
+            </div>
+          </div>
+
+          <!-- FACE 1 — Montants par statut -->
+          <div class="fc-face">
+            <div class="fc-body scrollable">
+              <div class="chead" style="margin-bottom:12px"><div class="clabel">Montants engagés</div></div>
+              <div id="av-montants"></div>
+              <div class="div"></div>
+              <div class="mrow"><span class="mk" style="font-size:.75em">Budget non encore signé</span><span class="mv" id="av-unsigned">—</span></div>
+              <div class="mrow"><span class="mk" style="font-size:.75em">Dépensé confirmé (C)</span><span class="mv" id="av-confirmed">—</span></div>
+            </div>
+            <div class="fc-foot">
+              <div class="face-dots"><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span></div>
+              <button class="details-toggle" onclick="nextFace('av')"><span>Urgences par dept</span><span class="arrow">▶</span></button>
+            </div>
+          </div>
+
+          <!-- FACE 2 — Urgency by dept -->
+          <div class="fc-face">
+            <div class="fc-body scrollable">
+              <div class="chead" style="margin-bottom:10px"><div class="clabel">Non signé par dept</div><span class="tag tr" style="font-size:.58em;padding:2px 7px">À traiter</span></div>
+              <div id="av-urgency"></div>
+            </div>
+            <div class="fc-foot">
+              <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span></div>
+              <button class="details-toggle" onclick="nextFace('av')"><span>Staff vs Prestataires</span><span class="arrow">▶</span></button>
+            </div>
+          </div>
+
+          <!-- FACE 3 — S vs G split -->
+          <div class="fc-face">
+            <div class="fc-body scrollable">
+              <div class="chead" style="margin-bottom:12px"><div class="clabel">Staff vs Prestataires</div></div>
+              <div id="av-sg"></div>
+            </div>
+            <div class="fc-foot">
+              <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span></div>
+              <button class="details-toggle" onclick="nextFace('av')"><span>Pipeline</span><span class="arrow">▶</span></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="g2 mb">
+    <div class="card">
+      <div class="ctitle">Estimation par département (HT)</div>
+      <div class="cwrap" style="height:240px"><canvas id="c-donut"></canvas></div>
+      <div id="donut-leg" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;font-size:.59em;color:var(--text-dim)"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Au budget vs Dépensé (HT)</div>
+      <div class="cwrap" style="height:240px"><canvas id="c-bar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Dept burn tracker -->
+  <div class="sdiv"><div class="sdl"></div><div class="sdt">Consommation par département</div><div class="sdl"></div></div>
+  <div class="card mb" id="b-drows"></div>
+
+  <!-- P&L Recettes full table -->
+  <div class="sdiv"><div class="sdl"></div><div class="sdt">P&amp;L — Recettes détaillées</div><div class="sdl"></div></div>
+  <div class="card mb">
+    <div class="twrap">
+    <table class="btbl">
+      <thead><tr>
+        <th>Poste</th><th>Qté</th><th>Prix unit.</th>
+        <th>Au budget HT</th><th>TVA %</th><th>Au budget TTC</th>
+        <th>Dépensé HT</th><th>Dépensé TTC</th><th>Écart HT</th><th>Statut</th>
+      </tr></thead>
+      <tbody id="b-rec-body"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- P&L Dépenses summary -->
+  <div class="sdiv"><div class="sdl"></div><div class="sdt">P&amp;L — Dépenses par département</div><div class="sdl"></div></div>
+  <div class="card">
+    <div class="twrap">
+    <table class="btbl">
+      <thead><tr>
+        <th>Département</th><th>Au budget HT</th><th>Au budget TTC (×1.15 approx.)</th>
+        <th>Dépensé HT</th><th>Écart HT</th><th>Consommé</th>
+      </tr></thead>
+      <tbody id="b-dep-body"></tbody>
+    </table>
+    </div>
+  </div>
+
+</div><!-- /bilan -->
+
+<!-- ═══════════ DEPT PAGES ═══════════ -->
+<div id="page-reperages"    class="page"></div>
+<div id="page-vhr"          class="page"></div>
+<div id="page-production"   class="page"></div>
+<div id="page-catering"     class="page"></div>
+<div id="page-bar"          class="page"></div>
+<div id="page-artistique"   class="page"></div>
+<div id="page-technique"    class="page"></div>
+<div id="page-sceno"        class="page"></div>
+<div id="page-partenariat"  class="page"></div>
+<div id="page-communication" class="page"></div>
+<div id="page-transactions" class="page">
+  <div style="padding:24px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="margin:0;font-size:1.1em;color:var(--text)">Transactions non détectées</h2>
+      <span style="font-size:.8em;color:var(--text-muted)">Qonto → non associées à une ligne budgétaire</span>
+    </div>
+    <div id="tx-empty" style="padding:48px 24px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      <div style="font-size:2em;margin-bottom:12px">⏳</div>
+      <div style="color:var(--text-muted);font-size:.9em">Connexion Qonto non encore active.</div>
+      <div style="color:var(--text-dim);font-size:.8em;margin-top:6px">Les transactions non matchées apparaîtront ici automatiquement une fois l'API Qonto connectée.</div>
+    </div>
+    <table id="tx-table" style="display:none;width:100%;border-collapse:collapse;font-size:.85em">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th class="tl" style="padding:8px 12px;color:var(--text-muted);font-weight:500">Date</th>
+          <th class="tl" style="padding:8px 12px;color:var(--text-muted);font-weight:500">Libellé</th>
+          <th class="tl" style="padding:8px 12px;color:var(--text-muted);font-weight:500">Label Qonto</th>
+          <th style="padding:8px 12px;color:var(--text-muted);font-weight:500">Montant HT</th>
+          <th style="padding:8px 12px;color:var(--text-muted);font-weight:500">Statut</th>
+          <th class="tl" style="padding:8px 12px;color:var(--text-muted);font-weight:500">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tx-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA — faithfully transcribed from Excel
+   Statuts in file: ESTIMATION · EN COURS · DEVIS SIGNE
+   Technique sheet column 1 uses: SIGNE / PAYÉ
+   We surface: ESTIMATION | EN COURS | DEVIS SIGNÉ | VALIDÉ | PAYÉ
+   TVA: numeric (0.2 / 0.1 / 0.055) | 'URSSAF' | 'AE'
+        | 'AUTO-ENTRE' | 'INTERMITTANT' | 'NA' | 'x' | null
+   Col-D type: 'S'=Salaire/Staff · 'G'=Général/Prestataire
+   Col-H marker (réel): 'C'=Confirmé · 'G'=Général
+   ═══════════════════════════════════════════════════ */
+
+
+const API = 'https://web-production-4565a.up.railway.app';
+
+// ── Static recettes data (not in Sheet yet) ────────────────────────────
+const REC = [
+  { cat:'TICKETS', rows:[
+    {l:'EARLY',       qte:2500,  pu:50,  ht:118483,  tva:0.055, reel:0,    st:'ESTIMATION'},
+    {l:'REGULAR',     qte:14000, pu:55,  ht:729858,  tva:0.055, reel:0,    st:'ESTIMATION'},
+    {l:'LAST',        qte:17000, pu:60,  ht:966825,  tva:0.055, reel:0,    st:'ESTIMATION'},
+    {l:'VERY LAST',   qte:6500,  pu:65,  ht:400474,  tva:0.055, reel:0,    st:'ESTIMATION'},
+    {l:'VERY LAST 2', qte:0,     pu:70,  ht:0,       tva:0.055, reel:null, st:'ESTIMATION'},
+    {l:'KICK BACK (inclus prix prod)', qte:null,pu:null,ht:0,tva:0.055,reel:null,st:'ESTIMATION'},
+  ]},
+  { cat:'BAR', rows:[
+    {l:'BAR 1',              qte:null,pu:28.1,ht:468333,  tva:0.2,  reel:0,    st:'ESTIMATION'},
+    {l:'REDEVANCE 8% BAR 1', qte:null,pu:null,ht:37467,   tva:0.2,  reel:0,    st:'ESTIMATION'},
+    {l:'BAR 2',              qte:null,pu:28.1,ht:468333,  tva:0.2,  reel:null, st:'ESTIMATION'},
+    {l:'RÉSIDUEL CASHLESS',  qte:null,pu:null,ht:25000,   tva:null, reel:null, st:'ESTIMATION'},
+  ]},
+  { cat:'DIVERS', rows:[
+    {l:'FOODTRUCK',     qte:null,pu:null,ht:7500,  tva:0.2, reel:0,    st:'ESTIMATION'},
+    {l:'MERCHANDISING', qte:null,pu:null,ht:20000, tva:0.2, reel:null, st:'ESTIMATION'},
+    {l:'BOT CUP',       qte:null,pu:null,ht:0,     tva:0.2, reel:null, st:'ESTIMATION'},
+  ]},
+  { cat:'AUTRE', rows:[
+    {l:'LOCKERS',      qte:null,pu:null,ht:57785, tva:0.2, reel:0,    st:'ESTIMATION'},
+    {l:'ELEC FORAINS', qte:null,pu:null,ht:8000,  tva:0.2, reel:null, st:'ESTIMATION'},
+  ]},
+];
+
+// ── DEPTS will be populated from API ──────────────────────────────────
+let DEPTS = [];
+
+const DEPT_META = {
+  'REPERAGES':    {id:'reperages',    name:'REPÉRAGES'},
+  'VHR':          {id:'vhr',          name:'VHR'},
+  'PRODUCTION':   {id:'production',   name:'PRODUCTION'},
+  'CATERING':     {id:'catering',     name:'CATERING'},
+  'BAR':          {id:'bar',          name:'BAR'},
+  'ARTISTIQUE':   {id:'artistique',   name:'ARTISTIQUE'},
+  'TECHNIQUE':    {id:'technique',    name:'TECHNIQUE'},
+  'SCENO':        {id:'sceno',        name:'SCÉNO'},
+  'PARTENARIAT':  {id:'partenariat',  name:'PARTENARIAT'},
+  'COMMUNICATION':{id:'communication',name:'COMMUNICATION'},
+};
+
+function apiRowsToDept(tabName, rows) {
+  const meta = DEPT_META[tabName] || {id: tabName.toLowerCase(), name: tabName};
+  const sectionsMap = {};
+  const sectionsOrder = [];
+  for (const row of rows) {
+    const s = row.section || 'GÉNÉRAL';
+    if (!sectionsMap[s]) {
+      sectionsMap[s] = [];
+      sectionsOrder.push(s);
+    }
+    sectionsMap[s].push({
+      l:    row.ligne,
+      obs:  row.observations,
+      typ:  row.typ,
+      tva:  row.tva ? parseFloat(row.tva) || row.tva : null,
+      est:  row.est_ht || 0,
+      rh:   row.rh,
+      reel: row.reel_ht || 0,
+      st:   row.statut || 'ESTIMATION',
+      _row: row._row,
+    });
+  }
+  return {
+    id: meta.id,
+    name: meta.name,
+    note: '',
+    sections: sectionsOrder.map(s => ({s, lines: sectionsMap[s]})),
+  };
+}
+
+// ── Loading state ─────────────────────────────────────────────────────
+function showLoadingOverlay() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'flex';
+}
+function hideLoadingOverlay() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'none';
+}
+function showLoadError(msg) {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.innerHTML = `
+    <div style="text-align:center">
+      <div style="color:var(--red);font-size:1.1em;margin-bottom:8px">⚠ Erreur de chargement</div>
+      <div style="color:var(--text-muted);font-size:.85em;max-width:320px">${msg}</div>
+      <button onclick="loadBudgetData()" style="margin-top:16px;padding:8px 20px;background:var(--indigo);border:none;border-radius:6px;color:#fff;cursor:pointer">Réessayer</button>
+    </div>`;
+}
+
+async function loadBudgetData() {
+  showLoadingOverlay();
+  try {
+    const resp = await fetch(`${API}/api/budget`, {
+      headers: {'Accept': 'application/json'}
+    });
+    if (!resp.ok) throw new Error(`API error ${resp.status}`);
+    const json = await resp.json();
+    DEPTS = Object.entries(json.data).map(([tab, rows]) => apiRowsToDept(tab, rows));
+    hideLoadingOverlay();
+    initApp();
+  } catch(e) {
+    showLoadError(`Impossible de contacter l'API.<br><small>${e.message}</small>`);
+  }
+}
+
+
+/* ═══ HELPERS ═══ */
+const fe = n => n==null?'—':Math.round(n).toLocaleString('fr-FR')+'\u202f€';
+const ftva = v => v==null?'—':typeof v==='number'?(v*100).toFixed(1).replace('.0','')+'%':v;
+const fttc = (ht,tva) => { if(!ht) return null; if(typeof tva==='number') return ht*(1+tva); return ht; };
+const dtot = d => d.sections.flatMap(s=>s.lines).reduce((a,l)=>({est:a.est+(l.est||0),reel:a.reel+(l.reel||0)}),{est:0,reel:0});
+const pct = (r,e) => !e?0:Math.min(Math.round(r/e*100),999);
+const fc = p => p>=100?'danger':p>=75?'warn':'safe';
+const stcls = s => ({'ESTIMATION':'est','EN COURS':'ec','DEVIS SIGNÉ':'ds','VALIDÉ':'val','PAYÉ':'pay'}[s]||'est');
+const chipcls = s => ({'ESTIMATION':'chip-est','EN COURS':'chip-ec','DEVIS SIGNÉ':'chip-ds','VALIDÉ':'chip-val','PAYÉ':'chip-pay'}[s]||'chip-est');
+const ecH = (e, untracked=false) => {
+  if(Math.abs(e||0)<1) return '<span class="cdim">—</span>';
+  const tag=untracked?'<span title="Dépensé sans statut signé — vérifier" style="color:var(--amber);margin-left:3px;font-size:.7em">⚠</span>':'';
+  return `<span class="${e>0?'cpos':'cneg'}">${e>0?'+':''}${fe(e)}</span>${tag}`;
+};
+const typchip = t => !t?'':t==='S'?'<span class="chip chip-s">S</span>':t==='G'?'<span class="chip chip-g">G</span>':'';
+const rhchip  = r => !r?'':r==='C'?'<span class="chip chip-c">C</span>':'<span class="chip chip-g">G</span>';
+
+/* ═══ CHARTS ═══ */
+let cD=null,cB=null;
+function buildCharts(){
+  const labels = DEPTS.map(d=>d.name.split(' ')[0]);
+  const estV   = DEPTS.map(d=>dtot(d).est);
+  const reelV  = DEPTS.map(d=>dtot(d).reel);
+  // Alternate purple/indigo opacities — only 2 hues total
+  const alphas = [.75,.65,.55,.8,.7,.6,.5,.85,.45,.75];
+  const bgD = DEPTS.map((_,i)=>i%2===0?`rgba(168,85,247,${alphas[i]})`:`rgba(99,102,241,${alphas[i]})`);
+
+  if(cD){cD.destroy();cD=null;}
+  cD=new Chart(document.getElementById('c-donut'),{
+    type:'doughnut',
+    data:{labels:DEPTS.map(d=>d.name),datasets:[{data:estV,backgroundColor:bgD,borderColor:'#08080d',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+fe(c.raw)}}}}
+  });
+  const leg=document.getElementById('donut-leg');
+  leg.innerHTML=DEPTS.map((d,i)=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:1px;background:${bgD[i]};flex-shrink:0"></span>${d.name.split(' ')[0]}</span>`).join('');
+
+  if(cB){cB.destroy();cB=null;}
+  cB=new Chart(document.getElementById('c-bar'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Au budget HT', data:estV,  backgroundColor:'rgba(99,102,241,.5)', borderColor:'rgba(99,102,241,.8)', borderWidth:1, borderRadius:3},
+      {label:'Dépensé HT',   data:reelV, backgroundColor:'rgba(168,85,247,.5)',borderColor:'rgba(168,85,247,.8)',borderWidth:1, borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#a0a0b0',font:{size:11,family:'DM Sans'}}}},
+      scales:{
+        x:{ticks:{color:'#5a5a6a',font:{size:9},maxRotation:40},grid:{color:'rgba(255,255,255,.025)'}},
+        y:{ticks:{color:'#5a5a6a',font:{size:9},callback:v=>Math.round(v/1000)+'k'},grid:{color:'rgba(255,255,255,.025)'},border:{color:'rgba(255,255,255,.04)'}}
+      }
+    }
+  });
+}
+
+/* ═══ BILAN ═══ */
+function renderBilan(){
+  const tE=DEPTS.reduce((a,d)=>a+dtot(d).est,0);
+  const tR=DEPTS.reduce((a,d)=>a+dtot(d).reel,0);
+  const recHT=REC.flatMap(c=>c.rows).reduce((a,r)=>a+r.ht,0);
+  const res=recHT-tE;
+  const p=pct(tR,tE);
+  const allL=DEPTS.flatMap(d=>d.sections.flatMap(s=>s.lines));
+  const ec=allL.filter(l=>l.st==='EN COURS').length;
+  const ds=allL.filter(l=>l.st==='DEVIS SIGNÉ').length;
+  const pay=allL.filter(l=>l.st==='PAYÉ').length;
+
+  document.getElementById('kpi-res').innerHTML=fe(res)+'<span class="hu">€</span>';
+  const rt=document.getElementById('kpi-res-tag');
+  rt.textContent=res>0?`Marge: +${(res/recHT*100).toFixed(1)}%`:`Déficit: ${fe(res)}`;
+  rt.className='tag '+(res>0?'tg':'tr');
+  document.getElementById('kpi-rec').textContent=fe(recHT);
+  document.getElementById('kpi-dep').textContent=fe(tE);
+  document.getElementById('kpi-marge').innerHTML=`<span style="color:${res>0?'var(--green)':'var(--red)'}">${fe(res)}</span>`;
+  document.getElementById('kpi-reel').innerHTML=fe(tR)+'<span class="hu">€</span>';
+  document.getElementById('kpi-pct').textContent=p+'%';
+  document.getElementById('kpi-est').textContent=fe(tE);
+  document.getElementById('kpi-rest').innerHTML=`<span style="color:var(--amber)">${fe(tE-tR)}</span>`;
+  document.getElementById('kpi-ec').innerHTML=`<span style="color:var(--amber)">${ec}</span>`;
+  document.getElementById('kpi-ds').innerHTML=`<span style="color:#818cf8">${ds}</span>`;
+  document.getElementById('kpi-pay').innerHTML=`<span style="color:var(--green)">${pay}</span>`;
+
+  // ── FACE 0: Pipeline statut pills ──────────────────────────────────
+  const total=allL.length;
+  document.getElementById('av-total-badge').textContent=total+' lignes';
+  document.getElementById('kpi-statuts').innerHTML=
+    [{s:'ESTIMATION',c:'chip-est'},{s:'EN COURS',c:'chip-ec'},{s:'DEVIS SIGNÉ',c:'chip-ds'},{s:'VALIDÉ',c:'chip-val'},{s:'PAYÉ',c:'chip-pay'}]
+    .map(x=>{
+      const n=allL.filter(l=>l.st===x.s).length; if(!n)return '';
+      const pctW=Math.round(n/total*100);
+      return `<div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span class="chip ${x.c}">${x.s}</span>
+          <span style="font-size:.72em;color:var(--text-muted)">${n} <span style="color:var(--text-dim)">/ ${total} &nbsp;${pctW}%</span></span>
+        </div>
+        <div style="height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden">
+          <div style="width:${pctW}%;height:100%;background:${{'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'}[x.s]||'var(--text-dim)'};border-radius:2px;transition:width .6s"></div>
+        </div>
+      </div>`; }).join('');
+
+  // ── FACE 1: Montants par statut ─────────────────────────────────────
+  const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
+  const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
+  const STCHIP={'ESTIMATION':'chip-est','EN COURS':'chip-ec','DEVIS SIGNÉ':'chip-ds','VALIDÉ':'chip-val','PAYÉ':'chip-pay'};
+  const stAmounts={};
+  STORDER.forEach(s=>{ stAmounts[s]=allL.filter(l=>l.st===s).reduce((a,l)=>a+(l.est||0),0); });
+  const maxAmt=Math.max(...Object.values(stAmounts),1);
+  const unsignedAmt=stAmounts['ESTIMATION']+(stAmounts['EN COURS']||0);
+  const confirmedAmt=allL.filter(l=>l.rh==='C').reduce((a,l)=>a+(l.reel||l.est||0),0);
+  document.getElementById('av-unsigned').innerHTML=`<span style="color:var(--red);font-weight:600">${fe(unsignedAmt)}</span>`;
+  document.getElementById('av-confirmed').innerHTML=`<span style="color:var(--green);font-weight:600">${fe(confirmedAmt)}</span>`;
+  document.getElementById('av-montants').innerHTML=STORDER.map(s=>{
+    const amt=stAmounts[s]; if(!amt)return '';
+    const barW=Math.round(amt/maxAmt*100);
+    return `<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span class="chip ${STCHIP[s]}">${s}</span>
+        <span style="font-size:.72em;font-weight:600;color:#fff">${fe(amt)}</span>
+      </div>
+      <div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+        <div style="width:${barW}%;height:100%;background:${STCOL[s]};opacity:.7;border-radius:3px;transition:width .6s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── FACE 2: Urgency — unsigned budget ranked by dept ────────────────
+  const urgencyRows=DEPTS.map(d=>{
+    const lines=d.sections.flatMap(s=>s.lines);
+    const unsigned=lines.filter(l=>l.st==='ESTIMATION'||l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
+    const dTotal=lines.reduce((a,l)=>a+(l.est||0),0);
+    const uPct=dTotal>0?Math.round(unsigned/dTotal*100):0;
+    return {name:d.name,id:d.id,unsigned,dTotal,uPct};
+  }).filter(r=>r.unsigned>0).sort((a,b)=>b.unsigned-a.unsigned);
+  const maxU=urgencyRows[0]?.unsigned||1;
+  document.getElementById('av-urgency').innerHTML=urgencyRows.map(r=>{
+    const col=r.uPct>=80?'var(--red)':r.uPct>=50?'var(--amber)':'#818cf8';
+    return `<div style="margin-bottom:8px;cursor:pointer" onclick="go('${r.id}',null)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)">${r.name}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:.68em;color:#fff;font-weight:600">${fe(r.unsigned)}</span>
+          <span style="font-size:.6em;font-weight:700;color:${col};background:${col}18;padding:1px 6px;border-radius:4px">${r.uPct}% non signé</span>
+        </span>
+      </div>
+      <div style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden">
+        <div style="width:${Math.round(r.unsigned/maxU*100)}%;height:100%;background:${col};opacity:.65;border-radius:2px;transition:width .6s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── FACE 3: Staff (S) vs Prestataires (G) ──────────────────────────
+  const sLines=allL.filter(l=>l.typ==='S');
+  const gLines=allL.filter(l=>l.typ==='G');
+  const nLines=allL.filter(l=>!l.typ);
+  const sEst=sLines.reduce((a,l)=>a+(l.est||0),0);
+  const gEst=gLines.reduce((a,l)=>a+(l.est||0),0);
+  const nEst=nLines.reduce((a,l)=>a+(l.est||0),0);
+  const sReel=sLines.reduce((a,l)=>a+(l.reel||0),0);
+  const gReel=gLines.reduce((a,l)=>a+(l.reel||0),0);
+  // By statut within each type
+  const sgStat=(lines,label,color)=>{
+    const signed=lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+    const inProg=lines.filter(l=>l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
+    const estOnly=lines.filter(l=>l.st==='ESTIMATION').reduce((a,l)=>a+(l.est||0),0);
+    const tot=lines.reduce((a,l)=>a+(l.est||0),0);
+    const signPct=tot>0?Math.round(signed/tot*100):0;
+    return `<div style="background:var(--surface-2);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${color}">${label}</span>
+        <span style="font-size:.72em;font-weight:600;color:#fff">${fe(tot)} &nbsp;<span style="color:var(--text-dim);font-weight:400">(${lines.length} lignes)</span></span>
+      </div>
+      <div style="display:flex;height:7px;border-radius:4px;overflow:hidden;gap:1px;margin-bottom:8px">
+        <div style="flex:${signed};background:var(--green);opacity:.75" title="Signé: ${fe(signed)}"></div>
+        <div style="flex:${inProg};background:var(--amber);opacity:.75" title="En cours: ${fe(inProg)}"></div>
+        <div style="flex:${estOnly};background:var(--text-dim);opacity:.5" title="Estimation: ${fe(estOnly)}"></div>
+      </div>
+      <div style="display:flex;gap:10px;font-size:.62em;color:var(--text-dim)">
+        <span><span style="color:var(--green);font-weight:600">✓ ${signPct}%</span> signé</span>
+        <span><span style="color:var(--amber);font-weight:600">${fe(inProg)}</span> en cours</span>
+        <span><span style="color:var(--text-dim)">${fe(estOnly)}</span> à engager</span>
+      </div>
+    </div>`;
+  };
+  document.getElementById('av-sg').innerHTML=
+    sgStat(sLines,'Staff / Salaires','#c4b5fd')+
+    sgStat(gLines,'Prestataires / Fournisseurs','var(--indigo)')+
+    (nLines.length?`<div style="font-size:.65em;color:var(--text-dim);padding:4px 2px">Non catégorisé (ni S ni G): ${fe(nEst)} sur ${nLines.length} lignes</div>`:'');
+
+  // Dept rows
+  document.getElementById('b-drows').innerHTML=DEPTS.map(d=>{
+    const t=dtot(d);const p2=pct(t.reel,t.est);const ec2=t.est-t.reel;
+    return `<div class="drow" onclick="go('${d.id}',null)" title="Voir ${d.name}">
+      <div class="dname">${d.name}</div>
+      <div class="dbar"><div class="dfill ${fc(p2)}" style="width:${Math.min(p2,100)}%"></div></div>
+      <div class="dnums">
+        <div class="dest">${fe(t.est)}</div>
+        <div class="dpct" style="color:${p2>=100?'var(--red)':p2>=75?'var(--amber)':'var(--green)'}">${p2}%</div>
+        ${Math.abs(ec2)>100?`<span class="tag ${ec2>0?'tg':'tr'} decart" style="margin-top:0">${ec2>0?'+':''}${fe(ec2)}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Recettes P&L table
+  let rb=''; let gt=0;
+  REC.forEach((cat,ci)=>{
+    rb+=`<tr class="bcat"><td colspan="10">${cat.cat}</td></tr>`;
+    let ct=0;
+    cat.rows.forEach((r,ri)=>{
+      const ttc=typeof r.tva==='number'?r.ht*(1+r.tva):r.ht;
+      const reeH=r.reel||0;
+      const rttc=typeof r.tva==='number'?reeH*(1+r.tva):reeH;
+      const ec3=r.ht-reeH;
+      ct+=r.ht; gt+=r.ht;
+      rb+=`<tr><td>${r.l}</td>
+        <td>${r.qte!=null?`<input class="ce" style="width:70px;text-align:center" value="${r.qte}"
+          onchange="upRec(${ci},${ri},'qte',this)" onblur="upRec(${ci},${ri},'qte',this)" title="✎ Quantité">`:''}</td>
+        <td>${r.pu!=null?r.pu+'€':''}</td>
+        <td><input class="ce" value="${r.ht||0}"
+          onchange="upRec(${ci},${ri},'ht',this)" onblur="upRec(${ci},${ri},'ht',this)" title="✎ Au budget HT"></td>
+        <td>${ftva(r.tva)}</td><td><span class="cro">${ttc?fe(ttc):''}</span></td>
+        <td><input class="ce" value="${reeH||0}"
+          onchange="upRec(${ci},${ri},'reel',this)" onblur="upRec(${ci},${ri},'reel',this)" title="✎ Dépensé HT"></td>
+        <td><span class="cro">${reeH&&rttc?fe(rttc):'—'}</span></td>
+        <td class="${ec3>0?'bpos':'bneg'}">${Math.abs(ec3)>1?fe(ec3):'—'}</td>
+        <td><select class="ss ${chipcls(r.st)}" onchange="upRecSt(${ci},${ri},this)">
+          <option value="ESTIMATION" ${r.st==='ESTIMATION'?'selected':''}>ESTIMATION</option>
+          <option value="EN COURS"   ${r.st==='EN COURS'?'selected':''}>EN COURS</option>
+          <option value="CONFIRMÉ"   ${r.st==='CONFIRMÉ'?'selected':''}>CONFIRMÉ</option>
+          <option value="ENCAISSÉ"   ${r.st==='ENCAISSÉ'?'selected':''}>ENCAISSÉ</option>
+        </select></td></tr>`;
+    });
+    rb+=`<tr class="btot"><td>Total ${cat.cat}</td><td></td><td></td><td>${fe(ct)}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  });
+  rb+=`<tr class="bgt"><td>TOTAL RECETTES</td><td></td><td></td><td>${fe(gt)}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  document.getElementById('b-rec-body').innerHTML=rb;
+
+  // Dépenses table
+  let db=''; let ge=0,gr=0;
+  DEPTS.forEach(d=>{
+    const t=dtot(d); const ec4=t.est-t.reel; const p3=pct(t.reel,t.est);
+    ge+=t.est; gr+=t.reel;
+    db+=`<tr style="cursor:pointer" onclick="go('${d.id}',null)">
+      <td>${d.name}</td><td>${fe(t.est)}</td><td style="color:var(--text-dim)">${fe(t.est*1.15)}</td>
+      <td>${t.reel?fe(t.reel):'—'}</td>
+      <td class="${ec4>=0?'bpos':'bneg'}">${fe(ec4)}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="width:60px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.min(p3,100)}%;height:100%;background:${p3>=100?'var(--red)':p3>=75?'var(--amber)':'var(--green)'};border-radius:3px"></div>
+        </div>
+        <span style="font-size:.8em;font-weight:700;color:${p3>=100?'var(--red)':p3>=75?'var(--amber)':'var(--green)'}">${p3}%</span>
+      </div></td>
+    </tr>`;
+  });
+  db+=`<tr class="bgt"><td>TOTAL DÉPENSES</td><td>${fe(ge)}</td><td style="color:var(--text-dim)">${fe(ge*1.15)}</td><td>${fe(gr)}</td>
+    <td class="${(ge-gr)>=0?'bpos':'bneg'}">${fe(ge-gr)}</td><td></td></tr>`;
+  document.getElementById('b-dep-body').innerHTML=db;
+
+  buildCharts();
+}
+
+/* ═══ DEPT PAGES ═══ */
+function renderDept(id){
+  const dept=DEPTS.find(d=>d.id===id);
+  const cont=document.getElementById('page-'+id);
+  if(!dept||!cont||cont._built) return; // cache rendered dept
+  cont._built=true;
+
+  const tot=dtot(dept);
+  const p=pct(tot.reel,tot.est);
+  const ec=tot.est-tot.reel;
+  const allL=dept.sections.flatMap(s=>s.lines);
+  const sc2={};allL.forEach(l=>{sc2[l.st]=(sc2[l.st]||0)+1;});
+  const pills=Object.entries(sc2).map(([s,c])=>`<span class="chip ${chipcls(s)}">${c}× ${s}</span>`).join(' ');
+
+  // Note about Technique's special col names
+  const techniqueNote = id==='technique'?'<div style="font-size:.68em;color:var(--text-dim);margin-bottom:10px;padding:6px 10px;background:var(--surface-2);border-radius:6px">⚡ Dans la feuille Technique, la colonne Estimation est renommée <strong style="color:#818cf8">SIGNE</strong> et la colonne Réel est renommée <strong style="color:var(--green)">PAYÉ</strong>.</div>':'';
+
+  const secHTML=dept.sections.map((sec,si)=>{
+    const sid=`s${id}${si}`;
+    const sE=sec.lines.reduce((a,l)=>a+(l.est||0),0);
+    const sR=sec.lines.reduce((a,l)=>a+(l.reel||0),0);
+    const sEc=sE-sR;
+
+    const rows=sec.lines.map((line,li)=>{
+      const ttcE=fttc(line.est,line.tva);
+      const ttcR=fttc(line.reel,line.tva);
+      const e=(line.est||0)-(line.reel||0);
+      const untracked=(line.reel||0)>0 && !['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(line.st);
+      return `<tr>
+        <td style="display:flex;align-items:center;gap:5px">${line.l}${typchip(line.typ)}</td>
+        <td style="text-align:center">${ftva(line.tva)}</td>
+        <td><input class="ce" value="${line.est||0}"
+          data-id="${id}" data-si="${si}" data-li="${li}" data-f="est"
+          onchange="upCell(this)" onblur="upCell(this)"
+          title="✎ Au budget HT — modifiable"></td>
+        <td><span class="cro">${ttcE?fe(ttcE):''}</span></td>
+        <td><input class="ce" value="${line.reel||0}"
+          data-id="${id}" data-si="${si}" data-li="${li}" data-f="reel"
+          onchange="upCell(this)" onblur="upCell(this)"
+          title="✎ Dépensé HT — modifiable">${rhchip(line.rh)}</td>
+        <td><span class="cro">${ttcR?fe(ttcR):''}</span></td>
+        <td>${ecH(e,untracked)}</td>
+        <td><select class="ss ${stcls(line.st)}"
+          data-id="${id}" data-si="${si}" data-li="${li}" onchange="upSt(this)">
+          <option value="ESTIMATION"  ${line.st==='ESTIMATION' ?'selected':''}>ESTIMATION</option>
+          <option value="EN COURS"    ${line.st==='EN COURS'   ?'selected':''}>EN COURS</option>
+          <option value="DEVIS SIGNÉ" ${line.st==='DEVIS SIGNÉ'?'selected':''}>DEVIS SIGNÉ</option>
+          <option value="VALIDÉ"      ${line.st==='VALIDÉ'     ?'selected':''}>VALIDÉ</option>
+          <option value="PAYÉ"        ${line.st==='PAYÉ'       ?'selected':''}>PAYÉ</option>
+        </select></td>
+        <td class="obs"><input class="ce obs-inp" value="${line.obs||''}"
+          data-id="${id}" data-si="${si}" data-li="${li}" data-f="obs"
+          onchange="upCell(this)" onblur="upCell(this)"
+          placeholder="—" title="✎ Observations"></td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="mb">
+      <div class="twrap">
+      <table class="tbl">
+        <thead>
+          <tr class="shead" onclick="tog('${sid}')">
+            <td colspan="9" style="display:flex;justify-content:space-between;align-items:center">
+              <span>
+                <span id="arr-${sid}" style="font-size:.55em;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg)">▶</span>
+                &nbsp;${sec.s}
+              </span>
+              <span style="font-size:.9em;color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">${fe(sE)} au budget &nbsp;·&nbsp; ${ecH(sEc)} écart</span>
+            </td>
+          </tr>
+          <tr id="hdr-${sid}" style="display:none">
+            <th class="tl" style="min-width:180px">Ligne budgétaire</th>
+            <th>TVA</th>
+            <th class="ec-col">${id==='technique'?'SIGNE HT ✎':'Au budget HT ✎'}</th>
+            <th>${id==='technique'?'SIGNE TTC':'Au budget TTC'}</th>
+            <th class="ec-col">${id==='technique'?'PAYÉ HT ✎':'Dépensé HT ✎'}</th>
+            <th>${id==='technique'?'PAYÉ TTC':'Dépensé TTC'}</th>
+            <th>Écart HT</th>
+            <th>Statut ✎</th>
+            <th class="tl obs">Observations ✎</th>
+          </tr>
+        </thead>
+        <tbody id="${sid}" style="display:none">${rows}
+          <tr class="trow">
+            <td>TOTAL ${sec.s}</td><td></td>
+            <td><span class="cro" style="font-weight:700;color:#fff">${fe(sE)}</span></td><td></td>
+            <td><span class="cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span></td><td></td>
+            <td>${ecH(sEc)}</td><td></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML=`
+    <div class="sdiv"><div class="sdl"></div><div class="sdt">${dept.name}</div><div class="sdl"></div></div>
+
+    <div class="g2 mb">
+
+      <!-- LEFT CARD: KPI default + section detail carousel -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="fc-wrap" id="fc-${id}">
+          <div class="fc-track" id="fct-${id}">
+
+            <!-- FACE 0 — KPI summary (default) -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="chead"><div class="clabel">${dept.name}</div><div style="display:flex;gap:4px;flex-wrap:wrap">${pills}</div></div>
+                <div class="hero">${fe(tot.est)}<span class="hu">au budget HT</span></div>
+                <div class="tag ${ec>=0?'tg':'tr'}" style="margin-top:8px">${ec>0?'+':''}\${fe(ec)} écart</div>
+                <div class="div"></div>
+                ${(()=>{
+                  const allL2=dept.sections.flatMap(s=>s.lines);
+                  const reelC2=allL2.filter(l=>l.rh==='C').reduce((a,l)=>a+(l.reel||0),0);
+                  const reelG2=allL2.filter(l=>l.rh==='G').reduce((a,l)=>a+(l.reel||0),0);
+                  const reelUnconf=Math.max(0,tot.reel-reelC2);
+                  const pC=tot.est>0?Math.min(Math.round(reelC2/tot.est*100),100):0;
+                  const pU=tot.est>0?Math.min(Math.round(reelUnconf/tot.est*100),100-pC):0;
+                  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                    <span style="font-size:.76em;color:var(--text-muted)">Budget consommé</span>
+                    <span style="font-size:.76em;font-weight:700;color:${p>=100?'var(--red)':p>=75?'var(--amber)':'var(--green)'}">${p}%</span>
+                  </div>
+                  <div class="pt">
+                    <div class="pt-seg" style="width:${pC}%;background:var(--green);opacity:.85" title="Réel confirmé (C): ${fe(reelC2)}"></div>
+                    <div class="pt-seg" style="width:${pU}%;background:var(--amber);opacity:.75" title="Réel non confirmé: ${fe(reelUnconf)}"></div>
+                  </div>
+                  <div style="display:flex;gap:10px;margin-top:4px;font-size:.6em;color:var(--text-dim)">
+                    ${reelC2>0?`<span><span style="color:var(--green)">▪</span> Confirmé ${fe(reelC2)}</span>`:''}
+                    ${reelUnconf>0?`<span><span style="color:var(--amber)">▪</span> Non confirmé ${fe(reelUnconf)}</span>`:''}
+                  </div>`;
+                })()}
+                <div class="div"></div>
+                <div class="mrow"><span class="mk">Dépensé HT</span><span class="mv">${tot.reel?fe(tot.reel):'—'}</span></div>
+                <div class="mrow"><span class="mk">Estimation totale HT</span><span class="mv">${fe(tot.est)}</span></div>
+                ${dept.note?`<div style="margin-top:12px;font-size:.65em;color:var(--text-dim);padding:6px 8px;background:var(--surface-2);border-radius:5px">${dept.note}</div>`:''}
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots"><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span></div>
+                <button class="details-toggle" onclick="nextFace('${id}')"><span>Répartition par section</span><span class="arrow">▶</span></button>
+              </div>
+            </div>
+
+            <!-- FACE 1 — Sections text -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="clabel" style="margin-bottom:14px">Répartition par section</div>
+                ${dept.sections.map(s=>{
+                  const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
+                  const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
+                  const sP=pct(sR,sE);
+                  return `<div class="mrow">
+                    <span class="mk" style="font-size:.76em">${s.s}</span>
+                    <span style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:.7em;color:var(--text-dim)">${fe(sE)}</span>
+                      <span style="font-size:.7em;font-weight:700;color:${sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--text-dim)'}">${sP}%</span>
+                    </span>
+                  </div>`;
+                }).join('')}
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots"><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span></div>
+                <button class="details-toggle" onclick="nextFace('${id}')"><span>Au budget vs Dépensé</span><span class="arrow">▶</span></button>
+              </div>
+            </div>
+
+            <!-- FACE 2 — Bar chart -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="fc-title">Au budget vs Dépensé — par section (HT)</div>
+                <div style="background:var(--surface-2);border-radius:10px;padding:14px 12px;position:relative;height:220px">
+                  <canvas id="sec-bar-${id}" style="width:100%;height:100%"></canvas>
+                </div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span></div>
+                <button class="details-toggle" onclick="nextFace('${id}')"><span>Répartition</span><span class="arrow">▶</span></button>
+              </div>
+            </div>
+
+            <!-- FACE 3 — Donut -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="fc-title">Répartition estimation (HT)</div>
+                <div style="background:var(--surface-2);border-radius:10px;padding:14px 12px;position:relative;height:220px">
+                  <canvas id="sec-pie-${id}" style="width:100%;height:100%"></canvas>
+                </div>
+                <div id="pie-leg-${id}" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;font-size:.58em;color:var(--text-dim)"></div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span></div>
+                <button class="details-toggle" onclick="nextFace('${id}')"><span>Vue générale</span><span class="arrow">▶</span></button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT CARD: Avancement — dept-specific 4-face carousel -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="fc-wrap" id="fc-av-${id}">
+          <div class="fc-track" id="fct-av-${id}">
+
+            <!-- FACE 0 — Statuts pipeline -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="chead" style="margin-bottom:12px">
+                  <div class="clabel" id="av-t0-${id}">Statuts</div>
+                  <span class="wbadge" id="av-badge-${id}">—</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px" id="av-pipe-${id}"></div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots">
+                  <span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span>
+                </div>
+                <button class="details-toggle" onclick="nextFace('av-${id}')">
+                  <span id="av-btn0-${id}">Montants engagés</span><span class="arrow">▶</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- FACE 1 — Montants par statut -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="chead" style="margin-bottom:12px">
+                  <div class="clabel" id="av-t1-${id}">Montants</div>
+                </div>
+                <div id="av-mont-${id}"></div>
+                <div class="div"></div>
+                <div class="mrow"><span class="mk" style="font-size:.75em" id="av-uns-lbl-${id}">Non signé</span><span class="mv" id="av-uns-${id}">—</span></div>
+                <div class="mrow"><span class="mk" style="font-size:.75em" id="av-conf-lbl-${id}">Dépensé</span><span class="mv" id="av-conf-${id}">—</span></div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots">
+                  <span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span>
+                </div>
+                <button class="details-toggle" onclick="nextFace('av-${id}')">
+                  <span id="av-btn1-${id}">Par section</span><span class="arrow">▶</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- FACE 2 — Par section -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="chead" style="margin-bottom:10px">
+                  <div class="clabel" id="av-t2-${id}">Par section</div>
+                  <span class="tag tr" style="font-size:.58em;padding:2px 7px" id="av-t2-badge-${id}">À suivre</span>
+                </div>
+                <div id="av-urg-${id}"></div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots">
+                  <span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span>
+                </div>
+                <button class="details-toggle" onclick="nextFace('av-${id}')">
+                  <span id="av-btn2-${id}">Répartition</span><span class="arrow">▶</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- FACE 3 — Répartition (S/G or TVA) -->
+            <div class="fc-face">
+              <div class="fc-body">
+                <div class="chead" style="margin-bottom:12px">
+                  <div class="clabel" id="av-t3-${id}">Répartition</div>
+                </div>
+                <div id="av-sg-${id}"></div>
+              </div>
+              <div class="fc-foot">
+                <div class="face-dots">
+                  <span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span>
+                </div>
+                <button class="details-toggle" onclick="nextFace('av-${id}')">
+                  <span>Statuts</span><span class="arrow">▶</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    ${techniqueNote}
+    <div class="eled">
+      <div style="display:flex;align-items:center;gap:5px"><div class="esw e"></div><span>Cellule modifiable (violet = Au budget HT · Dépensé HT · Statut)</span></div>
+      <div style="display:flex;align-items:center;gap:5px"><div class="esw r"></div><span>Calculé automatiquement (TTC · Écart)</span></div>
+      <span>S = Salaire/Staff &nbsp;·&nbsp; G = Général/Prestataire &nbsp;·&nbsp; C = Confirmé (réel)</span>
+    </div>
+    <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)">
+      <span class="chevron">▶</span><span>Tout déplier les sections</span>
+    </button>
+
+    <div class="dept-sticky">
+      <span style="font-weight:700;color:#fff;font-size:1.05em">${dept.name}</span>
+      <span style="color:var(--text-dim)">·</span>
+      <span style="color:var(--text-muted)">${fe(tot.est)} <span style="color:var(--text-dim)">au budget</span></span>
+      <span style="color:var(--text-dim)">·</span>
+      <span style="${p>=100?'color:var(--red)':p>=75?'color:var(--amber)':'color:var(--green)'}">
+        ${tot.reel?fe(tot.reel):'—'} réel <span style="opacity:.7">(${p}%)</span>
+      </span>
+      <span style="color:var(--text-dim)">·</span>
+      <span style="color:${ec>=0?'var(--green)':'var(--red)'};font-weight:600">${ec>=0?'+':''}${fe(ec)} écart</span>
+      <span style="margin-left:auto;color:var(--text-dim);font-size:.9em">${dept.sections.length} sections · ${allL.length} lignes</span>
+    </div>
+
+    ${secHTML}`;
+
+  // Populate dept-scoped avancement card
+  renderDeptAv(id);
+  // Equalize face heights so button stays at same position on all faces
+  setTimeout(()=>{ equalizeFaces('fct-'+id); equalizeFaces('fct-av-'+id); }, 60);
+}
+
+/* ╔═══ DEPT AVANCEMENT (right card) ═══ */
+function renderDeptAv(id){
+  const dept=DEPTS.find(d=>d.id===id);
+  if(!dept) return;
+  const allL=dept.sections.flatMap(s=>s.lines);
+  const total=allL.length;
+
+  if(!total||allL.every(l=>!(l.est||0)&&!(l.reel||0))){
+    const wrap=document.getElementById('fc-av-'+id);
+    if(wrap) wrap.closest('.card').innerHTML=
+      '<div style="padding:28px;color:var(--text-dim);font-size:.8em;height:100%;display:flex;align-items:center;justify-content:center">Aucun poste actif</div>';
+    return;
+  }
+
+  const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
+  const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
+  const STCHIP={'ESTIMATION':'chip-est','EN COURS':'chip-ec','DEVIS SIGNÉ':'chip-ds','VALIDÉ':'chip-val','PAYÉ':'chip-pay'};
+  const fe2=v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+
+  const tEst=allL.reduce((a,l)=>a+(l.est||0),0);
+  const tReel=allL.reduce((a,l)=>a+(l.reel||0),0);
+  const stCounts={},stAmts={};
+  STORDER.forEach(s=>{stCounts[s]=0;stAmts[s]=0;});
+  allL.forEach(l=>{stCounts[l.st]=(stCounts[l.st]||0)+1;stAmts[l.st]=(stAmts[l.st]||0)+(l.est||0);});
+  const reelC=allL.filter(l=>l.rh==='C').reduce((a,l)=>a+(l.reel||0),0);
+  const unsignedAmt=(stAmts['ESTIMATION']||0)+(stAmts['EN COURS']||0);
+  const signedAmt=(stAmts['DEVIS SIGNÉ']||0)+(stAmts['VALIDÉ']||0)+(stAmts['PAYÉ']||0);
+  const reelWithoutDevis=tReel>0&&signedAmt<tReel*0.3;
+  const sLines=allL.filter(l=>l.typ==='S');
+  const gLines=allL.filter(l=>l.typ==='G');
+
+  // Per-dept config
+  const CFGS={
+    reperages:{t0:'Statuts — Planification',t1:'Budget prévisionnel',t2:'Sections à mobiliser',t3:'Types de frais',btn0:'Budget',btn1:'Par section',btn2:'Types de frais',t2badge:'Planifié',t2badgeCls:'tg',alert:'⚠ Aucun réel — déplacements/repas à confirmer',alertRgb:'251,191,36',f3:'tva'},
+    vhr:{t0:'Statuts — Hôtels & Transports',t1:'Engagements hébergement',t2:'Non signé par catégorie',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'1 devis signé',t2badgeCls:'tg',alert:'✔ '+fe2(tReel)+' dépensé confirmé (hôtels) sans devis signé',alertRgb:'251,146,60',f3:'sg'},
+    production:{t0:'Statuts — Production',t1:'Budgets par statut',t2:'Sections à signer en priorité',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'6 EN COURS',t2badgeCls:'tr',alert:null,alertRgb:'251,191,36',f3:'sg'},
+    catering:{t0:'Statuts — Catering',t1:'Budget traiteur',t2:'Sections engagées',t3:'Régimes TVA',btn0:'Montants',btn1:'Par section',btn2:'TVA',t2badge:'Régulariser',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' engagé sans devis signé — régulariser',alertRgb:'251,146,60',f3:'tva'},
+    bar:{t0:'Statuts — Bar & Commis',t1:'Budget boissons & staff',t2:'Sections à commander',t3:'Staff (AE/URSSAF) vs Achats',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Tout à engager',t2badgeCls:'tr',alert:'⚠ Commande alcool non passée — anticiper délais fournisseur',alertRgb:'248,113,113',f3:'sg'},
+    artistique:{t0:'Statuts — Cachets artistes',t1:'Fees & cachets',t2:'Artistes non confirmés',t3:'Régimes (TVA / URSSAF)',btn0:'Montants',btn1:'Par artiste/catégorie',btn2:'Répartition',t2badge:'Critique',t2badgeCls:'tr',alert:'⚠ '+fe2(unsignedAmt)+' de fees non signés — contrats à finaliser',alertRgb:'248,113,113',f3:'tva'},
+    technique:{t0:'Statuts — Technique',t1:'Payé vs Au budget',t2:'Prestataires par section',t3:'Répartition prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Statuts à corriger',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' payé — statuts ESTIMATION à mettre à jour',alertRgb:'251,146,60',f3:'sg'},
+    sceno:{t0:'Statuts — Scénographie',t1:'Engagé vs Au budget',t2:'Prestataires par section',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Statuts à régulariser',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' engagé sans statut signé',alertRgb:'251,146,60',f3:'sg'},
+    partenariat:{t0:'Statuts',t1:'Montants',t2:'Par section',t3:'Répartition',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'',t2badgeCls:'tg',alert:null,alertRgb:'251,191,36',f3:'tva'},
+    communication:{t0:'Statuts — Communication',t1:'Budget communication',t2:'Prestataires à engager',t3:'Régimes TVA',btn0:'Montants',btn1:'Par poste',btn2:'TVA',t2badge:'Aucun confirmé',t2badgeCls:'tr',alert:'⚠ Aucun prestataire engagé — lancer les appels d’offres',alertRgb:'251,191,36',f3:'tva'}
+  };
+  const c=CFGS[id]||{t0:'Statuts',t1:'Montants',t2:'Par section',t3:'Répartition',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'',t2badgeCls:'tg',alert:null,alertRgb:'251,191,36',f3:'sg'};
+
+  // Update dynamic labels
+  const setTxt=(eid,v)=>{const e=document.getElementById(eid+id);if(e)e.textContent=v;};
+  setTxt('av-t0-',c.t0); setTxt('av-t1-',c.t1); setTxt('av-t2-',c.t2); setTxt('av-t3-',c.t3);
+  setTxt('av-btn0-',c.btn0); setTxt('av-btn1-',c.btn1); setTxt('av-btn2-',c.btn2);
+  const t2b=document.getElementById('av-t2-badge-'+id);
+  if(t2b){ if(c.t2badge){t2b.textContent=c.t2badge;t2b.className='tag '+c.t2badgeCls;t2b.style.cssText='font-size:.58em;padding:2px 7px';}else t2b.style.display='none'; }
+
+  // FACE 0 - pipeline
+  const bdg=document.getElementById('av-badge-'+id);
+  if(bdg) bdg.textContent=total+' ligne'+(total>1?'s':'');
+  const pipe=document.getElementById('av-pipe-'+id);
+  if(pipe){
+    const alertHtml=c.alert?`<div style="font-size:.64em;padding:6px 9px;border-radius:6px;background:rgba(${c.alertRgb},.07);border:1px solid rgba(${c.alertRgb},.2);color:rgb(${c.alertRgb});margin-bottom:8px;line-height:1.5">${c.alert}</div>`:'';
+    const bars=STORDER.filter(s=>stCounts[s]>0).map(s=>{
+      const n=stCounts[s],pctW=Math.round(n/total*100);
+      return `<div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span class="chip ${STCHIP[s]}">${s}</span>
+          <span style="font-size:.7em;color:var(--text-muted)">${n}<span style="color:var(--text-dim);margin-left:4px">${pctW}%</span></span>
+        </div>
+        <div style="height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden">
+          <div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px"></div>
+        </div>
+      </div>`;}).join('');
+    pipe.innerHTML=alertHtml+bars;
+  }
+
+  // FACE 1 - montants
+  const unsLbl=document.getElementById('av-uns-lbl-'+id);
+  const confLbl=document.getElementById('av-conf-lbl-'+id);
+  const unsEl=document.getElementById('av-uns-'+id);
+  const confEl=document.getElementById('av-conf-'+id);
+  const montEl=document.getElementById('av-mont-'+id);
+  if(unsLbl) unsLbl.textContent='Non signé';
+  if(confLbl) confLbl.textContent=reelWithoutDevis?'Dépensé (sans devis)':'Confirmé (dépensé C)';
+  if(unsEl) unsEl.innerHTML=`<span style="color:${unsignedAmt/Math.max(tEst,1)>.5?'var(--red)':'var(--amber)'};font-weight:600">${fe(unsignedAmt)}</span>`;
+  if(confEl) confEl.innerHTML=`<span style="color:var(--green);font-weight:600">${fe(reelWithoutDevis?tReel:reelC)}</span>`;
+  if(montEl){
+    const maxAmt=Math.max(...STORDER.map(s=>stAmts[s]||0),tReel,1);
+    let rows=STORDER.filter(s=>stAmts[s]>0).map(s=>`
+      <div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span class="chip ${STCHIP[s]}">${s}</span>
+          <span style="font-size:.72em;font-weight:600;color:#fff">${fe(stAmts[s])}</span>
+        </div>
+        <div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.round(stAmts[s]/maxAmt*100)}%;height:100%;background:${STCOL[s]};opacity:.75;border-radius:3px"></div>
+        </div>
+      </div>`).join('');
+    if(reelWithoutDevis&&tReel>0) rows+=`
+      <div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span style="font-size:.59em;font-weight:700;text-transform:uppercase;color:var(--green);background:rgba(52,211,153,.1);padding:2px 8px;border-radius:4px">DÉPENSÉ</span>
+          <span style="font-size:.72em;font-weight:600;color:var(--green)">${fe(tReel)}</span>
+        </div>
+        <div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.round(tReel/maxAmt*100)}%;height:100%;background:var(--green);opacity:.5;border-radius:3px"></div>
+        </div>
+      </div>`;
+    montEl.innerHTML=rows;
+  }
+
+  // FACE 2 - urgency by section
+  const urgEl=document.getElementById('av-urg-'+id);
+  if(urgEl){
+    const rows=dept.sections.map(s=>{
+      const sReel=s.lines.reduce((a,l)=>a+(l.reel||0),0);
+      const sEst=s.lines.reduce((a,l)=>a+(l.est||0),0);
+      const unsig=s.lines.filter(l=>l.st==='ESTIMATION'||l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
+      const uPct=sEst>0?Math.round(unsig/sEst*100):0;
+      return {name:s.s,unsig,sReel,sEst,uPct};
+    }).filter(r=>r.sEst>0||r.sReel>0).sort((a,b)=>b.unsig-a.unsig);
+    const maxU=Math.max(...rows.map(r=>r.unsig),1);
+    urgEl.innerHTML=rows.length?rows.map(r=>{
+      const col=r.uPct>=80?'var(--red)':r.uPct>=50?'var(--amber)':'#818cf8';
+      const reelNote=r.sReel>0?` <span style="color:var(--green);font-size:.85em">✓ ${fe(r.sReel)}</span>`:'';
+      return `<div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span style="font-size:.64em;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted)">${r.name}${reelNote}</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            ${r.unsig>0
+              ?`<span style="font-size:.65em;font-weight:600;color:#fff">${fe(r.unsig)}</span><span style="font-size:.58em;font-weight:700;color:${col};background:${col}22;padding:1px 5px;border-radius:3px">${r.uPct}%</span>`
+              :'<span style="font-size:.62em;color:var(--green)">✓ signé</span>'}
+          </span>
+        </div>
+        ${r.unsig>0?`<div style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden"><div style="width:${Math.round(r.unsig/maxU*100)}%;height:100%;background:${col};opacity:.6;border-radius:2px"></div></div>`:''}
+      </div>`;
+    }).join(''):'<div style="font-size:.75em;color:var(--green);padding:8px 0">✓ Tout est signé</div>';
+  }
+
+  // FACE 3 - TVA breakdown OR S vs G
+  const sgEl=document.getElementById('av-sg-'+id);
+  if(sgEl){
+    if(c.f3==='tva'){
+      const TVA_LABELS={'0.2':'TVA 20%','0.1':'TVA 10%','0.055':'TVA 5.5%','URSSAF':'URSSAF (salarié)','AE':'Auto-entrepreneur','AUTO-ENTRE':'Auto-entrepreneur','INTERMITTANT':'Intermittent','NA':'Sans TVA','null':'Non renseigné'};
+      const tG={};
+      allL.forEach(l=>{
+        const tv=l.tva===null||l.tva===undefined?'null':String(l.tva);
+        const lbl=TVA_LABELS[tv]||tv;
+        if(!tG[lbl]) tG[lbl]={n:0,est:0};
+        tG[lbl].n++; tG[lbl].est+=(l.est||0);
+      });
+      const tRows=Object.entries(tG).sort((a,b)=>b[1].est-a[1].est);
+      const maxT=Math.max(...tRows.map(r=>r[1].est),1);
+      sgEl.innerHTML=`<div style="font-size:.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px">Répartition par régime</div>`+
+        tRows.map(([lbl,v])=>`<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:.67em;color:var(--text-muted);font-weight:600">${lbl}</span>
+            <span style="font-size:.67em;color:#fff">${v.est>0?fe(v.est):'—'} <span style="color:var(--text-dim)">(${v.n})</span></span>
+          </div>
+          <div style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden">
+            <div style="width:${v.est>0?Math.round(v.est/maxT*100):8}%;height:100%;background:var(--indigo);opacity:.6;border-radius:2px"></div>
+          </div>
+        </div>`).join('');
+    } else {
+      const sgStat=(lines,label,color)=>{
+        if(!lines.length) return '';
+        const tot3=lines.reduce((a,l)=>a+(l.est||0),0);
+        if(!tot3) return '';
+        const signed=lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+        const inProg=lines.filter(l=>l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
+        const estOnly=lines.filter(l=>l.st==='ESTIMATION').reduce((a,l)=>a+(l.est||0),0);
+        const reelLines=lines.reduce((a,l)=>a+(l.reel||0),0);
+        const pctSign=Math.round(signed/tot3*100);
+        return `<div style="background:var(--surface-2);border-radius:10px;padding:11px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+            <span style="font-size:.67em;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:${color}">${label}</span>
+            <span style="font-size:.7em;font-weight:600;color:#fff">${fe(tot3)} <span style="color:var(--text-dim);font-weight:400">(${lines.length})</span></span>
+          </div>
+          <div style="display:flex;height:6px;border-radius:4px;overflow:hidden;gap:1px;margin-bottom:7px">
+            <div style="flex:${signed||0.001};background:var(--green);opacity:.8"></div>
+            <div style="flex:${inProg||0.001};background:var(--amber);opacity:.8"></div>
+            <div style="flex:${estOnly||0.001};background:rgba(255,255,255,.1)"></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:.61em;color:var(--text-dim)">
+            <span><span style="color:var(--green);font-weight:600">✓ ${pctSign}%</span> signé</span>
+            ${inProg>0?`<span><span style="color:var(--amber)">${fe(inProg)}</span> en cours</span>`:''}
+            <span>${fe(estOnly)} à engager</span>
+            ${reelLines>0?`<span>→ <span style="color:var(--green)">${fe(reelLines)}</span> réel</span>`:''}
+          </div>
+        </div>`;
+      };
+      const nL=allL.filter(l=>!l.typ&&(l.est||0)>0);
+      sgEl.innerHTML=
+        sgStat(sLines,'Staff / Salaires','#c4b5fd')+
+        sgStat(gLines,'Prestataires / Fournisseurs','var(--indigo)')+
+        (nL.length?`<div style="font-size:.63em;color:var(--text-dim);padding:3px 2px">Non catégorisé : ${fe(nL.reduce((a,l)=>a+(l.est||0),0))}</div>`:'');
+    }
+  }
+}
+
+function upCell(inp){
+  const {id,si,li,f}=inp.dataset;
+  const dept=DEPTS.find(d=>d.id===id);
+  const line=dept.sections[si].lines[li];
+  const val=(f==='st'||f==='obs')?inp.value:(parseFloat(inp.value.replace(/[\s\u202f€,]/g,'').replace(',','.'))||0);
+  line[f]=val;
+  inp.classList.remove('saved');
+  void inp.offsetWidth;
+  inp.classList.add('saved');
+  const cont=document.getElementById('page-'+id);
+  if(cont) cont._built=false;
+  renderDept(id);
+  if(document.getElementById('page-bilan').classList.contains('on')) renderBilan();
+  setTimeout(()=>{ equalizeFaces('fct-'+id); equalizeFaces('fct-av-'+id); }, 80);
+  // POST to API
+  if(line._row){
+    const tabName=Object.entries(DEPT_META).find(([,m])=>m.id===id)?.[0];
+    if(tabName){
+      const fieldMap={est:'est_ht',reel:'reel_ht',st:'statut',obs:'observations'};
+      const apiField=fieldMap[f];
+      if(apiField){
+        fetch(`${API}/api/budget/update`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({dept:tabName,row:line._row,field:apiField,value:String(val)})
+        }).catch(e=>console.warn('API write failed:',e));
+      }
+    }
+  }
+}
+function upRec(ci,ri,field,inp){
+  const val=parseFloat(inp.value.replace(/[\s\u202f€,]/g,'').replace(',','.'))||0;
+  REC[ci].rows[ri][field]=val;
+  inp.classList.remove('saved'); void inp.offsetWidth; inp.classList.add('saved');
+  renderBilan();
+}
+function upRecSt(ci,ri,sel){
+  REC[ci].rows[ri].st=sel.value;
+  sel.className='ss '+chipcls(sel.value);
+  renderBilan();
+}
+function upSt(sel){
+  const {id,si,li}=sel.dataset;
+  const dept=DEPTS.find(d=>d.id===id);
+  dept.sections[si].lines[li].st=sel.value;
+  sel.className='ss '+stcls(sel.value);
+  const cont=document.getElementById('page-'+id);
+  if(cont) cont._built=false;
+}
+function tog(sid){
+  const tb=document.getElementById(sid);
+  const hd=document.getElementById('hdr-'+sid);
+  const ar=document.getElementById('arr-'+sid);
+  const vis=tb.style.display!=='none';
+  tb.style.display=vis?'none':'';
+  hd.style.display=vis?'none':'';
+  if(ar) ar.style.transform=vis?'rotate(0)':'rotate(90deg)';
+}
+function toggleAllSections(deptId, btn){
+  const dept=DEPTS.find(d=>d.id===deptId);
+  if(!dept) return;
+  const firstSid='s'+deptId+'0';
+  const firstTb=document.getElementById(firstSid);
+  const anyCollapsed=!firstTb||firstTb.style.display==='none';
+  dept.sections.forEach((s,si)=>{
+    const sid='s'+deptId+si;
+    const tb=document.getElementById(sid);
+    const hd=document.getElementById('hdr-'+sid);
+    const ar=document.getElementById('arr-'+sid);
+    if(!tb) return;
+    if(anyCollapsed){
+      tb.style.display=''; hd.style.display=''; if(ar) ar.style.transform='rotate(90deg)';
+    } else {
+      tb.style.display='none'; hd.style.display='none'; if(ar) ar.style.transform='rotate(0deg)';
+    }
+  });
+  const chevron=btn.querySelector('.chevron');
+  const label=btn.querySelector('span:last-child');
+  if(anyCollapsed){
+    btn.classList.add('open');
+    if(chevron) chevron.style.transform='rotate(90deg)';
+    if(label) label.textContent='Tout replier les sections';
+  } else {
+    btn.classList.remove('open');
+    if(chevron) chevron.style.transform='';
+    if(label) label.textContent='Tout déplier les sections';
+  }
+}
+function go(id,tabEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
+  if(tabEl){tabEl.classList.add('on');}
+  else{
+    const f=[...document.querySelectorAll('.nl')].find(l=>(l.getAttribute('onclick')||'').includes(`'${id}'`));
+    if(f) f.classList.add('on');
+  }
+  const page=document.getElementById('page-'+id);
+  if(!page) return;
+  page.classList.add('on');
+  if(id==='bilan') renderBilan(); else if(id==='transactions') {} else renderDept(id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ═══ 3-FACE CAROUSEL ═══ */
+const secCharts={};
+const faceState={};  // id → current face index (0/1/2)
+
+/* equalize face heights within a carousel so the button stays fixed */
+function equalizeFaces(trackId){
+  // Don't equalize the bilan carousel — its faces vary too much in content length
+  if(trackId==='fct-av') return;
+  const track=document.getElementById(trackId);
+  if(!track) return;
+  const faces=[...track.children];
+  if(!faces.length) return;
+  // Reset to natural heights first
+  faces.forEach(f=>{ f.style.height=''; f.style.minHeight=''; });
+  requestAnimationFrame(()=>{
+    const max=Math.max(...faces.map(f=>f.offsetHeight));
+    if(max>0) faces.forEach(f=>{ f.style.minHeight=max+'px'; });
+  });
+}
+
+function nextFace(id){
+  const cur=(faceState[id]||0);
+  const track=document.getElementById('fct-'+id);
+  if(!track) return;
+  const total=track.children.length;
+  const next=(cur+1)%total;
+  faceState[id]=next;
+  track.style.transform=`translateX(-${next*100}%)`;
+  if(!id.startsWith('av-')){
+    setTimeout(()=>{
+      if(next===2) buildSecBar(id);
+      if(next===3) buildSecPie(id);
+      setTimeout(()=>equalizeFaces('fct-'+id), 80);
+    },50);
+  }
+}
+
+const SECTION_COLORS=[
+  'rgba(99,102,241,.65)','rgba(168,85,247,.65)','rgba(52,211,153,.55)',
+  'rgba(251,191,36,.55)','rgba(248,113,113,.55)','rgba(99,102,241,.4)',
+  'rgba(168,85,247,.4)','rgba(52,211,153,.35)',
+];
+
+function buildSecBar(id){
+  const dept=DEPTS.find(d=>d.id===id);
+  if(!dept) return;
+  const canvas=document.getElementById('sec-bar-'+id);
+  if(!canvas) return;
+  if(secCharts['bar-'+id]){secCharts['bar-'+id].destroy();delete secCharts['bar-'+id];}
+  const labels=dept.sections.map(s=>s.s);
+  const estV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0));
+  const reelV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.reel||0),0));
+  secCharts['bar-'+id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Au budget HT', data:estV, backgroundColor:'rgba(99,102,241,.45)',borderColor:'rgba(99,102,241,.75)',borderWidth:1,borderRadius:3},
+      {label:'Dépensé HT',   data:reelV,backgroundColor:'rgba(168,85,247,.45)',borderColor:'rgba(168,85,247,.75)',borderWidth:1,borderRadius:3},
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#a0a0b0',font:{size:10,family:'DM Sans'},boxWidth:10,boxHeight:10}},
+        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fe(c.raw)}}},
+      scales:{
+        x:{ticks:{color:'#5a5a6a',font:{size:9},callback:v=>Math.round(v/1000)+'k'},grid:{color:'rgba(255,255,255,.025)'},border:{color:'rgba(255,255,255,.04)'}},
+        y:{ticks:{color:'#a0a0b0',font:{size:9,family:'DM Sans'},maxRotation:0},grid:{display:false},border:{display:false}}
+      }
+    }
+  });
+}
+
+function buildSecPie(id){
+  const dept=DEPTS.find(d=>d.id===id);
+  if(!dept) return;
+  const canvas=document.getElementById('sec-pie-'+id);
+  if(!canvas) return;
+  if(secCharts['pie-'+id]){secCharts['pie-'+id].destroy();delete secCharts['pie-'+id];}
+  const labels=dept.sections.map(s=>s.s);
+  const estV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0));
+  const colors=dept.sections.map((_,i)=>SECTION_COLORS[i%SECTION_COLORS.length]);
+  secCharts['pie-'+id]=new Chart(canvas,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:estV,backgroundColor:colors,borderColor:'#08080d',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      layout:{padding:4},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+fe(c.raw)}}}}
+  });
+  // Custom legend
+  const leg=document.getElementById('pie-leg-'+id);
+  if(leg) leg.innerHTML=labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:1px;background:${colors[i]};flex-shrink:0"></span>${l}</span>`).join('');
+}
+
+/* ═══ INIT ═══ */
+function initApp(){
+  // Reset render cache so all dept pages rebuild with API data
+  document.querySelectorAll('[id^="page-"]').forEach(el=>{ el._built=false; });
+  // Render bilan first (summary page)
+  renderBilan();
+  // Render whichever dept tab is active
+  const activeNav = document.querySelector('.nav-item.on');
+  if(activeNav && activeNav.dataset.page && activeNav.dataset.page !== 'bilan' && activeNav.dataset.page !== 'transactions'){
+    renderDept(activeNav.dataset.page);
+  }
+}
+
+// Kick off — fetch data from API then init
+loadBudgetData();
+</script>
+</body>
+</html>
