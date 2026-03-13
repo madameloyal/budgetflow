@@ -794,6 +794,7 @@ async function loadBudgetData() {
 
 /* ═══ HELPERS ═══ */
 const fe = n => n==null?'—':Math.round(n).toLocaleString('fr-FR')+'\u202f€';
+const fmtAmt = (n, decimals=2) => n.toLocaleString('fr-FR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals}).replace(/\u202f/g,'\u2009');
 const ftva = v => v==null?'—':typeof v==='number'?(v*100).toFixed(1).replace('.0','')+'%':v;
 const fttc = (ht,tva) => { if(!ht) return null; if(typeof tva==='number') return ht*(1+tva); return ht; };
 const dtot = d => d.sections.flatMap(s=>s.lines).reduce((a,l)=>({est:a.est+(l.est||0),reel:a.reel+(l.reel||0)}),{est:0,reel:0});
@@ -1862,57 +1863,97 @@ function triggerImport() {
 
 // ── Qonto column indices (0-based, matches export order) ──
 const QC = { CAT:0, SOUS:1, FOURN:2, NOTE:3, DATE:4, HT:5, TTC:6, REF:7, METHODE:8, INIT:9, CARTE:10 };
-const QONTO_TX_KEY = 'bf_qonto_tx';    // all transactions
-const QONTO_MATCH_KEY = 'bf_qonto_match'; // tab|ligne → [tx,...]
+const QONTO_TX_KEY = 'bf_qonto_tx';
+const QONTO_MATCH_KEY = 'bf_qonto_match';
+
+function parseFrNum(s) {
+  if (!s) return 0;
+  // Handle French format: "−1 234,56" or "-1234.56" or "1 234,56"
+  const clean = String(s)
+    .replace(/\u2212/g, '-')   // minus sign → hyphen
+    .replace(/\s/g, '')        // remove spaces (thousands sep)
+    .replace(',', '.');        // comma decimal → dot
+  const n = parseFloat(clean);
+  return isNaN(n) ? 0 : n;
+}
 
 function storeQontoTransactions(csvData) {
   const lines = csvData.split('\n').filter(l => l.trim());
   if (lines.length < 2) return;
-  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const sep = '\t'; // we always produce TSV via SheetJS
   const all = [];
-  const byLine = {}; // key: "TAB|Ligne name"
+  const byLine = {};
+
+  // Detect header row to confirm column order
+  const headers = lines[0].split(sep).map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
+  // Find column indices dynamically from headers as fallback
+  const ci = {
+    cat:   headers.findIndex(h => h.includes('cat') && h.includes('sor')),
+    fourn: headers.findIndex(h => h.includes('contrepartie') || h.includes('fourn')),
+    note:  headers.findIndex(h => h === 'note' || h.includes('commentaire')),
+    date:  headers.findIndex(h => h.includes('date')),
+    ht:    headers.findIndex(h => h.includes('ht') && h.includes('mont')),
+    ttc:   headers.findIndex(h => h.includes('ttc') && h.includes('mont')),
+    ref:   headers.findIndex(h => h.includes('f\u00e9rence') || h === 'r\u00e9f\u00e9rence'),
+    init:  headers.findIndex(h => h.includes('initiateur')),
+  };
+  // Fall back to hardcoded positions if header detection fails
+  const c = {
+    cat:   ci.cat   >= 0 ? ci.cat   : 0,
+    fourn: ci.fourn >= 0 ? ci.fourn : 2,
+    note:  ci.note  >= 0 ? ci.note  : 3,
+    date:  ci.date  >= 0 ? ci.date  : 4,
+    ht:    ci.ht    >= 0 ? ci.ht    : 5,
+    ttc:   ci.ttc   >= 0 ? ci.ttc   : 6,
+    ref:   ci.ref   >= 0 ? ci.ref   : 7,
+    init:  ci.init  >= 0 ? ci.init  : 9,
+  };
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(sep).map(c => c.replace(/^["']|["']$/g, '').trim());
-    if (cols.length < 7) continue;
+    const cols = lines[i].split(sep).map(col => col.replace(/^["']|["']$/g, '').trim());
+    if (cols.length < 5) continue;
+    const ttc = parseFrNum(cols[c.ttc]);
+    const ht  = parseFrNum(cols[c.ht]);
     const tx = {
-      cat:   cols[QC.CAT]  || '',
-      sous:  cols[QC.SOUS] || '',
-      fourn: cols[QC.FOURN]|| '',
-      note:  cols[QC.NOTE] || '',
-      date:  cols[QC.DATE] || '',
-      ht:    parseFloat(cols[QC.HT])  || 0,
-      ttc:   parseFloat(cols[QC.TTC]) || 0,
-      ref:   cols[QC.REF]  || '',
-      init:  cols[QC.INIT] || '',
+      cat:   cols[c.cat]   || '',
+      fourn: cols[c.fourn] || '',
+      note:  cols[c.note]  || '',
+      date:  cols[c.date]  || '',
+      ht,
+      ttc,
+      ref:   cols[c.ref]   || '',
+      init:  cols[c.init]  || '',
     };
     all.push(tx);
+  }
 
-    // Try to match to a budget line (mirror of Apps Script logic)
+  // Build match index: try to match each expense tx to a budget line
+  const matchedKeys = new Set();
+  all.filter(tx => tx.ttc < 0).forEach(tx => {
     const normCat = normStr(tx.cat);
     const tabName = POLE_MAP_CLIENT[normCat];
-    if (tabName && tx.ttc < 0) {
-      const noteDesc = extractDesc(tx.note);
-      const dept = DEPTS.find(d => d.id === (DEPT_META[tabName]?.id));
-      if (dept) {
-        const match = dept.sections.flatMap(s => s.lines)
-          .find(l => l.l && !l.l.startsWith('(ligne') &&
-            (normStr(l.l) === normStr(noteDesc || '') ||
-             fuzzyMatchClient(normStr(l.l), normStr(noteDesc || '')) ||
-             fuzzyMatchClient(normStr(l.l), normStr(tx.fourn))));
-        if (match) {
-          const key = `${tabName}|${match.l}`;
-          if (!byLine[key]) byLine[key] = [];
-          byLine[key].push(tx);
-        }
-      }
+    if (!tabName) return;
+    const dept = DEPTS.find(d => d.id === tabName.toLowerCase());
+    if (!dept) return;
+    const allLines = dept.sections.flatMap(s => s.lines).filter(l => l.l && !l.l.match(/^\(ligne/i));
+    const noteDesc = extractDesc(tx.note);
+    const match = allLines.find(l =>
+      (noteDesc && fuzzyMatchClient(normStr(l.l), normStr(noteDesc))) ||
+      fuzzyMatchClient(normStr(l.l), normStr(tx.fourn))
+    );
+    if (match) {
+      const key = `${tabName}|${match.l}`;
+      if (!byLine[key]) byLine[key] = [];
+      byLine[key].push(tx);
+      matchedKeys.add(`${tx.date}|${tx.fourn}|${tx.ttc}`);
     }
-  }
+  });
 
   try {
     sessionStorage.setItem(QONTO_TX_KEY, JSON.stringify(all));
     sessionStorage.setItem(QONTO_MATCH_KEY, JSON.stringify(byLine));
-  } catch(e) { console.warn('sessionStorage full, skipping tx cache'); }
+    console.log(`✅ Qonto: ${all.length} tx stored, ${Object.keys(byLine).length} lignes matched`);
+  } catch(e) { console.warn('sessionStorage full'); }
 }
 
 const POLE_MAP_CLIENT = {
@@ -2262,7 +2303,7 @@ function buildTransactionList(line, tabName) {
 
   const rows = txList.map(tx => {
     const d = tx.date ? tx.date.slice(0,10).split('-').reverse().join('/') : '—';
-    const amt = tx.ttc ? `−${Math.abs(tx.ttc).toLocaleString('fr-FR', {minimumFractionDigits:2})}` : '—';
+    const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
     return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
       <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
       <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
@@ -2282,7 +2323,7 @@ function buildTransactionList(line, tabName) {
   return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
       <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${count} transaction${count > 1 ? 's' : ''} associée${count > 1 ? 's' : ''}</span>
-      <span style="font-family:monospace;font-size:.82em;font-weight:600;color:#fff">−${total.toLocaleString('fr-FR', {minimumFractionDigits:2})} € TTC</span>
+      <span style="font-family:monospace;font-size:.82em;font-weight:600;color:#fff">−${fmtAmt(total)} € TTC</span>
     </div>
     <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
       <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
@@ -2462,8 +2503,8 @@ function renderReleve() {
 
   document.getElementById('releve-kpis').innerHTML = [
     { label: 'Transactions', val: all.length, color: '#fff' },
-    { label: 'Total dépenses TTC', val: `−${totalDep.toLocaleString('fr-FR', {minimumFractionDigits:2})} €`, color: 'var(--red)' },
-    { label: 'Total recettes TTC', val: `+${totalRec.toLocaleString('fr-FR', {minimumFractionDigits:2})} €`, color: 'var(--green)' },
+    { label: 'Total dépenses TTC', val: `−${fmtAmt(totalDep)} €`, color: 'var(--red)' },
+    { label: 'Total recettes TTC', val: `+${fmtAmt(totalRec)} €`, color: 'var(--green)' },
     { label: 'Associées', val: `${matched} / ${depenses.length}`, color: '#818cf8' },
   ].map(k => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px">
     <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;margin-bottom:4px">${k.label}</div>
@@ -2506,8 +2547,8 @@ function filterReleve(matchedKeysArg) {
     const isRec = tx.ttc > 0;
     const amtColor = isRec ? 'var(--green)' : 'var(--red)';
     const amtVal = isRec
-      ? `+${tx.ttc.toLocaleString('fr-FR', {minimumFractionDigits:2})}`
-      : `−${Math.abs(tx.ttc).toLocaleString('fr-FR', {minimumFractionDigits:2})}`;
+      ? `+${fmtAmt(tx.ttc)}`
+      : `−${fmtAmt(Math.abs(tx.ttc))}`;
 
     return `<tr style="border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.015)'" onmouseout="this.style.background=''">
       <td style="padding:9px 14px;color:var(--text-dim);font-family:monospace;font-size:.85em;white-space:nowrap">${d}</td>
