@@ -596,7 +596,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <select id="releve-filter-match" onchange="filterReleve()"
           style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:.78em;outline:none">
           <option value="">Toutes</option>
-          <option value="matched">Associées</option>
+          <option value="matched">✓ Associées</option>
+          <option value="pole">Pôle identifié</option>
           <option value="unmatched">Non associées</option>
         </select>
       </div>
@@ -2133,16 +2134,24 @@ async function loadUnmatchedTransactions() {
   }
 }
 
+let _unmatchedRows = []; // cache for assign drawer
+
 function renderUnmatchedTab(rows) {
+  _unmatchedRows = rows;
   const empty = document.getElementById('tx-empty');
   const table = document.getElementById('tx-table');
   const tbody = document.getElementById('tx-body');
   const badge = document.querySelector('.tx-tab');
 
   if (!rows || rows.length === 0) {
-    if (empty) empty.style.display = '';
+    if (empty) {
+      empty.style.display = '';
+      empty.innerHTML = `<div style="font-size:2em;margin-bottom:12px">✅</div>
+        <div style="color:var(--green);font-size:.9em;font-weight:600">Toutes les transactions sont associées</div>
+        <div style="color:var(--text-dim);font-size:.8em;margin-top:6px">Aucune transaction en attente d'assignation manuelle.</div>`;
+    }
     if (table) table.style.display = 'none';
-    if (badge) badge.style.color = 'var(--green)';
+    if (badge) { badge.style.color = 'var(--green)'; badge.textContent = '✓ Transactions'; }
     return;
   }
 
@@ -2153,33 +2162,41 @@ function renderUnmatchedTab(rows) {
     badge.textContent = `⚠ ${rows.length} transaction${rows.length > 1 ? 's' : ''}`;
   }
 
-  if (!tbody) return;
-  tbody.innerHTML = rows.map((row, idx) => {
-    const statut = row[11] || 'PENDING';
-    const raison = row[8] || '—';
-    const tabSuggere = row[9] || '';
-    const montantTTC = parseFloat(row[6]) || 0;
-    const date = row[4] || '';
-    const fournisseur = row[2] || '';
-    const note = row[3] || '';
-    const isAssigned = statut === 'ASSIGNÉ';
+  // Update table headers to match real data
+  const thead = table?.querySelector('thead tr');
+  if (thead) thead.innerHTML = `
+    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Date</th>
+    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Fournisseur</th>
+    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Note</th>
+    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Catégorie</th>
+    <th style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px;text-align:right">Montant TTC</th>
+    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Initiateur</th>
+    <th style="padding:8px 14px"></th>
+  `;
 
-    return `<tr style="border-bottom:1px solid var(--border);${isAssigned ? 'opacity:.5' : ''}">
-      <td style="padding:10px 12px;color:var(--text-dim);font-size:.78em;white-space:nowrap">${date}</td>
-      <td style="padding:10px 12px">
-        <div style="font-size:.82em;font-weight:600;color:#fff">${fournisseur}</div>
-        <div style="font-size:.68em;color:var(--text-dim);margin-top:2px">${note || ''}</div>
+  if (!tbody) return;
+  tbody.innerHTML = rows.map((row) => {
+    const d = row.date ? row.date.toString().slice(0,10).split('-').reverse().join('/') : '—';
+    const amt = row.ttc ? `−${fmtAmt(Math.abs(row.ttc))}` : '—';
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.015)'" onmouseout="this.style.background=''">
+      <td style="padding:10px 14px;color:var(--text-dim);font-family:monospace;font-size:.82em;white-space:nowrap">${d}</td>
+      <td style="padding:10px 14px">
+        <div style="font-size:.82em;font-weight:600;color:#fff">${row.fourn || '—'}</div>
       </td>
-      <td style="padding:10px 12px">
-        <div style="font-size:.7em;color:var(--amber);background:rgba(251,191,36,.08);padding:2px 8px;border-radius:4px;display:inline-block">${raison}</div>
-        ${tabSuggere ? `<div style="font-size:.65em;color:var(--text-dim);margin-top:3px">→ ${tabSuggere}</div>` : ''}
+      <td style="padding:10px 14px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        <div style="font-size:.75em;color:var(--text-muted)">${row.note || '—'}</div>
       </td>
-      <td style="padding:10px 12px;text-align:right;font-size:.82em;font-weight:700;color:var(--red)">${montantTTC ? fe(Math.abs(montantTTC)) : '—'}</td>
-      <td style="padding:10px 12px;text-align:center">
-        <span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;${isAssigned ? 'background:rgba(52,211,153,.1);color:var(--green)' : 'background:rgba(251,191,36,.08);color:var(--amber)'}">${statut}</span>
+      <td style="padding:10px 14px">
+        ${row.cat ? `<span style="font-size:.65em;font-weight:600;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text-muted)">${row.cat}</span>` : '<span style="color:var(--text-dim);font-size:.75em">—</span>'}
       </td>
-      <td style="padding:10px 12px">
-        ${!isAssigned ? `<button onclick="openAssignDrawer(${idx})" style="font-size:.7em;padding:4px 10px;border-radius:5px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.08);color:#818cf8;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.background='rgba(99,102,241,.18)'" onmouseout="this.style.background='rgba(99,102,241,.08)'">Assigner →</button>` : '<span style="font-size:.7em;color:var(--green)">✓ Assigné</span>'}
+      <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:.85em;font-weight:700;color:var(--red);white-space:nowrap">${amt}</td>
+      <td style="padding:10px 14px;color:var(--text-dim);font-size:.78em">${row.init || ''}</td>
+      <td style="padding:10px 14px;text-align:right">
+        <button onclick="openAssignDrawer(${row.idx},'${(row.fourn||'').replace(/'/g,"\\'")}','${(row.note||'').replace(/'/g,"\\'")}',${row.ttc||0},'${row.cat||''}')"
+          style="font-size:.7em;padding:5px 12px;border-radius:5px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;white-space:nowrap"
+          onmouseover="this.style.background='rgba(99,102,241,.22)'" onmouseout="this.style.background='rgba(99,102,241,.1)'">
+          Assigner →
+        </button>
       </td>
     </tr>`;
   }).join('');
@@ -2302,7 +2319,7 @@ function buildTransactionList(line, tabName) {
   const count = txList.length;
 
   const rows = txList.map(tx => {
-    const d = tx.date ? tx.date.slice(0,10).split('-').reverse().join('/') : '—';
+    const d = formatQontoDate(tx.date);
     const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
     return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
       <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
@@ -2348,41 +2365,57 @@ function dissociateTransaction() {
   closeDrawer();
 }
 
-function openAssignDrawer(unmatchedIdx) {
-  // Opens a simplified drawer for manual assignment
+function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
   const deptOptions = Object.entries(DEPT_META).map(([tab, m]) => `<option value="${tab}">${m.name}</option>`).join('');
 
-  document.getElementById('drawer-title').textContent = 'Assigner une transaction';
-  document.getElementById('drawer-sub').textContent = 'Transaction non détectée automatiquement';
+  // Pre-select dept based on catégorie if possible
+  const catNorm = (cat||'').toUpperCase();
+  const preselect = POLE_MAP_CLIENT[catNorm] || '';
+
+  document.getElementById('drawer-title').textContent = fourn || 'Transaction non associée';
+  document.getElementById('drawer-sub').textContent = 'Assigner manuellement à une ligne budgétaire';
 
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
-      <div class="drawer-section-title">Assigner manuellement</div>
+      <div class="drawer-section-title">Transaction</div>
+      <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;margin-bottom:18px;border:1px solid rgba(255,255,255,.04)">
+        <div style="font-size:.82em;font-weight:600;color:#fff;margin-bottom:4px">${fourn || '—'}</div>
+        ${note ? `<div style="font-size:.72em;color:var(--text-muted);margin-bottom:6px">${note}</div>` : ''}
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          ${cat ? `<span style="font-size:.65em;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--text-muted);text-transform:uppercase;font-weight:600">${cat}</span>` : ''}
+          <span style="font-family:monospace;font-size:.85em;font-weight:700;color:var(--red)">−${fmtAmt(Math.abs(ttc))}</span>
+        </div>
+      </div>
+
+      <div class="drawer-section-title">Destination</div>
       <div style="margin-bottom:14px">
         <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Département</label>
-        <select id="assign-dept" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82em" onchange="populateAssignLines(this.value)">
+        <select id="assign-dept" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none" onchange="populateAssignLines(this.value)">
           <option value="">Choisir un département…</option>
           ${deptOptions}
         </select>
       </div>
       <div id="assign-ligne-wrap" style="margin-bottom:14px;display:none">
         <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budgétaire</label>
-        <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82em">
+        <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
           <option value="">Choisir une ligne…</option>
         </select>
-      </div>
-      <div style="font-size:.72em;color:var(--text-dim);padding:10px;background:var(--surface-2);border-radius:6px">
-        ℹ️ L'assignment écrira le montant sur la ligne choisie dans le Google Sheet et marquera la transaction comme ASSIGNÉE.
       </div>
     </div>
   `;
 
+  // Pre-select dept if catégorie matches
+  if (preselect) {
+    setTimeout(() => {
+      const sel = document.getElementById('assign-dept');
+      if (sel) { sel.value = preselect; populateAssignLines(preselect); }
+    }, 0);
+  }
+
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-dissociate').style.display = 'none';
 
-  // Override footer button
-  const footer = document.getElementById('drawer-footer');
-  footer.innerHTML = `
+  document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
     <button class="drawer-btn primary" onclick="confirmAssign(${unmatchedIdx})">Confirmer →</button>
   `;
@@ -2418,21 +2451,34 @@ async function confirmAssign(unmatchedIdx) {
     return;
   }
 
+  // Update button to loading state
+  const btn = document.querySelector('#drawer-footer .primary');
+  if (btn) { btn.textContent = 'En cours…'; btn.disabled = true; }
+
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    const resp = await fetch(`${API}/api/assign`, {
       method: 'POST',
-      body: JSON.stringify({ action: 'assign', unmatchedRowIndex: unmatchedIdx, targetTab: dept, targetLigne: ligne }),
-      headers: { 'Content-Type': 'text/plain' },
-      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unmatched_idx: unmatchedIdx, dept, ligne }),
     });
 
-    await new Promise(r => setTimeout(r, 2000));
-    await refreshBudgetData();
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
 
-    showToast('✅ Transaction assignée', `Associée à "${ligne}" dans ${dept}.`, 'green');
+    const result = await resp.json();
     closeDrawer();
+
+    // Reload both budget data and unmatched list
+    await Promise.all([refreshBudgetData(), loadUnmatchedTransactions()]);
+
+    showToast('✅ Transaction assignée',
+      `−${fmtAmt(result.ttc_added)} € ajoutés à "${ligne}" dans ${dept}.\nRéel TTC mis à jour : ${fmtAmt(result.new_reel_ttc)} €`, 'green');
+
   } catch (e) {
-    showToast('⚠ Erreur', e.message, 'red');
+    if (btn) { btn.textContent = 'Confirmer →'; btn.disabled = false; }
+    showToast('⚠ Erreur assignment', e.message, 'red');
   }
 }
 
@@ -2464,6 +2510,23 @@ function hideToast() {
 // ════════════════════════════════════════════════════
 
 let _releveAllTx = [];
+
+function formatQontoDate(raw) {
+  if (!raw) return '—';
+  const s = String(raw).trim();
+  // YYYY/MM/DD or YYYY-MM-DD
+  const iso = s.match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1].slice(2)}`;
+  // DD/MM/YYYY
+  const fr = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (fr) return `${fr[1]}/${fr[2]}/${fr[3].slice(2)}`;
+  // Excel serial number
+  if (/^\d{5}$/.test(s)) {
+    const d = new Date(Math.round((parseInt(s) - 25569) * 86400 * 1000));
+    return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+  }
+  return s.slice(0, 10);
+}
 
 function renderReleve() {
   const all = getAllQontoTx();
@@ -2499,13 +2562,16 @@ function renderReleve() {
   const recettes = all.filter(t => t.ttc > 0);
   const totalDep = depenses.reduce((a, t) => a + Math.abs(t.ttc), 0);
   const totalRec = recettes.reduce((a, t) => a + t.ttc, 0);
-  const matched  = depenses.filter(t => matchedKeys.has(`${t.date}|${t.fourn}|${t.ttc}`)).length;
+
+  // Count lignes with Réel > 0 from the Sheet (via DEPTS) — much more accurate than client-side matching
+  const lignesWithReel = DEPTS.reduce((count, dept) =>
+    count + dept.sections.flatMap(s => s.lines).filter(l => l.reel && l.reel > 0).length, 0);
 
   document.getElementById('releve-kpis').innerHTML = [
     { label: 'Transactions', val: all.length, color: '#fff' },
     { label: 'Total dépenses TTC', val: `−${fmtAmt(totalDep)} €`, color: 'var(--red)' },
     { label: 'Total recettes TTC', val: `+${fmtAmt(totalRec)} €`, color: 'var(--green)' },
-    { label: 'Associées', val: `${matched} / ${depenses.length}`, color: '#818cf8' },
+    { label: 'Lignes budg. alimentées', val: lignesWithReel, color: '#818cf8' },
   ].map(k => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px">
     <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;margin-bottom:4px">${k.label}</div>
     <div style="font-size:.95em;font-weight:700;color:${k.color}">${k.val}</div>
@@ -2531,7 +2597,8 @@ function filterReleve(matchedKeysArg) {
     if (catFilter && tx.cat !== catFilter) return false;
     const isMatched = matchedKeys.has(`${tx.date}|${tx.fourn}|${tx.ttc}`);
     if (matchFilter === 'matched' && !isMatched) return false;
-    if (matchFilter === 'unmatched' && isMatched) return false;
+    if (matchFilter === 'pole' && (isMatched || !tx.cat)) return false;
+    if (matchFilter === 'unmatched' && (isMatched || tx.cat)) return false;
     if (search) {
       if (!`${tx.fourn} ${tx.note} ${tx.cat} ${tx.ref}`.toLowerCase().includes(search)) return false;
     }
@@ -2542,7 +2609,7 @@ function filterReleve(matchedKeysArg) {
   if (!tbody) return;
 
   tbody.innerHTML = filtered.map(tx => {
-    const d = tx.date ? tx.date.slice(0,10).split('-').reverse().join('/') : '—';
+    const d = formatQontoDate(tx.date);
     const isMatched = matchedKeys.has(`${tx.date}|${tx.fourn}|${tx.ttc}`);
     const isRec = tx.ttc > 0;
     const amtColor = isRec ? 'var(--green)' : 'var(--red)';
@@ -2560,7 +2627,11 @@ function filterReleve(matchedKeysArg) {
       <td style="padding:9px 14px;text-align:right;font-family:monospace;font-weight:700;color:${amtColor};white-space:nowrap">${amtVal}</td>
       <td style="padding:9px 14px;text-align:center">
         ${!isRec
-          ? `<span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;${isMatched ? 'background:rgba(52,211,153,.1);color:var(--green)' : 'background:rgba(251,191,36,.08);color:var(--amber)'}">${isMatched ? '✓ Associée' : 'Non associée'}</span>`
+          ? isMatched
+            ? `<span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(52,211,153,.1);color:var(--green)">✓ Associée</span>`
+            : tx.cat
+              ? `<span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(99,102,241,.08);color:#818cf8">Pôle identifié</span>`
+              : `<span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(251,191,36,.08);color:var(--amber)">Non associée</span>`
           : `<span style="font-size:.65em;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(99,102,241,.1);color:#818cf8">Recette</span>`}
       </td>
       <td style="padding:9px 14px;color:var(--text-dim);font-size:.85em">${tx.init || ''}</td>
