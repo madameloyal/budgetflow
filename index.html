@@ -320,7 +320,33 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 </style>
 </head>
 <body>
-<div id="loading-overlay" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+<!-- PASSWORD GATE -->
+<div id="pw-gate" style="position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.4em;font-weight:700;color:#fff;margin-bottom:6px">BudgetFlow</div>
+      <div style="font-size:.78em;color:var(--text-dim)">Paris XXL 2026 · Madame Loyal</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px">
+      <div style="font-size:.7em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:12px">Mot de passe</div>
+      <input id="pw-input" type="password" placeholder="••••••••"
+        style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.95em;outline:none;transition:border-color .2s;margin-bottom:10px"
+        onfocus="this.style.borderColor='rgba(99,102,241,.6)'"
+        onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')checkPassword()">
+      <div id="pw-error" style="display:none;font-size:.7em;color:var(--red);margin-bottom:10px;padding:6px 10px;background:rgba(248,113,113,.07);border-radius:6px">Mot de passe incorrect</div>
+      <button onclick="checkPassword()"
+        style="width:100%;padding:11px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);border-radius:8px;color:#818cf8;font-family:'DM Sans',sans-serif;font-size:.85em;font-weight:600;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.background='rgba(99,102,241,.25)'"
+        onmouseout="this.style.background='rgba(99,102,241,.15)'">
+        Accéder →
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:.65em;color:var(--text-dim)">Accès réservé à l'équipe Madame Loyal</div>
+  </div>
+</div>
+
+<div id="loading-overlay" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px">
   <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--indigo);border-radius:50%;animation:spin 0.8s linear infinite"></div>
   <div style="color:var(--text-muted);font-size:.9em">Chargement des données…</div>
 </div>
@@ -2188,8 +2214,43 @@ function hideToast() {
   document.getElementById('import-toast').classList.remove('show');
 }
 
-// Kick off — fetch data from API then init
-loadBudgetData();
+// ════════════════════════════════════════════════════
+// PASSWORD GATE
+// ════════════════════════════════════════════════════
+
+const PASSWORD = 'laxxldeparis';
+const SESSION_KEY = 'bf_auth';
+
+function checkPassword() {
+  const input = document.getElementById('pw-input');
+  const error = document.getElementById('pw-error');
+  if (input.value === PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    const gate = document.getElementById('pw-gate');
+    gate.style.opacity = '0';
+    gate.style.transition = 'opacity .3s';
+    setTimeout(() => { gate.style.display = 'none'; }, 300);
+    // Now start loading data
+    showLoadingOverlay();
+    loadBudgetData();
+  } else {
+    error.style.display = 'block';
+    input.value = '';
+    input.style.borderColor = 'rgba(248,113,113,.6)';
+    setTimeout(() => { input.style.borderColor = 'var(--border)'; }, 1500);
+    input.focus();
+  }
+}
+
+// On load — check if already authenticated this session
+(function() {
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('pw-gate').style.display = 'none';
+    showLoadingOverlay();
+    loadBudgetData();
+  }
+  // else: pw-gate stays visible, loadBudgetData not called yet
+})();
 </script>
 </body>
 </html>
