@@ -373,7 +373,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="nl"     onclick="go('sceno',this)">Scéno</button>
     <button class="nl"     onclick="go('partenariat',this)">Partenariat</button>
     <button class="nl"     onclick="go('communication',this)">Communication</button>
-    <button class="nl tx-tab" onclick="go('transactions',this)" style="margin-left:auto;color:var(--amber);border-color:rgba(251,191,36,.3)">⚠ Transactions</button>
+    <button class="nl tx-tab" onclick="go('transactions',this)" style="margin-left:auto;color:var(--amber);border-color:rgba(251,191,36,.3)">⚠ Non Détectées</button>
     <button class="nl" onclick="go('releve',this)" style="color:var(--indigo)">📋 Relevé Qonto</button>
   </div>
 </nav>
@@ -1006,23 +1006,20 @@ function renderBilan(){
       const rttc=typeof r.tva==='number'?reeH*(1+r.tva):reeH;
       const ec3=r.ht-reeH;
       ct+=r.ht; gt+=r.ht;
-      rb+=`<tr><td>${r.l}</td>
-        <td>${r.qte!=null?`<input class="ce" style="width:70px;text-align:center" value="${r.qte}"
-          onchange="upRec(${ci},${ri},'qte',this)" onblur="upRec(${ci},${ri},'qte',this)" title="✎ Quantité">`:''}</td>
-        <td>${r.pu!=null?r.pu+'€':''}</td>
-        <td><input class="ce" value="${r.ht||0}"
-          onchange="upRec(${ci},${ri},'ht',this)" onblur="upRec(${ci},${ri},'ht',this)" title="✎ Au budget HT"></td>
-        <td>${ftva(r.tva)}</td><td><span class="cro">${ttc?fe(ttc):''}</span></td>
-        <td><input class="ce" value="${reeH||0}"
-          onchange="upRec(${ci},${ri},'reel',this)" onblur="upRec(${ci},${ri},'reel',this)" title="✎ Dépensé HT"></td>
+      const qteCell = r.qte!=null ? `<span class="cro">${r.qte.toLocaleString('fr-FR')}</span>` : '';
+      const puCell  = r.pu!=null  ? `<span class="cro">${r.pu}€</span>` : '';
+      const htCell  = `<span class="cro" style="color:#fff;font-weight:500">${r.ht?fe(r.ht):''}</span>`;
+      rb+=`<tr>
+        <td>${r.l}</td>
+        <td>${qteCell}</td>
+        <td>${puCell}</td>
+        <td>${htCell}</td>
+        <td>${ftva(r.tva)}</td>
+        <td><span class="cro">${ttc?fe(ttc):''}</span></td>
+        <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
         <td><span class="cro">${reeH&&rttc?fe(rttc):'—'}</span></td>
         <td class="${ec3>0?'bpos':'bneg'}">${Math.abs(ec3)>1?fe(ec3):'—'}</td>
-        <td><select class="ss ${chipcls(r.st)}" onchange="upRecSt(${ci},${ri},this)">
-          <option value="ESTIMATION" ${r.st==='ESTIMATION'?'selected':''}>ESTIMATION</option>
-          <option value="EN COURS"   ${r.st==='EN COURS'?'selected':''}>EN COURS</option>
-          <option value="CONFIRMÉ"   ${r.st==='CONFIRMÉ'?'selected':''}>CONFIRMÉ</option>
-          <option value="ENCAISSÉ"   ${r.st==='ENCAISSÉ'?'selected':''}>ENCAISSÉ</option>
-        </select></td></tr>`;
+        <td><span class="chip ${chipcls(r.st)}" style="font-size:.6em">${r.st}</span></td></tr>`;
     });
     rb+=`<tr class="btot"><td>Total ${cat.cat}</td><td></td><td></td><td>${fe(ct)}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
   });
@@ -1629,9 +1626,13 @@ function upCell(inp){
   }
 }
 function upRec(ci,ri,field,inp){
-  const val=parseFloat(inp.value.replace(/[\s\u202f€,]/g,'').replace(',','.'))||0;
+  const val=parseFloat(inp.value.replace(/[\s\u202f\u2009€,]/g,'').replace(',','.'))||0;
   REC[ci].rows[ri][field]=val;
-  inp.classList.remove('saved'); void inp.offsetWidth; inp.classList.add('saved');
+  // If qty or pu changes and both exist, recalculate ht
+  const r=REC[ci].rows[ri];
+  if((field==='qte'||field==='pu') && r.qte!=null && r.pu!=null){
+    REC[ci].rows[ri].ht = Math.round(r.qte * r.pu);
+  }
   renderBilan();
 }
 function upRecSt(ci,ri,sel){
@@ -2124,12 +2125,29 @@ async function refreshBudgetData() {
 // ════════════════════════════════════════════════════
 
 async function loadUnmatchedTransactions() {
+  const empty = document.getElementById('tx-empty');
   try {
     const resp = await fetch(`${API}/api/unmatched`, { headers: { 'Accept': 'application/json' } });
-    if (!resp.ok) return;
+    if (!resp.ok) {
+      const txt = await resp.text().catch(()=>'');
+      if (empty) {
+        empty.style.display = '';
+        empty.innerHTML = `<div style="font-size:2em;margin-bottom:12px">⚠️</div>
+          <div style="color:var(--amber);font-size:.9em;font-weight:600">Erreur API ${resp.status}</div>
+          <div style="color:var(--text-dim);font-size:.75em;margin-top:6px;font-family:monospace">${txt.slice(0,200)}</div>
+          <div style="color:var(--text-dim);font-size:.75em;margin-top:8px">L'API doit être mise à jour (v1.2) pour activer cet onglet.</div>`;
+      }
+      return;
+    }
     const json = await resp.json();
     renderUnmatchedTab(json.data || []);
   } catch (e) {
+    if (empty) {
+      empty.style.display = '';
+      empty.innerHTML = `<div style="font-size:2em;margin-bottom:12px">⚠️</div>
+        <div style="color:var(--red);font-size:.9em;font-weight:600">Impossible de contacter l'API</div>
+        <div style="color:var(--text-dim);font-size:.75em;margin-top:6px;font-family:monospace">${e.message}</div>`;
+    }
     console.warn('Could not load unmatched:', e);
   }
 }
@@ -2151,7 +2169,7 @@ function renderUnmatchedTab(rows) {
         <div style="color:var(--text-dim);font-size:.8em;margin-top:6px">Aucune transaction en attente d'assignation manuelle.</div>`;
     }
     if (table) table.style.display = 'none';
-    if (badge) { badge.style.color = 'var(--green)'; badge.textContent = '✓ Transactions'; }
+    if (badge) { badge.style.color = 'var(--green)'; badge.textContent = '✓ Non Détectées'; }
     return;
   }
 
