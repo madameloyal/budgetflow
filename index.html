@@ -2541,7 +2541,7 @@ function formatSyncTs(isoStr) {
 
 function setSyncTimestamp() {
   const now = new Date().toISOString();
-  sessionStorage.setItem(SYNC_TS_KEY, now);
+  try { localStorage.setItem(SYNC_TS_KEY, now); } catch(e) {}
   updateSyncDisplay(now);
 }
 
@@ -2553,11 +2553,18 @@ function updateSyncDisplay(isoStr) {
   if (el2) el2.textContent = formatted;
 }
 
-// Restore on page load
-(function() {
-  const saved = sessionStorage.getItem(SYNC_TS_KEY);
-  if (saved) updateSyncDisplay(saved);
-})();
+// Restore on page load — use DOMContentLoaded to guarantee elements exist
+function restoreSyncTimestamp() {
+  try {
+    const saved = localStorage.getItem(SYNC_TS_KEY);
+    if (saved) updateSyncDisplay(saved);
+  } catch(e) {}
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', restoreSyncTimestamp);
+} else {
+  restoreSyncTimestamp();
+}
 
 const PASSWORD = 'parisxxl2026';
 const SESSION_KEY = 'bf_auth';
