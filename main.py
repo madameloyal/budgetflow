@@ -118,7 +118,7 @@ def parse_dept_rows(values: list, tab: str) -> list:
     return rows
 
 # ── App ───────────────────────────────────────────────────────────────────
-app = FastAPI(title="BudgetFlow API", version="1.1")
+app = FastAPI(title="BudgetFlow API", version="1.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +133,8 @@ def health():
     return {
         "status": "ok",
         "service": "BudgetFlow API",
-        "version": "1.1",
+        "version": "1.2",
+        "endpoints": ["/api/budget", "/api/unmatched", "/api/assign"],
         "credentials_loaded": creds is not None,
         "credential_method": "json" if os.environ.get("GOOGLE_CREDENTIALS") else "individual_vars"
     }
