@@ -1234,8 +1234,6 @@ function renderDept(id){
           <tr id="hdr-${sid}" style="display:none">
             <th class="tl" style="min-width:180px">
               Ligne budgétaire
-              <button class="edit-titles-btn" onclick="togglePencilMode('${sid}',this);event.stopPropagation()"
-                title="Modifier" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:.85em;padding:2px 4px;border-radius:3px;margin-left:4px;opacity:.5;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">✏️</button>
             </th>
             <th>TVA</th>
             <th class="ec-col">${id==='technique'?'SIGNE HT':'Au budget HT'}</th>
@@ -2454,18 +2452,24 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
   setTimeout(() => document.getElementById('ef-nom')?.focus(), 80);
 }
 
+let _editLigneActive = false;
+
 function openEditLigne(deptId, sectionIdx, lineIdx) {
+  _editLigneActive = true;
   buildEditDrawer(deptId, sectionIdx, lineIdx, false);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   document.body.style.overflow = 'hidden';
+  setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
 function openAddLigne(deptId, sectionIdx) {
+  _editLigneActive = true;
   buildEditDrawer(deptId, sectionIdx, -1, true);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   document.body.style.overflow = 'hidden';
+  setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
 async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
@@ -2547,6 +2551,7 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
 }
 
 function openDrawer(deptId, sectionIdx, lineIdx) {
+  if (_editLigneActive) return; // edit button was clicked, don't open transaction drawer
   const dept = DEPTS.find(d => d.id === deptId);
   if (!dept) return;
   const line = dept.sections[sectionIdx]?.lines[lineIdx];
