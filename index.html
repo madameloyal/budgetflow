@@ -1165,8 +1165,7 @@ function renderBilan(){
 function renderDept(id){
   const dept=DEPTS.find(d=>d.id===id);
   const cont=document.getElementById('page-'+id);
-  if(!dept||!cont||cont._built) return; // cache rendered dept
-  cont._built=true;
+  if(!dept||!cont) return;
 
   const tot=dtot(dept);
   const p=pct(tot.reel,tot.est);
@@ -1202,15 +1201,16 @@ function renderDept(id){
             Éditer
           </button>
         </td>
-        <td style="text-align:center"><span class="tva-label">${ftva(line.tva)}</span></td>
+        <td class="tva-col" style="text-align:center"><span class="tva-label">${ftva(line.tva)}</span></td>
         <td class="clickable-cell" onclick="openEstDrawer('${id}',${si},${li})" title="Voir source d'estimation">
-          <span class="est-label cro" style="color:${line.est?'#fff':'var(--text-dim)'}">${line.est?fe(line.est):'—'}</span>
+          <span class="show-ht cro" style="color:${line.est?'#fff':'var(--text-dim)'}">${line.est?fe(line.est):'—'}</span>
+          <span class="show-ttc cro" style="display:none;color:${ttcE?'#c4b5fd':'var(--text-dim)'}">${ttcE?fe(ttcE):'—'}</span>
         </td>
-        <td class="ttc-col"><span class="cro">${ttcE?fe(ttcE):''}</span></td>
         <td class="clickable-cell" onclick="openReelDrawer('${id}',${si},${li})" title="Voir transactions Qonto">
-          <span class="cro${line.reel?' dep-val':''}">${line.reel?fe(line.reel):'<span style="color:var(--text-dim);font-size:.8em">—</span>'}</span>${txBadge}${rhchip(line.rh)}
+          <span class="show-ht cro${line.reel?' dep-val':''}">${line.reel?fe(line.reel):'<span style="color:var(--text-dim);font-size:.8em">—</span>'}</span>
+          <span class="show-ttc cro" style="display:none;color:${ttcR?'var(--red)':'var(--text-dim)'}">${ttcR?fe(ttcR):'—'}</span>
+          ${txBadge}${rhchip(line.rh)}
         </td>
-        <td class="ttc-col"><span class="cro">${ttcR?fe(ttcR):''}</span></td>
         <td>${ecH(e,untracked)}</td>
         <td onclick="event.stopPropagation()"><select class="ss ${stcls(line.st)}"
           data-id="${id}" data-si="${si}" data-li="${li}" onchange="upSt(this)" onclick="event.stopPropagation()">
@@ -1243,11 +1243,17 @@ function renderDept(id){
           </tr>
           <tr id="hdr-${sid}" style="display:none">
             <th class="tl" style="min-width:180px">Ligne budgétaire</th>
-            <th>TVA</th>
-            <th class="ec-col" style="cursor:pointer" onclick="openEstDrawer('${id}',0,0)" title="Cliquer sur une valeur pour voir la source">${id==='technique'?'SIGNE HT':'Au budget HT'} <span style="font-size:.7em;opacity:.4">↗</span></th>
-            <th class="ttc-col">${id==='technique'?'SIGNE TTC':'Au budget TTC'}</th>
-            <th class="ec-col" style="cursor:pointer" title="Cliquer sur une valeur pour voir les transactions">${id==='technique'?'PAYÉ HT':'Dépensé HT'} <span style="font-size:.7em;opacity:.4">↗</span></th>
-            <th class="ttc-col">${id==='technique'?'PAYÉ TTC':'Dépensé TTC'}</th>
+            <th class="tva-col">TVA</th>
+            <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir la source">
+              <span class="show-ht">${id==='technique'?'SIGNE HT':'Au budget HT'}</span>
+              <span class="show-ttc" style="display:none">${id==='technique'?'SIGNE TTC':'Au budget TTC'}</span>
+              <span style="font-size:.7em;opacity:.35">↗</span>
+            </th>
+            <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir les transactions">
+              <span class="show-ht">${id==='technique'?'PAYÉ HT':'Dépensé HT'}</span>
+              <span class="show-ttc" style="display:none">${id==='technique'?'PAYÉ TTC':'Dépensé TTC'}</span>
+              <span style="font-size:.7em;opacity:.35">↗</span>
+            </th>
             <th>Écart HT</th>
             <th>Statut</th>
             <th class="tl obs">Observations</th>
@@ -2572,16 +2578,16 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
 // ════════════════════════════════════════════════════
 // TTC TOGGLE
 // ════════════════════════════════════════════════════
-let _ttcVisible = true;
+let _ttcVisible = false; // false=HT (default), true=TTC
 function toggleTTC(btn) {
   _ttcVisible = !_ttcVisible;
-  document.querySelectorAll('.tbl').forEach(t => {
-    t.classList.toggle('ttc-hidden', !_ttcVisible);
-  });
-  btn.style.color = _ttcVisible ? 'var(--text-dim)' : '#818cf8';
-  btn.style.borderColor = _ttcVisible ? 'var(--border)' : 'rgba(99,102,241,.4)';
-  btn.style.background = _ttcVisible ? 'var(--surface-2)' : 'rgba(99,102,241,.1)';
-  btn.textContent = _ttcVisible ? 'TTC ⇄' : 'TTC masqué';
+  document.querySelectorAll('.show-ht').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
+  document.querySelectorAll('.show-ttc').forEach(el => el.style.display = _ttcVisible ? '' : 'none');
+  document.querySelectorAll('.tva-col').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
+  btn.style.color       = _ttcVisible ? '#818cf8'              : 'var(--text-dim)';
+  btn.style.borderColor = _ttcVisible ? 'rgba(99,102,241,.4)'  : 'var(--border)';
+  btn.style.background  = _ttcVisible ? 'rgba(99,102,241,.1)'  : 'var(--surface-2)';
+  btn.textContent       = _ttcVisible ? 'HT ⇄' : 'TTC ⇄';
 }
 
 // ════════════════════════════════════════════════════
@@ -2591,7 +2597,7 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
   const dept = DEPTS.find(d => d.id === deptId);
   if (!dept) return;
   const line = dept.sections[sectionIdx]?.lines[lineIdx];
-  if (!line || !line.est) return;
+  if (!line) return;
   const section = dept.sections[sectionIdx]?.s || '';
 
   document.getElementById('drawer-title').innerHTML = `<span style="color:#818cf8">📊</span> Source d'estimation`;
