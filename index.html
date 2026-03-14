@@ -2020,20 +2020,23 @@ async function handleQontoFile(event) {
       throw new Error('Fichier vide ou format non reconnu.');
     }
 
-    // Store transactions client-side immediately (before Apps Script)
+    // Store transactions client-side for Relevé Qonto tab
     storeQontoTransactions(csvData);
 
-    // Send to Apps Script
-    await fetch(APPS_SCRIPT_URL, {
+    // Send file directly to Railway API (bypasses Apps Script 50KB limit)
+    const formData = new FormData();
+    formData.append('file', file);
+    const importResp = await fetch(`${API}/api/import-qonto`, {
       method: 'POST',
-      body: JSON.stringify({ action: 'import', csvData }),
-      headers: { 'Content-Type': 'text/plain' },
-      mode: 'no-cors',
+      body: formData,
     });
+    if (!importResp.ok) {
+      const err = await importResp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur API ${importResp.status}`);
+    }
+    const importResult = await importResp.json();
 
-    await new Promise(r => setTimeout(r, 3500));
     await refreshBudgetData();
-
     // Re-run client-side matching with updated DEPTS
     storeQontoTransactions(csvData);
     setSyncTimestamp();
@@ -2043,7 +2046,9 @@ async function handleQontoFile(event) {
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> Importé ✓`;
 
     const allTx = getAllQontoTx() || [];
-    showToast('✅ Import Qonto terminé', `${allTx.length} transactions chargées depuis "${file.name}".\nConsulte "Relevé Qonto" pour l'aperçu complet.`, 'green');
+    showToast('✅ Import Qonto terminé',
+      `${importResult.transactions} transactions · ${importResult.matched} associées · ${importResult.unmatched} non associées\nConsulte "Relevé Qonto" et "Non Détectées" pour les détails.`,
+      'green');
 
     setTimeout(() => {
       btn.classList.remove('import-success');
