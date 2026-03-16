@@ -1615,20 +1615,112 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green')}
   `;
 
-  if (id === 'vhr') return `
-    ${pipelineCard()}
-    ${comingSoonCard('Rooming list', `${dept.sections.flatMap(s=>s.lines).filter(l=>l.est>0).length} lignes d'hébergement détectées. Vue par chambre, nuitée et personne assignée.`, 'blue',
-      `<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;opacity:.5">
-        ${[['Chambres prévues','—'],['Nuitées totales','—'],['Arrivées J-1','—'],['Départs J+1','—']].map(([l,v])=>
-          `<div style="background:var(--surface-2);border-radius:6px;padding:8px 10px">
-            <div style="font-size:.55em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px">${l}</div>
-            <div style="font-size:.85em;font-weight:700;color:var(--text-dim);margin-top:3px">${v}</div>
-          </div>`
-        ).join('')}
-      </div>`
-    )}
-    ${comingSoonCard('Planning transports', 'Navettes gare/site, horaires, drivers assignés. Connecté au module Transport Festiflow.', 'amber')}
-  `;
+  if (id === 'vhr') {
+    // Smart line categorization from budget data
+    const hotelLines  = allL.filter(l => /h.tel|chambre|h.berg|nuit/i.test(l.l));
+    const transLines  = allL.filter(l => /transport|navette|train|avion|taxi|voiture|v.hicule|van|camion|location/i.test(l.l));
+    const otherLines  = allL.filter(l => !hotelLines.includes(l) && !transLines.includes(l));
+    const hotelEst    = hotelLines.reduce((a,l)=>a+(l.est||0),0);
+    const transEst    = transLines.reduce((a,l)=>a+(l.est||0),0);
+    const hotelReel   = hotelLines.reduce((a,l)=>a+(l.reel||0),0);
+    const transReel   = transLines.reduce((a,l)=>a+(l.reel||0),0);
+    const hotelBurn   = hotelEst>0 ? Math.round(hotelReel/hotelEst*100) : 0;
+    const transBurn   = transEst>0 ? Math.round(transReel/transEst*100) : 0;
+    const hotelSigned = hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+    const transSigned = transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+
+    return `
+    <!-- CARD 1: Hébergement vs Transports — detailed split -->
+    <div class="card" style="padding:16px">
+      ${cardLabel('Budget par catégorie')}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        ${[
+          {label:'🏨 Hébergement', est:hotelEst, reel:hotelReel, signed:hotelSigned, col:'#60a5fa', lines:hotelLines.length},
+          {label:'🚐 Transports',  est:transEst, reel:transReel, signed:transSigned, col:'#fb923c', lines:transLines.length},
+          ...(otherLines.length ? [{label:'📦 Autres', est:otherLines.reduce((a,l)=>a+(l.est||0),0), reel:otherLines.reduce((a,l)=>a+(l.reel||0),0), signed:0, col:'var(--text-dim)', lines:otherLines.length}] : [])
+        ].map(c=>{
+          const burnPct = c.est>0 ? Math.round(c.reel/c.est*100) : 0;
+          const signPct = c.est>0 ? Math.round(c.signed/c.est*100) : 0;
+          return `<div style="background:var(--surface-2);border-radius:9px;padding:11px 13px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <span style="font-size:.7em;font-weight:600;color:var(--text-muted)">${c.label}</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:.68em;font-weight:700;color:#fff">${c.est?fe2(c.est):'—'}</span>
+                ${c.reel>0?`<span style="font-size:.6em;color:${c.col};font-weight:700">${burnPct}%</span>`:''}
+              </span>
+            </div>
+            <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:5px">
+              <div style="width:${Math.min(burnPct,100)}%;height:100%;background:${c.col};opacity:.8;border-radius:3px;transition:width .6s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:.58em;color:var(--text-dim)">${c.lines} ligne${c.lines>1?'s':''}</span>
+              ${c.signed>0
+                ?`<span style="font-size:.58em;color:var(--green)">✓ ${signPct}% confirmé</span>`
+                :`<span style="font-size:.58em;color:var(--amber)">⚠ Aucun devis signé</span>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${unsignedAmt>0?`
+      <div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">
+        ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}% du budget VHR
+      </div>`:''}
+    </div>
+
+    <!-- CARD 2: Rooming list — coming soon -->
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(96,165,250,.2);cursor:pointer;transition:border-color .2s"
+      onclick="openVhrRoomingDrawer()"
+      onmouseover="this.style.borderColor='rgba(96,165,250,.4)'" onmouseout="this.style.borderColor='rgba(96,165,250,.2)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        ${cardLabel('Rooming list')}
+        <div style="display:flex;align-items:center;gap:6px">
+          ${futureBadge('blue')}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px">
+        ${[
+          ['🏨 Hôtels prévus','—'],['🛏 Chambres','—'],
+          ['👥 Personnes logées','— / 213'],['💶 Coût / nuitée moy.','—'],
+        ].map(([l,v])=>`
+          <div style="background:var(--surface-2);border-radius:6px;padding:8px 10px;opacity:.6">
+            <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">${l}</div>
+            <div style="font-size:.82em;font-weight:700;color:var(--text-dim)">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
+        Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.
+      </div>
+    </div>
+
+    <!-- CARD 3: Planning transports — coming soon -->
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s"
+      onclick="openVhrTransportDrawer()"
+      onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        ${cardLabel('Planning transports')}
+        <div style="display:flex;align-items:center;gap:6px">
+          ${futureBadge('amber')}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+        ${[
+          ['🚐 Navettes gare/site','—'],
+          ['✈️ Trajets aéroport','—'],
+          ['🚙 Locations véhicules','—'],
+          ['🎫 Cartes avantage SNCF','—'],
+        ].map(([icon,v])=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px;opacity:.6">
+            <span style="font-size:.65em;color:var(--text-dim)">${icon}</span>
+            <span style="font-size:.65em;font-weight:600;color:var(--text-dim)">${v}</span>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
+        Données issues du LOG_STAFF (SUIVI TRANSPORT). Disponible via Festiflow Transport.
+      </div>
+    </div>
+  `;}
 
   if (id === 'production') return `
     ${pipelineCard()}
@@ -2916,6 +3008,52 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
 
   const ttcEst = typeof line.tva === 'number' ? (line.est || 0) * (1 + line.tva) : (line.est || 0);
 
+  // ── VHR-specific context ──────────────────────────────
+  const isHotel = deptId === 'vhr' && /h.tel|chambre|h.bergement|nuit/i.test(line.l);
+  const isTransport = deptId === 'vhr' && /transport|navette|train|avion|taxi|voiture|v.hicule|van|camion|location/i.test(line.l);
+  const isVHR = deptId === 'vhr';
+
+  const vhrContextHtml = isVHR ? `
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        ${isHotel ? '🏨 Détail hébergement' : isTransport ? '🚐 Détail transport' : '📋 Détail VHR'}
+        <span class="future-badge">✦ Bientôt</span>
+      </div>
+      ${isHotel ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;opacity:.6">
+          ${[
+            ['Hôtel / lieu','—'],['Catégorie','—'],
+            ['Chambres prévues','—'],['Type de chambre','—'],
+            ['Nuitées totales','—'],['Coût / nuitée','—'],
+            ['Arrivée','—'],['Départ','—'],
+          ].map(([l,v])=>`<div style="background:var(--surface-2);border-radius:6px;padding:8px 10px">
+            <div style="font-size:.55em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">${l}</div>
+            <div style="font-size:.78em;font-weight:600;color:var(--text-dim)">${v}</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:.65em;color:var(--text-dim);padding:8px 10px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);border-radius:7px;line-height:1.6">
+          Les données de rooming (personnes assignées, nuitées, chambres) seront disponibles via le module Hébergement Festiflow.
+        </div>` :
+      isTransport ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;opacity:.6">
+          ${[
+            ['Type de transport','—'],['Prestataire','—'],
+            ['Départ','—'],['Arrivée','—'],
+            ['Nb. de personnes','—'],['Driver assigné','—'],
+            ['Horaire','—'],['Carte avantage','—'],
+          ].map(([l,v])=>`<div style="background:var(--surface-2);border-radius:6px;padding:8px 10px">
+            <div style="font-size:.55em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">${l}</div>
+            <div style="font-size:.78em;font-weight:600;color:var(--text-dim)">${v}</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:.65em;color:var(--text-dim);padding:8px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;line-height:1.6">
+          Le planning transport (navettes gare/site, cartes avantage SNCF, horaires) sera disponible via le module Transport Festiflow.
+        </div>` : `
+        <div style="font-size:.65em;color:var(--text-dim);line-height:1.6;padding:8px 0">
+          Associez cette ligne à une catégorie hébergement ou transport pour voir le détail logistique dans Festiflow.
+        </div>`}
+    </div>` : '';
+
   document.getElementById('drawer-body').innerHTML = `
 
     <!-- Current value -->
@@ -2932,7 +3070,10 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
         </div>
       </div>
       ${line.obs ? `<div style="font-size:.72em;color:var(--text-dim);padding:8px 10px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3)">${line.obs}</div>` : ''}
+      ${line.qonto_ref ? `<div style="font-size:.65em;color:var(--indigo);margin-top:6px;padding:5px 8px;background:rgba(99,102,241,.08);border-radius:5px">🔗 Réf. Qonto: ${line.qonto_ref}</div>` : ''}
     </div>
+
+    ${vhrContextHtml}
 
     <!-- VISION: Staffing data -->
     <div class="drawer-section">
@@ -2957,31 +3098,6 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
                 <div style="font-size:.6em;color:var(--text-dim)">${r.note}</div>
               </div>
               <span style="font-size:.75em;font-weight:600;color:#fff;white-space:nowrap">${fe(r.val)}</span>
-            </div>`).join('')}
-        </div>
-      </div>
-
-      <!-- Mock staffing submission -->
-      <div style="background:var(--surface-2);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid rgba(168,85,247,.15);opacity:.7;position:relative;overflow:hidden">
-        <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(168,85,247,.03) 8px,rgba(168,85,247,.03) 16px)"></div>
-        <div style="position:relative">
-          <div style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8;margin-bottom:10px">Soumissions pôle</div>
-          ${[
-            {name:'Hugo Le Guellec', pole:'Technique', date:'12 mars', val: Math.round((line.est||0)*0.6), conf:'Confirmé'},
-            {name:'Chloe Adour', pole:'Production', date:'11 mars', val: Math.round((line.est||0)*0.4), conf:'Estimation'},
-          ].map(r => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(168,85,247,.4),rgba(99,102,241,.4));display:flex;align-items:center;justify-content:center;font-size:.6em;font-weight:700;color:#fff;flex-shrink:0">${r.name.split(' ').map(w=>w[0]).join('')}</div>
-                <div>
-                  <div style="font-size:.72em;color:#fff;font-weight:500">${r.name}</div>
-                  <div style="font-size:.6em;color:var(--text-dim)">${r.pole} · ${r.date}</div>
-                </div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:.75em;font-weight:600;color:#fff">${fe(r.val)}</div>
-                <div style="font-size:.6em;color:${r.conf==='Confirmé'?'var(--green)':'var(--amber)'}">${r.conf}</div>
-              </div>
             </div>`).join('')}
         </div>
       </div>
@@ -3248,6 +3364,159 @@ function openBilanBudgetsDrawer() {
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
   `;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// ════════════════════════════════════════════════════
+// VHR — Rooming & Transport drawers
+// ════════════════════════════════════════════════════
+function openVhrRoomingDrawer() {
+  document.getElementById('drawer-title').innerHTML = '🏨 Rooming list';
+  document.getElementById('drawer-sub').innerHTML = `<span class="df-badge new">Paris XXL 2026</span> <span style="margin-left:6px">VHR · Hébergement</span>`;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Vue d'ensemble hébergement</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${[
+          ['🏨 Hôtels contractualisés','—','Confirmés'],
+          ['🛏 Chambres réservées','—','Total'],
+          ['👥 Personnes à loger','— / 213','Staff confirmé'],
+          ['📅 Nuitées totales','—','J-2 à J+2'],
+          ['💶 Budget hébergement','—','Au budget'],
+          ['✓ Devis signés','—','Hôtels'],
+        ].map(([l,v,s])=>`
+          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
+            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
+            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Hôtels prévus
+        <span class="future-badge">✦ Bientôt</span>
+      </div>
+      <div style="border:1px dashed rgba(96,165,250,.2);border-radius:10px;padding:14px;opacity:.7">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${[
+            ['🏨 Hôtel Ibis Paris Nord 2','12 chambres · J-1 à J+1','En négociation'],
+            ['🏨 B&B Hôtel Villepinte','8 chambres · J-2 à J+2','En négociation'],
+            ['🏠 Logements équipe core','6 pers. · appartement','En négociation'],
+          ].map(([h,d,s])=>`
+            <div style="background:var(--surface);border-radius:7px;padding:9px 12px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:.72em;font-weight:600;color:var(--text-muted)">${h}</div>
+                  <div style="font-size:.62em;color:var(--text-dim);margin-top:2px">${d}</div>
+                </div>
+                <span style="font-size:.58em;padding:2px 7px;border-radius:4px;background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.2)">${s}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:10px;font-size:.62em;color:var(--text-dim);text-align:center">
+          Données du LOG_STAFF (ROOMING LIST) — disponible via Festiflow Hébergement
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Régimes alimentaires
+        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      </div>
+      <div style="border:1px dashed rgba(52,211,153,.2);border-radius:10px;padding:14px;opacity:.7">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+          ${[['🥗 Végétarien','—'],['🌱 Vegan','—'],['🚫 Allergie','—']].map(([l,v])=>`
+            <div style="background:var(--surface-2);border-radius:7px;padding:8px;text-align:center">
+              <div style="font-size:.75em;margin-bottom:3px">${l.split(' ')[0]}</div>
+              <div style="font-size:.62em;color:var(--text-dim);margin-bottom:4px">${l.split(' ').slice(1).join(' ')}</div>
+              <div style="font-size:.85em;font-weight:700;color:var(--text-dim)">${v}</div>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:8px;font-size:.62em;color:var(--text-dim);text-align:center">
+          Données issues des fiches contacts Festiflow
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openVhrTransportDrawer() {
+  document.getElementById('drawer-title').innerHTML = '🚐 Planning transports';
+  document.getElementById('drawer-sub').innerHTML = `<span class="df-badge new">Paris XXL 2026</span> <span style="margin-left:6px">VHR · Transport</span>`;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Vue d'ensemble transports</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${[
+          ['🚐 Navettes prévues','—','Gare → Site'],
+          ['✈️ Trajets aéroport','—','CDG / Orly'],
+          ['🚙 Locations véhicules','—','Camions / Vans'],
+          ['🎫 Cartes avantage SNCF','—','Staff éligible'],
+        ].map(([l,v,s])=>`
+          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
+            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
+            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Planning par jour
+        <span class="future-badge" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--amber)">✦ Bientôt</span>
+      </div>
+      <div style="border:1px dashed rgba(251,191,36,.2);border-radius:10px;padding:14px;opacity:.75">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${[
+            ['J-2 · 11 mars','🚙 Livraison matériel scéno','Villepinte · 08h00','Équipe scéno (6)'],
+            ['J-1 · 12 mars','🚐 Navette Gare du Nord','→ Villepinte · 18h00','12 personnes'],
+            ['J-1 · 12 mars','✈️ Navette CDG','→ Villepinte · 14h00','6 personnes'],
+            ['J · 13 mars','🚐 Navette matin','→ Villepinte · 07h00','Staff montage'],
+            ['J+1 · 14 mars','🚐 Retours gares','→ Paris · 23h00','Équipe démo'],
+          ].map(([day,traj,heure,pax])=>`
+            <div style="background:var(--surface);border-radius:7px;padding:9px 12px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div style="flex:1">
+                  <div style="font-size:.6em;color:var(--amber);font-weight:600;margin-bottom:2px">${day}</div>
+                  <div style="font-size:.72em;font-weight:600;color:var(--text-muted)">${traj}</div>
+                  <div style="font-size:.6em;color:var(--text-dim);margin-top:2px">${heure} · ${pax}</div>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:10px;font-size:.62em;color:var(--text-dim);text-align:center">
+          Données du LOG_STAFF (SUIVI TRANSPORT) — disponible via Festiflow Transport
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Cartes avantage SNCF
+        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      </div>
+      <div style="border:1px dashed rgba(52,211,153,.2);border-radius:10px;padding:14px;font-size:.65em;color:var(--text-dim);line-height:1.7;opacity:.75">
+        Les numéros de cartes avantage SNCF sont stockés dans les fiches contacts Festiflow (Base RH → Contacts). À la réservation, les numéros sont pré-remplis automatiquement depuis le profil de chaque intervenant.
+      </div>
+    </div>
+  `;
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   document.body.style.overflow = 'hidden';
