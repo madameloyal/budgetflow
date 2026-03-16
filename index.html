@@ -652,21 +652,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       TTC ⇄
     </button>
   </div>
-  <div class="card mb">
-    <div class="twrap">
-    <table class="btbl" id="dep-table">
-      <thead><tr>
-        <th class="tl">Département</th>
-        <th class="b-ht-col">Au budget HT</th>
-        <th class="b-ttc-col" style="display:none">Au budget TTC</th>
-        <th class="b-ht-col">Dépensé HT</th>
-        <th class="b-ttc-col" style="display:none">Dépensé TTC</th>
-        <th>Écart HT</th><th>Consommé</th>
-      </tr></thead>
-      <tbody id="b-dep-body"></tbody>
-    </table>
-    </div>
-  </div>
+  <div id="b-dep-wrapper" class="mb"></div>
 
   <!-- P&L Recettes — one card per category -->
   <div class="sdiv" style="align-items:center">
@@ -1161,36 +1147,80 @@ function renderBilan(){
     }).join('');
   }
 
-  // ── Dept rows (P&L table) ─────────────────────────────────────────
-  let db=''; let ge=0,gr=0;
-  DEPTS.forEach(d=>{
+  // ── Dept rows (P&L table) — match recettes card style ────────────
+  let ge=0, gr=0;
+  DEPTS.forEach(d=>{ const t=dtot(d); ge+=t.est; gr+=t.reel; });
+  const depBurnPct = ge>0 ? Math.round(gr/ge*100) : 0;
+  const depBurnColor = depBurnPct>=100?'var(--red)':depBurnPct>=75?'var(--amber)':'var(--green)';
+
+  let depRows = '';
+  DEPTS.forEach((d,i)=>{
     const t=dtot(d); const ec4=t.est-t.reel; const p3=pct(t.reel,t.est);
     const estTTC=Math.round(t.est*1.15); const reelTTC=Math.round(t.reel*1.15);
-    ge+=t.est; gr+=t.reel;
-    db+=`<tr style="cursor:pointer" onclick="go('${d.id}',null)">
-      <td>${d.name}</td>
+    const col = DEPT_COLORS[i] || 'var(--indigo)';
+    depRows+=`<tr style="cursor:pointer" onclick="go('${d.id}',null)">
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:7px">
+          <span style="width:7px;height:7px;border-radius:50%;background:${col};flex-shrink:0"></span>
+          ${d.name}
+        </span>
+      </td>
       <td class="b-ht-col">${fe(t.est)}</td>
       <td class="b-ttc-col" style="display:none;color:#c4b5fd">${fe(estTTC)}</td>
       <td class="b-ht-col">${t.reel?fe(t.reel):'—'}</td>
       <td class="b-ttc-col" style="display:none;color:#c4b5fd">${t.reel?fe(reelTTC):'—'}</td>
       <td>${ecH(ec4,false,t.reel>0)}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">
-        <div style="width:60px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
-          <div style="width:${Math.min(p3,100)}%;height:100%;background:${p3>=100?'var(--red)':p3>=75?'var(--amber)':'var(--green)'};border-radius:3px"></div>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:60px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
+            <div style="width:${Math.min(p3,100)}%;height:100%;background:${col};opacity:.8;border-radius:2px"></div>
+          </div>
+          <span style="font-size:.78em;font-weight:700;color:${p3>=100?'var(--red)':p3>=75?'var(--amber)':col}">${p3}%</span>
         </div>
-        <span style="font-size:.78em;font-weight:700;color:${p3>=100?'var(--red)':p3>=75?'var(--amber)':'var(--green)'}">${p3}%</span>
-      </div></td>
+      </td>
     </tr>`;
   });
-  db+=`<tr class="bgt">
-    <td>TOTAL DÉPENSES</td>
+  depRows+=`<tr class="btot">
+    <td style="font-size:.78em">TOTAL DÉPENSES</td>
     <td class="b-ht-col">${fe(ge)}</td>
     <td class="b-ttc-col" style="display:none;color:#c4b5fd">${fe(Math.round(ge*1.15))}</td>
     <td class="b-ht-col">${fe(gr)}</td>
     <td class="b-ttc-col" style="display:none;color:#c4b5fd">${fe(Math.round(gr*1.15))}</td>
-    <td>${ecH(ge-gr,false,gr>0)}</td><td></td>
+    <td>${ecH(ge-gr,false,gr>0)}</td>
+    <td></td>
   </tr>`;
-  if(el('b-dep-body')) el('b-dep-body').innerHTML=db;
+
+  if(el('b-dep-wrapper')) {
+    el('b-dep-wrapper').innerHTML = `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">TOTAL DÉPENSES</div>
+            <span style="font-size:.68em;font-weight:700;color:#fff">${fe(ge)}</span>
+            ${gr>0?`<span style="font-size:.62em;color:${depBurnColor};font-weight:600">${depBurnPct}% réalisé</span>`:''}
+          </div>
+          <div>
+            ${gr>0?`<span style="font-size:.68em;color:var(--red)">−${fe(gr)} réel</span>`:'<span style="font-size:.65em;color:var(--text-dim)">Aucun réel</span>'}
+          </div>
+        </div>
+        <div style="height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-bottom:14px">
+          <div style="width:${Math.min(depBurnPct,100)}%;height:100%;background:${depBurnColor};opacity:.7;border-radius:2px;transition:width .6s"></div>
+        </div>
+        <div class="twrap">
+          <table class="btbl" id="dep-table">
+            <thead><tr>
+              <th class="tl">Département</th>
+              <th class="b-ht-col">Au budget HT</th>
+              <th class="b-ttc-col" style="display:none">Au budget TTC</th>
+              <th class="b-ht-col">Dépensé HT</th>
+              <th class="b-ttc-col" style="display:none">Dépensé TTC</th>
+              <th>Écart HT</th><th>Consommé</th>
+            </tr></thead>
+            <tbody>${depRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
 
   // ── Recettes — one card per category ────────────────────────────
   if(el('b-rec-cards')) {
@@ -2963,7 +2993,7 @@ let _bilanRecTTC = false;
 function toggleBilanTTC(table) {
   const isTTC = table === 'dep' ? (_bilanDepTTC = !_bilanDepTTC) : (_bilanRecTTC = !_bilanRecTTC);
   const scope = table === 'dep'
-    ? document.getElementById('dep-table')?.parentElement?.parentElement
+    ? document.getElementById('b-dep-wrapper')
     : document.getElementById('b-rec-cards');
   if (scope) {
     scope.querySelectorAll('.b-ht-col').forEach(el => el.style.display = isTTC ? 'none' : '');
