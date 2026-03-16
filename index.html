@@ -1910,7 +1910,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
 
   if (id === 'catering') return `
     <div class="card" style="padding:16px">
-      ${cardLabel('Budget traiteur — répartition')}
+      ${cardLabel('Fournisseurs & engagement')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         ${dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
           const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
@@ -1943,7 +1943,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
           <div style="font-size:.82em;font-weight:700;color:var(--text-dim)">2</div>
         </div>
       </div>`,
-      {clickable:`openDeptComparisonDrawer('catering')`}
+      {clickable:`openCoutRepasDrawer()`}
     )}
     ${comparisonCard('catering', 'Catering')}
   `;
@@ -3519,6 +3519,78 @@ function buildTransactionList(line, tabName) {
 // ════════════════════════════════════════════════════
 // DEPT COMPARISON DRAWER — shared across all tabs
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// CATERING — Coût par repas drawer
+// ════════════════════════════════════════════════════
+function openCoutRepasDrawer() {
+  const dept = DEPTS.find(d => d.id === 'catering');
+  const totalBudget = dept ? dept.sections.flatMap(s=>s.lines).reduce((a,l)=>a+(l.est||0),0) : 0;
+  // Paris XXL: 213 staff, 2 jours, 3 repas/jour
+  const nbPersonnes = 213;
+  const nbJours = 2;
+  const nbRepas = 3;
+  const totalRepas = nbPersonnes * nbJours * nbRepas;
+  const coutParRepas = totalRepas > 0 ? Math.round(totalBudget / totalRepas) : 0;
+
+  document.getElementById('drawer-title').innerHTML = `🍽 Coût par repas`;
+  document.getElementById('drawer-sub').innerHTML = `Catering · Paris XXL 2026`;
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Calcul estimé</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        ${[
+          {label:'Budget total catering', val: totalBudget>0 ? (new Intl.NumberFormat('fr-FR').format(totalBudget).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'#fff'},
+          {label:'Coût / repas estimé', val: coutParRepas>0 ? (new Intl.NumberFormat('fr-FR').format(coutParRepas).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'var(--amber)'},
+          {label:'Effectif total', val: nbPersonnes+' pers.', color:'var(--text-muted)'},
+          {label:'Total repas servis', val: totalRepas.toLocaleString('fr-FR'), color:'var(--text-muted)'},
+        ].map(k=>`<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.55em;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:4px">${k.label}</div>
+          <div style="font-size:.9em;font-weight:700;color:${k.color}">${k.val}</div>
+        </div>`).join('')}
+      </div>
+      <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:10px 12px;margin-bottom:4px">
+        <div style="font-size:.62em;color:var(--amber);font-weight:600;margin-bottom:4px">📐 Formule</div>
+        <div style="font-size:.65em;color:var(--text-dim);line-height:1.8;font-family:'JetBrains Mono',monospace">
+          ${totalBudget>0?new Intl.NumberFormat('fr-FR').format(totalBudget).replace(/\u202f/g,'\u00a0'):'—'} € ÷ (${nbPersonnes} pers. × ${nbJours} jours × ${nbRepas} repas)<br>
+          = <span style="color:var(--amber);font-weight:600">${coutParRepas>0?coutParRepas:'—'} € / repas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Benchmarks secteur
+        <span class="future-badge">✦ Bientôt</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;opacity:.7">
+        ${[
+          {label:'Petit-déjeuner · festival', ref:'4–8 €', color:'var(--green)'},
+          {label:'Déjeuner / dîner · festival', ref:'12–18 €', color:'var(--amber)'},
+          {label:'Repas complet · événement pro', ref:'18–30 €', color:'var(--red)'},
+        ].map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface-2);border-radius:7px">
+          <span style="font-size:.68em;color:var(--text-muted)">${b.label}</span>
+          <span style="font-size:.68em;font-weight:700;color:${b.color}">${b.ref}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Affiner le calcul
+        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      </div>
+      <div style="font-size:.68em;color:var(--text-dim);line-height:1.6;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px">
+        L'effectif réel (${nbPersonnes} pers.) et la grille PDJ/Midi/Soir seront calculés automatiquement depuis le module Présence Festiflow, une fois les équipes confirmées.
+      </div>
+    </div>
+  `;
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
 function openDeptComparisonDrawer(deptId) {
   const dept = DEPTS.find(d => d.id === deptId);
   if (!dept) return;
