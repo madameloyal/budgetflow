@@ -243,7 +243,17 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .tbl th:nth-child(6),.tbl td:nth-child(6){display:none}
 }
 
-/* ── IMPORT BUTTON ───────────────────────────────── */
+/* ── PASSWORD GATE ── */
+.db-overlay{position:fixed;inset:0;background:rgba(4,4,10,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:10000}
+.db-modal{position:relative;z-index:1;background:rgba(12,6,24,0.3);border:1px solid rgba(168,85,247,0.15);border-radius:20px;padding:32px 28px;width:320px;box-shadow:0 32px 80px rgba(0,0,0,0.2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);text-align:center}
+.db-modal-logo{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 16px;display:block}
+.db-modal-title{font-family:'Space Grotesk','DM Sans',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.db-modal-sub{font-size:12px;color:#a0a0b0;margin-bottom:24px}
+.db-pw-field{width:100%;padding:13px 16px;background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.12));border:1px solid rgba(168,85,247,0.3);border-radius:10px;margin-bottom:10px;cursor:text;position:relative;min-height:46px;display:flex;align-items:center;box-sizing:border-box;text-align:left;transition:border-color 0.2s,box-shadow 0.2s}
+.db-pw-field:hover{border-color:rgba(168,85,247,0.6);box-shadow:0 0 16px rgba(168,85,247,0.2)}
+.db-pw-dots{color:#fff;font-size:18px;letter-spacing:4px;line-height:1}
+.db-pw-placeholder{color:#4a4a6a;font-size:14px}
+.db-pw-error{font-size:11px;color:#e17055;margin-bottom:8px;min-height:14px;text-align:left}
 .import-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.1);color:#818cf8;font-family:'DM Sans',sans-serif;font-size:.7em;font-weight:600;letter-spacing:.5px;cursor:pointer;transition:all .2s;white-space:nowrap}
 .import-btn:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.6);color:#a5b4fc}
 .import-btn:active{transform:scale(.97)}
@@ -432,34 +442,25 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 </head>
 <body>
 <!-- PASSWORD GATE -->
-<div id="pw-gate" style="position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden">
+<div class="db-overlay" id="pw-gate">
   <!-- Background image -->
-  <div style="position:absolute;inset:0;background:url('https://madameloyal.github.io/budgetflow/homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
-  <!-- Dark overlay for readability -->
-  <div style="position:absolute;inset:0;background:rgba(8,8,13,0.55);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:1"></div>
-
-  <!-- Card -->
-  <div style="position:relative;z-index:2;width:100%;max-width:360px">
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.6em;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:6px;text-shadow:0 2px 12px rgba(0,0,0,.5)">BudgetFlow</div>
-      <div style="font-size:.78em;color:rgba(255,255,255,.55);text-shadow:0 1px 6px rgba(0,0,0,.4)">Paris XXL 2026 · Madame Loyal</div>
+  <div style="position:fixed;inset:0;background:url('https://madameloyal.github.io/budgetflow/homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
+  <div class="db-modal">
+    <img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" class="db-modal-logo">
+    <div class="db-modal-title">BudgetFlow</div>
+    <div class="db-modal-sub">Paris XXL 2026 · Madame Loyal</div>
+    <div class="db-pw-field" id="db-pw-field">
+      <input type="password" id="pw-input" style="position:absolute;opacity:0;width:1px;height:1px;" onkeydown="if(event.key==='Enter')checkPassword()" oninput="dbUpdateDots(this.value)">
+      <span class="db-pw-placeholder" id="db-pw-display">Mot de passe</span>
     </div>
-    <div style="background:rgba(16,16,23,0.82);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 24px 64px rgba(0,0,0,.5)">
-      <div style="font-size:.7em;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.35);font-weight:600;margin-bottom:12px">Mot de passe</div>
-      <input id="pw-input" type="password" placeholder="••••••••"
-        style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.9em;outline:none;transition:border-color .2s;margin-bottom:10px"
-        onfocus="this.style.borderColor='rgba(99,102,241,.7)'"
-        onblur="this.style.borderColor='rgba(255,255,255,.1)'"
-        onkeydown="if(event.key==='Enter')checkPassword()">
-      <div id="pw-error" style="display:none;font-size:.7em;color:var(--red);margin-bottom:10px;padding:6px 10px;background:rgba(248,113,113,.1);border-radius:6px;border:1px solid rgba(248,113,113,.2)">Mot de passe incorrect</div>
-      <button onclick="checkPassword()"
-        style="width:100%;padding:11px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.5);border-radius:8px;color:#a5b4fc;font-family:'DM Sans',sans-serif;font-size:.85em;font-weight:600;cursor:pointer;transition:all .2s"
-        onmouseover="this.style.background='rgba(99,102,241,.35)';this.style.color='#fff'"
-        onmouseout="this.style.background='rgba(99,102,241,.2)';this.style.color='#a5b4fc'">
-        Accéder →
-      </button>
-    </div>
-    <div style="text-align:center;margin-top:16px;font-size:.65em;color:rgba(255,255,255,.3)">Accès réservé à l'équipe Madame Loyal</div>
+    <div class="db-pw-error" id="pw-error"></div>
+    <button onclick="checkPassword()"
+      onmouseover="this.style.borderColor='rgba(168,85,247,0.6)';this.style.boxShadow='0 0 16px rgba(168,85,247,0.2)'"
+      onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.boxShadow='none'"
+      style="-webkit-appearance:none;appearance:none;width:100%;padding:14px;background:rgba(12,6,24,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:0.5px;transition:border-color 0.2s,box-shadow 0.2s;display:block;">
+      Accéder →
+    </button>
+    <div style="margin-top:16px;font-size:.65em;color:rgba(255,255,255,.3)">Accès réservé à l'équipe Madame Loyal</div>
   </div>
 </div>
 
@@ -3242,35 +3243,43 @@ if (document.readyState === 'loading') {
 const PASSWORD = 'laxxldeparis';
 const SESSION_KEY = 'bf_auth';
 
+// New login UI helpers
+document.getElementById('db-pw-field').addEventListener('click', function(){
+  document.getElementById('pw-input').focus();
+});
+function dbUpdateDots(val) {
+  const d = document.getElementById('db-pw-display');
+  d.className = val.length ? 'db-pw-dots' : 'db-pw-placeholder';
+  d.textContent = val.length ? '●'.repeat(val.length) : 'Mot de passe';
+}
+
 function checkPassword() {
-  const input = document.getElementById('pw-input');
+  const val = document.getElementById('pw-input').value.trim();
   const error = document.getElementById('pw-error');
-  if (input.value === PASSWORD) {
+  if (!val) return;
+  if (val === PASSWORD) {
     sessionStorage.setItem(SESSION_KEY, '1');
     const gate = document.getElementById('pw-gate');
     gate.style.opacity = '0';
     gate.style.transition = 'opacity .3s';
     setTimeout(() => { gate.style.display = 'none'; }, 300);
-    // Now start loading data
     showLoadingOverlay();
     loadBudgetData();
   } else {
-    error.style.display = 'block';
-    input.value = '';
-    input.style.borderColor = 'rgba(248,113,113,.6)';
-    setTimeout(() => { input.style.borderColor = 'var(--border)'; }, 1500);
-    input.focus();
+    error.textContent = 'Mot de passe incorrect';
+    document.getElementById('pw-input').value = '';
+    dbUpdateDots('');
+    setTimeout(() => { error.textContent = ''; }, 2000);
   }
 }
 
-// On load — check if already authenticated this session
+// On load — check if already authenticated
 (function() {
   if (sessionStorage.getItem(SESSION_KEY) === '1') {
     document.getElementById('pw-gate').style.display = 'none';
     showLoadingOverlay();
     loadBudgetData();
   }
-  // else: pw-gate stays visible, loadBudgetData not called yet
 })();
 </script>
 </body>
