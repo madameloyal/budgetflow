@@ -597,14 +597,28 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <div id="b-sub-bars" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px"></div>
       </div>
 
-      <!-- Trésorerie Qonto — coming soon -->
-      <div class="card" style="padding:18px;border-style:dashed;border-color:rgba(52,211,153,.2)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Solde Qonto temps réel</div>
-          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      <!-- Cashless — coming soon, clickable -->
+      <div class="card" style="padding:18px;border-style:dashed;border-color:rgba(52,211,153,.2);cursor:pointer;transition:border-color .2s"
+        onclick="openCashlessDrawer()"
+        onmouseover="this.style.borderColor='rgba(52,211,153,.45)'" onmouseout="this.style.borderColor='rgba(52,211,153,.2)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">💳 Cashless</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(52,211,153,.4)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
         </div>
-        <div style="font-size:1.6em;font-weight:700;color:rgba(52,211,153,.3);margin-bottom:4px">— €</div>
-        <div style="font-size:.65em;color:var(--text-dim);line-height:1.5">Connexion directe au compte Qonto. Solde live + flux entrants/sortants.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
+          ${[
+            ['Montant chargé','—','#818cf8'],
+            ['Solde net','—','var(--green)'],
+          ].map(([l,v,c])=>`
+            <div style="background:var(--surface-2);border-radius:6px;padding:8px 10px">
+              <div style="font-size:.55em;color:var(--text-dim);margin-bottom:2px">${l}</div>
+              <div style="font-size:.88em;font-weight:700;color:${c}">${v}</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">Weezevent · Spiik · Cashless.io · Import CSV</div>
       </div>
 
       <!-- Comparaison events — coming soon -->
@@ -1827,32 +1841,14 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       {clickable:`openProductionPanel('comparaison')`}
     )}
 
-    <!-- Card 3: Cashless — coming soon, clickable, flex:1 -->
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(52,211,153,.2);cursor:pointer;transition:border-color .2s;flex:1"
-      onclick="openProductionPanel('cashless')"
-      onmouseover="this.style.borderColor='rgba(52,211,153,.45)'" onmouseout="this.style.borderColor='rgba(52,211,153,.2)'">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        ${cardLabel('💳 Cashless')}
-        <div style="display:flex;align-items:center;gap:6px">
-          ${futureBadge('green')}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(52,211,153,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
+    <!-- Card 3: Trésorerie Qonto — coming soon, flex:1 -->
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(52,211,153,.2);flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        ${cardLabel('Solde Qonto temps réel')}
+        ${futureBadge('green')}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;opacity:.55">
-        ${[
-          ['💰 Montant chargé','—'],
-          ['💸 Remboursé','—'],
-          ['✅ Solde net','—'],
-          ['📊 Commission','—'],
-        ].map(([l,v])=>`
-          <div style="background:var(--surface-2);border-radius:6px;padding:8px 10px">
-            <div style="font-size:.55em;color:var(--text-dim);margin-bottom:2px">${l}</div>
-            <div style="font-size:.82em;font-weight:700;color:var(--text-dim)">${v}</div>
-          </div>`).join('')}
-      </div>
-      <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
-        Connecter Weezevent, Spiik ou Cashless.io · Import CSV post-event disponible
-      </div>
+      <div style="font-size:1.4em;font-weight:700;color:rgba(52,211,153,.3);margin-bottom:6px">— €</div>
+      <div style="font-size:.65em;color:var(--text-dim);line-height:1.5">Connexion directe au compte Qonto. Solde live + flux entrants/sortants des dépenses Production.</div>
     </div>
   `;}
 
@@ -3428,6 +3424,80 @@ function buildTransactionList(line, tabName) {
 // ════════════════════════════════════════════════════
 // PRODUCTION — Side panels
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// BILAN — Cashless side panel
+// ════════════════════════════════════════════════════
+function openCashlessDrawer() {
+  document.getElementById('drawer-title').innerHTML = `💳 Cashless`;
+  document.getElementById('drawer-sub').innerHTML = `Bilan · Gestion cashless événement`;
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Vue d'ensemble cashless</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        ${[
+          {label:'Montant chargé', val:'—', sub:'Total crédité par les festivaliers', color:'#818cf8'},
+          {label:'Consommé sur site', val:'—', sub:'Bar · Merch · Food', color:'var(--amber)'},
+          {label:'Remboursé', val:'—', sub:'Après période de remboursement', color:'var(--red)'},
+          {label:'Solde net', val:'—', sub:'Revient à Madame Loyal', color:'var(--green)'},
+        ].map(k=>`<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.58em;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:4px">${k.label}</div>
+          <div style="font-size:1.1em;font-weight:700;color:${k.color};margin-bottom:3px">${k.val}</div>
+          <div style="font-size:.58em;color:var(--text-dim);line-height:1.4">${k.sub}</div>
+        </div>`).join('')}
+      </div>
+      <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;padding:10px 12px;margin-bottom:4px">
+        <div style="font-size:.62em;color:var(--green);font-weight:600;margin-bottom:4px">💡 Comment ça marche</div>
+        <div style="font-size:.65em;color:var(--text-dim);line-height:1.6">
+          Les festivaliers chargent leur bracelet cashless. Après l'événement, ils ont une période de remboursement (généralement 30 jours). Le solde non remboursé revient à l'organisateur — typiquement <strong style="color:#fff">5–15%</strong> du total chargé.
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Connecter un partenaire
+        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        ${[
+          {name:'Weezevent', desc:'API directe · Données temps réel', logo:'W', color:'#f59e0b'},
+          {name:'Spiik', desc:'API directe · Données temps réel', logo:'S', color:'#818cf8'},
+          {name:'Cashless.io', desc:'API directe · Données temps réel', logo:'C', color:'#34d399'},
+          {name:'Import CSV', desc:'Export manuel post-event · Universel', logo:'↑', color:'var(--text-dim)'},
+        ].map(p=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface-2);border-radius:8px;border:1px solid rgba(255,255,255,.04);opacity:.75">
+            <div style="width:30px;height:30px;border-radius:6px;background:${p.color}22;border:1px solid ${p.color}44;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:700;color:${p.color};flex-shrink:0">${p.logo}</div>
+            <div style="flex:1">
+              <div style="font-size:.75em;font-weight:600;color:#fff">${p.name}</div>
+              <div style="font-size:.62em;color:var(--text-dim)">${p.desc}</div>
+            </div>
+            <div style="font-size:.62em;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--text-dim)">Connecter</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:.65em;color:var(--text-dim);line-height:1.5;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px">
+        Une fois connecté, les données de charge, consommation et remboursement remontent automatiquement ici en temps réel pendant et après l'événement.
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Import CSV post-event
+        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+      </div>
+      <div style="border:1px dashed rgba(52,211,153,.2);border-radius:10px;padding:16px;text-align:center;opacity:.7">
+        <div style="font-size:1.8em;margin-bottom:8px">📂</div>
+        <div style="font-size:.75em;font-weight:600;color:var(--text-muted);margin-bottom:4px">Glisser le CSV partenaire ici</div>
+        <div style="font-size:.65em;color:var(--text-dim);line-height:1.5">Format Weezevent, Spiik ou générique. Calcul automatique du solde net après période de remboursement.</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
 function openProductionPanel(type) {
   if (type === 'comparaison') {
     document.getElementById('drawer-title').innerHTML = `📊 Comparaison éditions`;
@@ -3489,58 +3559,6 @@ function openProductionPanel(type) {
         </div>
       </div>`;
 
-  } else {
-    // cashless panel
-    document.getElementById('drawer-title').innerHTML = `💳 Cashless`;
-    document.getElementById('drawer-sub').innerHTML = `Production · Gestion cashless partenaire`;
-    document.getElementById('drawer-body').innerHTML = `
-      <div class="drawer-section">
-        <div class="drawer-section-title">Vue d'ensemble cashless</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          ${[
-            {label:'Montant chargé', val:'—', sub:'Total crédité par les festivaliers', color:'#818cf8'},
-            {label:'Consommé', val:'—', sub:'Dépensé sur site', color:'var(--amber)'},
-            {label:'Remboursé', val:'—', sub:'Après période de remboursement', color:'var(--red)'},
-            {label:'Solde net', val:'—', sub:'Revient à Madame Loyal', color:'var(--green)'},
-          ].map(k=>`<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-            <div style="font-size:.58em;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:4px">${k.label}</div>
-            <div style="font-size:1.1em;font-weight:700;color:${k.color};margin-bottom:3px">${k.val}</div>
-            <div style="font-size:.58em;color:var(--text-dim);line-height:1.4">${k.sub}</div>
-          </div>`).join('')}
-        </div>
-        <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;padding:10px 12px;margin-bottom:14px">
-          <div style="font-size:.62em;color:var(--green);font-weight:600;margin-bottom:4px">💡 Comment ça marche</div>
-          <div style="font-size:.65em;color:var(--text-dim);line-height:1.6">
-            Les festivaliers chargent leur bracelet cashless. Après l'événement, ils ont une période de remboursement (généralement 30 jours). Le solde non remboursé revient à l'organisateur. Ce montant peut représenter 5–15% du total chargé.
-          </div>
-        </div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-          Connecter un partenaire
-          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-          ${[
-            {name:'Weezevent', desc:'API directe · Données temps réel', logo:'W', color:'#f59e0b'},
-            {name:'Spiik', desc:'API directe · Données temps réel', logo:'S', color:'#818cf8'},
-            {name:'Cashless.io', desc:'API directe · Données temps réel', logo:'C', color:'#34d399'},
-            {name:'Import CSV', desc:'Export manuel post-event · Universel', logo:'↑', color:'var(--text-dim)'},
-          ].map(p=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface-2);border-radius:8px;border:1px solid rgba(255,255,255,.04);opacity:.75">
-              <div style="width:30px;height:30px;border-radius:6px;background:${p.color}22;border:1px solid ${p.color}44;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:700;color:${p.color};flex-shrink:0">${p.logo}</div>
-              <div style="flex:1">
-                <div style="font-size:.75em;font-weight:600;color:#fff">${p.name}</div>
-                <div style="font-size:.62em;color:var(--text-dim)">${p.desc}</div>
-              </div>
-              <div style="font-size:.62em;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--text-dim)">Connecter</div>
-            </div>`).join('')}
-        </div>
-        <div style="font-size:.65em;color:var(--text-dim);line-height:1.5;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px">
-          Une fois connecté, les données de charge, consommation et remboursement remontent automatiquement ici en temps réel pendant et après l'événement.
-        </div>
-      </div>`;
   }
 
   document.getElementById('drawer-footer').style.display = 'flex';
