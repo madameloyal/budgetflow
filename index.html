@@ -1445,11 +1445,11 @@ function renderDept(id){
       </div>
     </div>
 
-    <div class="g2 mb">
+    <div class="g2 mb" style="align-items:stretch">
 
       <!-- LEFT CARD: KPI default + section detail carousel -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="fc-wrap" id="fc-${id}">
+      <div class="card" style="padding:0;overflow:hidden;min-height:340px">
+        <div class="fc-wrap" id="fc-${id}" style="height:100%">
           <div class="fc-track" id="fct-${id}">
 
             <!-- FACE 0 — Sections breakdown -->
@@ -1531,7 +1531,7 @@ function renderDept(id){
       </div>
 
       <!-- RIGHT: dept-specific context cards -->
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:10px;min-height:100%">
         ${buildDeptRightCards(id, dept, tot, allL, p)}
       </div>
 
@@ -1593,11 +1593,15 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     return `<span style="font-size:.55em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 7px;border-radius:4px;background:${bg};border:1px solid ${border};color:${col};white-space:nowrap">✦ Bientôt</span>`;
   };
 
-  const comingSoonCard = (label, desc, color='purple', extraHtml='') => `
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(${color==='purple'?'168,85,247':color==='green'?'52,211,153':color==='amber'?'251,191,36':'99,102,241'},.2)">
+  const comingSoonCard = (label, desc, color='purple', extraHtml='', opts={}) => `
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(${color==='purple'?'168,85,247':color==='green'?'52,211,153':color==='amber'?'251,191,36':'99,102,241'},.2);${opts.flex?'flex:1;':''}${opts.clickable?'cursor:pointer;transition:border-color .2s;':''}${opts.style||''}"
+      ${opts.clickable?`onclick="${opts.clickable}" onmouseover="this.style.borderColor='rgba(${color==='blue'?'99,102,241':color==='green'?'52,211,153':color==='amber'?'251,191,36':'168,85,247'},.5)'" onmouseout="this.style.borderColor=''"`:''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         ${cardLabel(label)}
-        ${futureBadge(color)}
+        <div style="display:flex;align-items:center;gap:6px">
+          ${futureBadge(color)}
+          ${opts.clickable?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`:''}
+        </div>
       </div>
       <div style="font-size:.68em;color:var(--text-dim);line-height:1.6">${desc}</div>
       ${extraHtml}
@@ -1640,9 +1644,25 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
         ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
           `<div style="font-size:.65em;padding:5px 8px;background:var(--surface-2);border-radius:5px;color:var(--text-dim)">${v}</div>`
         ).join('')}
-      </div>`
+      </div>`,
+      {clickable:`openRepéragesPanel('reperages_visits')`}
     )}
-    ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green')}
+    ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
+      `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
+        ${[
+          {name:'Hugo Le Guellec', role:'Directeur technique', frais:'—'},
+          {name:'Chloe Adour', role:'Prod. exécutive', frais:'—'},
+          {name:'Leon Saturnin', role:'Régisseur général', frais:'—'},
+        ].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
+          <div>
+            <div style="font-size:.65em;color:var(--text-muted)">${p.name}</div>
+            <div style="font-size:.58em;color:var(--text-dim)">${p.role}</div>
+          </div>
+          <span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span>
+        </div>`).join('')}
+      </div>`,
+      {clickable:`openRepéragesPanel('reperages_contacts')`, flex:true}
+    )}
   `;
 
   if (id === 'vhr') {
@@ -3336,6 +3356,109 @@ function buildTransactionList(line, tabName) {
 // ════════════════════════════════════════════════════
 // BILAN — Budgets soumis drawer
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// REPÉRAGES — Side panels
+// ════════════════════════════════════════════════════
+function openRepéragesPanel(type) {
+  if (type === 'reperages_visits') {
+    document.getElementById('drawer-title').innerHTML = `🗓 Prochains repérages`;
+    document.getElementById('drawer-sub').innerHTML = `Repérages · Paris XXL 2026`;
+    document.getElementById('drawer-body').innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+          Planning des visites
+          <span class="future-badge">✦ Bientôt</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            {j:'J-45',date:'29 jan. 2026',lieu:'Paris Nord Villepinte',type:'Inspection technique',statut:'Planifié',color:'#818cf8'},
+            {j:'J-30',date:'13 fév. 2026',lieu:'Paris Nord Villepinte',type:'Validation scénographie',statut:'Planifié',color:'#818cf8'},
+            {j:'J-15',date:'28 fév. 2026',lieu:'Paris — réunion interne',type:'Réunion finale',statut:'À confirmer',color:'var(--amber)'},
+          ].map(v=>`
+            <div style="background:var(--surface-2);border-radius:10px;padding:12px 14px;border:1px solid rgba(255,255,255,.04);opacity:.7">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:.62em;font-weight:700;color:${v.color};background:${v.color}18;padding:2px 8px;border-radius:4px">${v.j}</span>
+                <span style="font-size:.62em;color:var(--text-dim)">${v.date}</span>
+              </div>
+              <div style="font-size:.78em;font-weight:600;color:#fff;margin-bottom:2px">${v.type}</div>
+              <div style="font-size:.65em;color:var(--text-dim)">${v.lieu}</div>
+              <div style="margin-top:6px">
+                <span style="font-size:.6em;color:${v.statut==='Planifié'?'#818cf8':'var(--amber)'};background:${v.statut==='Planifié'?'rgba(129,140,248,.1)':'rgba(251,191,36,.1)'};padding:2px 7px;border-radius:4px">${v.statut}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+          Participants par visite
+          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+        </div>
+        <div style="border:1px dashed rgba(99,102,241,.2);border-radius:10px;padding:14px;opacity:.7">
+          <div style="font-size:.68em;color:var(--text-dim);line-height:1.6;margin-bottom:10px">
+            Les participants aux repérages seront assignés depuis le module Contacts Festiflow. Chaque visite aura sa liste de participants avec notes de frais associées.
+          </div>
+          ${[
+            {name:'Hugo Le Guellec', role:'Dir. technique', avatar:'HG'},
+            {name:'Chloe Adour', role:'Prod. exécutive', avatar:'CA'},
+            {name:'Leon Saturnin', role:'Régisseur général', avatar:'LS'},
+          ].map(p=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);opacity:.6">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(168,85,247,.4));display:flex;align-items:center;justify-content:center;font-size:.6em;font-weight:700;color:#fff;flex-shrink:0">${p.avatar}</div>
+              <div>
+                <div style="font-size:.75em;color:#fff;font-weight:500">${p.name}</div>
+                <div style="font-size:.62em;color:var(--text-dim)">${p.role}</div>
+              </div>
+              <div style="margin-left:auto;font-size:.62em;color:var(--text-dim)">— frais</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else {
+    // reperages_contacts — Frais par intervenant
+    document.getElementById('drawer-title').innerHTML = `👥 Frais par intervenant`;
+    document.getElementById('drawer-sub').innerHTML = `Repérages · Notes de frais`;
+    document.getElementById('drawer-body').innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+          Contacts assignés aux repérages
+          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
+        </div>
+        ${[
+          {name:'Hugo Le Guellec', role:'Directeur technique', tel:'+33 6 —', mail:'hugo@madameloyal.fr', frais:'—', avatar:'HG', color:'#60a5fa'},
+          {name:'Chloe Nadia Andrea Adour', role:'Prod. exécutive', tel:'+33 6 —', mail:'chloe@madameloyal.fr', frais:'—', avatar:'CA', color:'#e879f9'},
+          {name:'Leon Saturnin Austin', role:'Régisseur général', tel:'+33 6 —', mail:'leon@madameloyal.fr', frais:'—', avatar:'LS', color:'#34d399'},
+        ].map(p=>`
+          <div style="background:var(--surface-2);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04);opacity:.8">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:36px;height:36px;border-radius:50%;background:${p.color}22;border:1px solid ${p.color}44;display:flex;align-items:center;justify-content:center;font-size:.65em;font-weight:700;color:${p.color};flex-shrink:0">${p.avatar}</div>
+              <div>
+                <div style="font-size:.8em;font-weight:600;color:#fff">${p.name}</div>
+                <div style="font-size:.62em;color:var(--text-dim)">${p.role}</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+              ${[['📞 Téléphone',p.tel],['✉ Email',p.mail]].map(([l,v])=>`
+                <div style="background:var(--surface);border-radius:6px;padding:7px 10px">
+                  <div style="font-size:.55em;color:var(--text-dim);margin-bottom:2px">${l}</div>
+                  <div style="font-size:.68em;color:var(--text-muted)">${v}</div>
+                </div>`).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.12);border-radius:6px">
+              <span style="font-size:.65em;color:var(--green)">💰 Notes de frais</span>
+              <span style="font-size:.68em;font-weight:600;color:var(--text-dim)">${p.frais}</span>
+            </div>
+          </div>`).join('')}
+        <div style="padding:10px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;font-size:.65em;color:var(--text-dim);line-height:1.5;margin-top:4px">
+          Les données de contact complètes (IBAN, sécu, contrat) seront disponibles via le module Contacts Festiflow. Les notes de frais seront soumises directement par les intervenants.
+        </div>
+      </div>`;
+  }
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
 function openBilanBudgetsDrawer() {
   document.getElementById('drawer-title').innerHTML = `📋 Budgets soumis par pôle`;
   document.getElementById('drawer-sub').innerHTML = `Vue consolidée · Paris XXL 2026`;
