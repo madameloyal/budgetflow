@@ -2386,9 +2386,9 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
 
   const tabName = Object.entries(DEPT_META).find(([,m]) => m.id === deptId)?.[0] || deptId.toUpperCase();
   const sections = getSections(deptId);
-  // All depts for potential section move
+  const currentSection = dept.sections[sectionIdx]?.s || '';
   const allDeptOptions = Object.entries(DEPT_META).map(([tab, m]) =>
-    `<option value="${tab}" ${tab === (Object.entries(DEPT_META).find(([,m2])=>m2.id===deptId)?.[0]||'') ? 'selected' : ''}>${m.name}</option>`
+    `<option value="${tab}" ${tab === tabName ? 'selected' : ''}>${m.name}</option>`
   ).join('');
 
   document.getElementById('drawer-title').innerHTML =
@@ -2507,13 +2507,19 @@ function openAddLigne(deptId, sectionIdx) {
 }
 
 async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
-  const nom    = document.getElementById('ef-nom')?.value.trim();
-  const section= document.getElementById('ef-section')?.value.trim();
-  const tva    = document.getElementById('ef-tva')?.value;
-  const typ    = document.getElementById('ef-typ')?.value;
-  const est    = parseFloat(document.getElementById('ef-est')?.value) || 0;
-  const st     = document.getElementById('ef-st')?.value;
-  const obs    = document.getElementById('ef-obs')?.value.trim();
+  const nom     = document.getElementById('ef-nom')?.value.trim();
+  const section = document.getElementById('ef-section')?.value.trim();
+  const tva     = document.getElementById('ef-tva')?.value;
+  const typ     = document.getElementById('ef-typ')?.value;
+  const est     = parseFloat(document.getElementById('ef-est')?.value) || 0;
+  const st      = document.getElementById('ef-st')?.value;
+  const obs     = document.getElementById('ef-obs')?.value.trim();
+  // Read dept from dropdown (user may have changed it)
+  const selectedDept = document.getElementById('ef-dept')?.value || null;
+  const effectiveDeptId = selectedDept
+    ? (DEPT_META[selectedDept]?.id || deptId)
+    : deptId;
+  const effectiveTabName = selectedDept || Object.entries(DEPT_META).find(([,m]) => m.id === deptId)?.[0];
 
   if (!nom) {
     document.getElementById('ef-nom').style.borderColor = 'rgba(248,113,113,.6)';
@@ -2524,9 +2530,9 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
   const btn = document.getElementById('ef-save-btn');
   if (btn) { btn.classList.add('saving'); btn.textContent = 'Enregistrement…'; }
 
-  const dept = DEPTS.find(d => d.id === deptId);
-  const tabName = Object.entries(DEPT_META).find(([,m]) => m.id === deptId)?.[0];
-  if (!dept || !tabName) { showToast('⚠ Erreur', 'Département introuvable', 'red'); return; }
+  const dept = DEPTS.find(d => d.id === effectiveDeptId);
+  const tabName = effectiveTabName;
+  if (!tabName) { showToast('⚠ Erreur', 'Département introuvable', 'red'); return; }
 
   try {
     if (isNew) {
@@ -2571,11 +2577,14 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
     const page = document.getElementById('page-' + deptId);
     if (page) page._built = false;
     await refreshBudgetData();
-    // Re-open the dept page
-    go(deptId, null);
+    closeDrawer();
+    const deptPage = document.getElementById('page-' + effectiveDeptId);
+    if (deptPage) deptPage._built = false;
+    await refreshBudgetData();
+    go(effectiveDeptId, null);
     showToast(
       isNew ? '✅ Ligne créée' : '✅ Ligne mise à jour',
-      `"${nom}" ${isNew ? 'ajoutée à' : 'mise à jour dans'} ${dept.name}`,
+      `"${nom}" ${isNew ? 'ajoutée à' : 'mise à jour dans'} ${effectiveTabName}`,
       'green'
     );
   } catch(e) {
