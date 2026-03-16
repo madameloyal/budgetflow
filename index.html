@@ -189,8 +189,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 /* ── CAROUSEL ── */
 .fc-wrap{overflow:hidden;border-radius:16px;height:100%}
 .fc-track{display:flex;transition:transform .4s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
-.fc-face{min-width:100%;width:100%;padding:28px;box-sizing:border-box;flex-shrink:0;display:flex;flex-direction:column}
-.fc-body{flex:1;min-height:0}
+.fc-face{min-width:100%;width:100%;padding:28px;box-sizing:border-box;flex-shrink:0;display:flex;flex-direction:column;height:100%}
+.fc-body{flex:1;overflow-y:auto}
 .fc-body.scrollable{overflow-y:auto;max-height:260px}
 .fc-foot{padding-top:8px}
 /* Bilan carousel: cap faces so the card stays same height as its neighbours */
@@ -1448,8 +1448,8 @@ function renderDept(id){
     <div class="g2 mb" style="align-items:stretch">
 
       <!-- LEFT CARD: KPI default + section detail carousel -->
-      <div class="card" style="padding:0;overflow:hidden;min-height:340px">
-        <div class="fc-wrap" id="fc-${id}" style="height:100%">
+      <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+        <div class="fc-wrap" id="fc-${id}" style="flex:1">
           <div class="fc-track" id="fct-${id}">
 
             <!-- FACE 0 — Sections breakdown -->
@@ -1744,7 +1744,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     </div>
 
     <!-- CARD 3: Planning transports — coming soon -->
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s"
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s;flex:1"
       onclick="openVhrTransportDrawer()"
       onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2266,18 +2266,15 @@ const faceState={};  // id → current face index (0/1/2)
 
 /* equalize face heights within a carousel so the button stays fixed */
 function equalizeFaces(trackId){
-  // Don't equalize the bilan carousel — its faces vary too much in content length
+  // Don't force equal face heights — let content drive naturally
+  // Only equalize the bilan avancement carousel which has a fixed context
   if(trackId==='fct-av') return;
+  // For dept carousels: just ensure the track container matches the tallest face
   const track=document.getElementById(trackId);
   if(!track) return;
   const faces=[...track.children];
   if(!faces.length) return;
-  // Reset to natural heights first
   faces.forEach(f=>{ f.style.height=''; f.style.minHeight=''; });
-  requestAnimationFrame(()=>{
-    const max=Math.max(...faces.map(f=>f.offsetHeight));
-    if(max>0) faces.forEach(f=>{ f.style.minHeight=max+'px'; });
-  });
 }
 
 function nextFace(id){
