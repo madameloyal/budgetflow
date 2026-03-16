@@ -530,7 +530,18 @@ def parse_qonto_file(file_bytes: bytes, filename: str) -> list:
     if fname.endswith(".xls"):
         try:
             import xlrd
-            wb = xlrd.open_workbook(file_contents=file_bytes)
+            # Try utf-8 first, fall back to latin-1 if needed
+            for enc in ('utf-8', 'latin-1', 'cp1252'):
+                try:
+                    wb = xlrd.open_workbook(file_contents=file_bytes, encoding_override=enc)
+                    ws = wb.sheet_by_index(0)
+                    # Quick check: if first row has mojibake, try next encoding
+                    sample = ' '.join(str(ws.cell(0,j).value) for j in range(min(ws.ncols,5)))
+                    if 'Ã' in sample or '\x83' in sample:
+                        continue
+                    break
+                except Exception:
+                    continue
             ws = wb.sheet_by_index(0)
             rows = []
             for i in range(1, ws.nrows):
@@ -545,7 +556,14 @@ def parse_qonto_file(file_bytes: bytes, filename: str) -> list:
                         v = cell.value
                         row.append(str(int(v)) if v == int(v) else str(v))
                     else:
-                        row.append(str(cell.value).strip())
+                        val = str(cell.value).strip()
+                        # Fix mojibake if still present: re-encode as latin-1, decode as utf-8
+                        try:
+                            fixed = val.encode('latin-1').decode('utf-8')
+                            val = fixed
+                        except (UnicodeEncodeError, UnicodeDecodeError):
+                            pass
+                        row.append(val)
                 if any(c.strip() for c in row):
                     rows.append(row)
             return rows
