@@ -849,16 +849,21 @@ function apiRowsToDept(tabName, rows) {
       sectionsMap[s] = [];
       sectionsOrder.push(s);
     }
+    const rawObs = row.observations || '';
+    const qontoMatch = rawObs.match(/\[QONTO:([^\]]+)\]/);
+    const qonto_ref = qontoMatch ? qontoMatch[1].trim() : '';
+    const cleanObs  = rawObs.replace(/\s*\[QONTO:[^\]]+\]/, '').trim();
     sectionsMap[s].push({
-      l:    row.ligne,
-      obs:  row.observations,
-      typ:  row.typ,
-      tva:  row.tva ? parseFloat(row.tva) || row.tva : null,
-      est:  row.est_ht || 0,
-      rh:   row.rh,
-      reel: row.reel_ht || 0,
-      st:   row.statut || 'ESTIMATION',
-      _row: row._row,
+      l:         row.ligne,
+      obs:       cleanObs,
+      qonto_ref: qonto_ref,
+      typ:       row.typ,
+      tva:       row.tva ? parseFloat(row.tva) || row.tva : null,
+      est:       row.est_ht || 0,
+      rh:        row.rh,
+      reel:      row.reel_ht || 0,
+      st:        row.statut || 'ESTIMATION',
+      _row:      row._row,
     });
   }
   return {
@@ -923,7 +928,8 @@ const pct = (r,e) => !e?0:Math.min(Math.round(r/e*100),999);
 const fc = p => p>=100?'danger':p>=75?'warn':'safe';
 const stcls = s => ({'ESTIMATION':'est','EN COURS':'ec','DEVIS SIGNÉ':'ds','VALIDÉ':'val','PAYÉ':'pay'}[s]||'est');
 const chipcls = s => ({'ESTIMATION':'chip-est','EN COURS':'chip-ec','DEVIS SIGNÉ':'chip-ds','VALIDÉ':'chip-val','PAYÉ':'chip-pay'}[s]||'chip-est');
-const ecH = (e, untracked=false) => {
+const ecH = (e, untracked=false, hasReel=true) => {
+  if(!hasReel) return '<span class="cdim">—</span>'; // no réel yet — don't show écart
   if(Math.abs(e||0)<1) return '<span class="cdim">—</span>';
   const tag=untracked?'<span title="Dépensé sans statut signé — vérifier" style="color:var(--amber);margin-left:3px;font-size:.7em">⚠</span>':'';
   return `<span class="${e>0?'cpos':'cneg'}">${e>0?'+':''}${fe(e)}</span>${tag}`;
@@ -1220,7 +1226,7 @@ function renderDept(id){
           <span class="show-ttc cro" style="display:none;color:${ttcR?'var(--red)':'var(--text-dim)'}">${ttcR?fe(ttcR):'—'}</span>
           ${txBadge}${rhchip(line.rh)}
         </td>
-        <td>${ecH(e,untracked)}</td>
+        <td>${ecH(e,untracked,(line.reel||0)>0)}</td>
         <td onclick="event.stopPropagation()"><select class="ss ${stcls(line.st)}"
           data-id="${id}" data-si="${si}" data-li="${li}" onchange="upSt(this)" onclick="event.stopPropagation()">
           <option value="ESTIMATION"  ${line.st==='ESTIMATION' ?'selected':''}>ESTIMATION</option>
@@ -1247,7 +1253,7 @@ function renderDept(id){
                 <span id="arr-${sid}" style="font-size:.6em;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg)">▶</span>
                 &nbsp;${sec.s}
               </span>
-              <span style="font-size:.9em;color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">${fe(sE)} au budget &nbsp;·&nbsp; ${ecH(sEc)} écart</span>
+              <span style="font-size:.9em;color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">${fe(sE)} au budget${sR>0?` &nbsp;·&nbsp; ${ecH(sEc,false,true)} écart`:''}</span>
             </td>
           </tr>
           <tr id="hdr-${sid}" style="display:none">
@@ -1482,11 +1488,6 @@ function renderDept(id){
     </div>
 
     ${techniqueNote}
-    <div class="eled">
-      <div style="display:flex;align-items:center;gap:5px"><div class="esw e"></div><span>Cellule modifiable (violet = Au budget HT · Dépensé HT · Statut)</span></div>
-      <div style="display:flex;align-items:center;gap:5px"><div class="esw r"></div><span>Calculé automatiquement (TTC · Écart)</span></div>
-      <span>S = Salaire/Staff &nbsp;·&nbsp; G = Général/Prestataire &nbsp;·&nbsp; C = Confirmé (réel)</span>
-    </div>
     <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)">
       <span class="chevron">▶</span><span>Tout déplier les sections</span>
     </button>
@@ -2470,6 +2471,21 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
           placeholder="Notes, références, détails…"
           value="${line.obs||''}">
       </div>
+
+      <div class="df-divider"></div>
+
+      <div class="df-group">
+        <label class="df-label" style="display:flex;align-items:center;gap:6px">
+          Référence Qonto
+          <span style="font-size:.7em;font-weight:400;color:var(--indigo);background:rgba(99,102,241,.1);padding:1px 7px;border-radius:4px;letter-spacing:0;text-transform:none">🔗 Matching auto</span>
+        </label>
+        <input id="ef-qonto-ref" class="df-input" type="text"
+          placeholder="ex: ML.13MARS.REGIEBAR"
+          value="${line.qonto_ref||''}">
+        <div style="font-size:.62em;color:var(--text-dim);margin-top:5px;line-height:1.5">
+          Le mot-clé exact utilisé dans la colonne <strong style="color:var(--text-muted)">Note</strong> des exports Qonto. Permet l'association automatique lors du prochain import.
+        </div>
+      </div>
     </div>
   `;
 
@@ -2513,7 +2529,8 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
   const typ     = document.getElementById('ef-typ')?.value;
   const est     = parseFloat(document.getElementById('ef-est')?.value) || 0;
   const st      = document.getElementById('ef-st')?.value;
-  const obs     = document.getElementById('ef-obs')?.value.trim();
+  const obs        = document.getElementById('ef-obs')?.value.trim();
+  const qonto_ref  = document.getElementById('ef-qonto-ref')?.value.trim();
   // Read dept from dropdown (user may have changed it)
   const selectedDept = document.getElementById('ef-dept')?.value || null;
   const effectiveDeptId = selectedDept
@@ -2535,15 +2552,19 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
   if (!tabName) { showToast('⚠ Erreur', 'Département introuvable', 'red'); return; }
 
   try {
+    // Merge qonto_ref into obs as a structured tag for now (no dedicated Sheet column yet)
+    const obsWithRef = qonto_ref
+      ? (obs ? `${obs} [QONTO:${qonto_ref}]` : `[QONTO:${qonto_ref}]`)
+      : obs;
+
     if (isNew) {
-      // POST to new endpoint — appends a row to the Sheet
       const resp = await fetch(`${API}/api/budget/add-ligne`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           dept: tabName,
           section: section || dept.sections[sectionIdx]?.s || '',
-          ligne: nom, obs, typ, tva: tva || '', est_ht: est, statut: st
+          ligne: nom, obs: obsWithRef, typ, tva: tva || '', est_ht: est, statut: st
         })
       });
       if (!resp.ok) {
@@ -2551,16 +2572,14 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
         throw new Error(err.detail || `Erreur ${resp.status}`);
       }
     } else {
-      // Update existing line — one call per changed field
       const line = dept.sections[sectionIdx]?.lines[lineIdx];
       if (!line?._row) throw new Error('Numéro de ligne introuvable');
-
       const updates = [
-        {field:'ligne',      value: nom},
-        {field:'tva',        value: tva},
-        {field:'est_ht',     value: String(est)},
-        {field:'statut',     value: st},
-        {field:'observations',value: obs},
+        {field:'ligne',        value: nom},
+        {field:'tva',          value: tva},
+        {field:'est_ht',       value: String(est)},
+        {field:'statut',       value: st},
+        {field:'observations', value: obsWithRef},
       ];
       for (const u of updates) {
         await fetch(`${API}/api/budget/update`, {
@@ -2569,7 +2588,6 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
           body: JSON.stringify({dept: tabName, row: line._row, field: u.field, value: u.value})
         });
       }
-      // Update type (col D) — needs separate handling if not in FIELD_TO_COL
     }
 
     closeDrawer();
