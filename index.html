@@ -124,7 +124,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .ce:hover{border-color:rgba(168,85,247,.38);background:rgba(168,85,247,.09)}
 .ce:focus{outline:none;border-color:var(--purple);background:rgba(168,85,247,.12);color:#e9d5ff;box-shadow:0 0 0 2px rgba(168,85,247,.12)}
 /* Read-only cells — dim, no border */
-.cro{font-size:.85em;color:var(--text-dim);text-align:right;display:block;padding:3px 6px}
+.cro{font-size:.85em;color:#fff;text-align:right;display:block;padding:3px 6px}
 .cpos{color:var(--green);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
 .cneg{color:var(--red);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
 .cdim{color:var(--text-dim);font-size:.85em;text-align:right;display:block;padding:3px 6px}
@@ -139,7 +139,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{font-size:.68em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
 .tbl th:first-child,.tbl th.tl{text-align:left}
-.tbl th.ec-col{color:rgba(168,85,247,.7)}
+.tbl th.ec-col{color:var(--text-dim)}
 .tbl td{padding:8px 10px;font-size:.78em;text-align:right;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;color:var(--text-muted)}
 .tbl td:first-child{text-align:left;color:#fff;font-weight:500}
 .tbl tr:last-child td{border-bottom:none}
@@ -1341,7 +1341,10 @@ function renderDept(id){
       const e=(line.est||0)-(line.reel||0);
       const untracked=(line.reel||0)>0 && !['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(line.st);
       const obsVal=line.obs||'';
-      const txBadge=(line.reel||0)>0?`<span class="tx-badge" title="Transactions Qonto">✓</span>`:'';
+      const hasReel=(line.reel||0)>0;
+      // Badges shown next to écart
+      const qontoBadge = hasReel ? `<span class="tx-badge" title="Transactions Qonto correspondantes">✓</span>` : '';
+      const warnBadge  = untracked ? `<span style="color:var(--amber);font-size:11px;margin-left:3px" title="Dépensé sans statut signé — vérifier">⚠</span>` : '';
       return `<tr>
         <td style="display:flex;align-items:center;gap:6px;cursor:default">
           <span class="ligne-label" style="flex:1">${line.l}</span>
@@ -1351,17 +1354,21 @@ function renderDept(id){
             Éditer
           </button>
         </td>
-        <td class="tva-col" style="text-align:center"><span class="tva-label">${ftva(line.tva)}</span></td>
+        <td class="tva-col" style="text-align:center;color:var(--text-dim)">${ftva(line.tva)}</td>
         <td class="clickable-cell" onclick="openEstDrawer('${id}',${si},${li})" title="Voir source d'estimation">
-          <span class="show-ht cro" style="color:${line.est?'#fff':'var(--text-dim)'}">${line.est?fe(line.est):'—'}</span>
-          <span class="show-ttc cro" style="display:none;color:${ttcE?'#c4b5fd':'var(--text-dim)'}">${ttcE?fe(ttcE):'—'}</span>
+          <span class="show-ht cro">${line.est?fe(line.est):'<span style="color:var(--text-dim)">—</span>'}</span>
+          <span class="show-ttc cro" style="display:none">${ttcE?fe(ttcE):'<span style="color:var(--text-dim)">—</span>'}</span>
         </td>
         <td class="clickable-cell" onclick="openReelDrawer('${id}',${si},${li})" title="Voir transactions Qonto">
-          <span class="show-ht cro${line.reel?' dep-val':''}">${line.reel?fe(line.reel):'<span style="color:var(--text-dim);font-size:.78em">—</span>'}</span>
-          <span class="show-ttc cro" style="display:none;color:${ttcR?'var(--red)':'var(--text-dim)'}">${ttcR?fe(ttcR):'—'}</span>
-          ${txBadge}${rhchip(line.rh)}
+          <span class="show-ht cro">${line.reel?fe(line.reel):'<span style="color:var(--text-dim)">—</span>'}</span>
+          <span class="show-ttc cro" style="display:none">${ttcR?fe(ttcR):'<span style="color:var(--text-dim)">—</span>'}</span>
         </td>
-        <td>${ecH(e,untracked,(line.reel||0)>0)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+            ${ecH(e,false,hasReel)}
+            ${qontoBadge}${warnBadge}
+          </div>
+        </td>
         <td onclick="event.stopPropagation()"><select class="ss ${stcls(line.st)}"
           data-id="${id}" data-si="${si}" data-li="${li}" onchange="upSt(this)" onclick="event.stopPropagation()">
           <option value="ESTIMATION"  ${line.st==='ESTIMATION' ?'selected':''}>ESTIMATION</option>
@@ -1394,23 +1401,23 @@ function renderDept(id){
         <thead>
           <tr class="shead" onclick="tog('${sid}')">
             <td colspan="9" style="padding:0">
-              <div style="display:flex;align-items:center;gap:0;padding:10px 12px">
-                <span id="arr-${sid}" style="font-size:9px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:9px">▶</span>
-                <span style="font-weight:700;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);flex-shrink:0">${sec.s}</span>
-                <span style="font-size:10px;color:var(--text-dim);background:rgba(255,255,255,.06);padding:1px 7px;border-radius:4px;margin-left:8px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
-                ${allSigned ? `<span style="font-size:10px;color:var(--green);margin-left:7px;flex-shrink:0">✓ tout signé</span>` :
-                  hasUnsigned ? `<span style="font-size:10px;color:var(--amber);background:rgba(251,191,36,.08);padding:1px 7px;border-radius:4px;margin-left:6px;flex-shrink:0">⚠ à signer</span>` : ''}
-                ${nWarning>0 ? `<span style="font-size:10px;color:var(--amber);background:rgba(251,191,36,.08);padding:1px 7px;border-radius:4px;margin-left:5px;flex-shrink:0">⚠ ${nWarning} sans devis</span>` : ''}
-                ${nReel>0 ? `<span style="font-size:10px;color:var(--green);background:rgba(52,211,153,.08);padding:1px 7px;border-radius:4px;margin-left:5px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
+              <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
+                <span id="arr-${sid}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:12px">▶</span>
+                <span style="font-weight:700;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
+                <span style="font-size:12px;color:var(--text-dim);background:rgba(255,255,255,.07);padding:3px 9px;border-radius:5px;margin-left:12px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
+                ${allSigned ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.1);padding:3px 9px;border-radius:5px;margin-left:7px;flex-shrink:0">✓ tout signé</span>` :
+                  hasUnsigned ? `<span style="font-size:12px;color:var(--amber);background:rgba(251,191,36,.1);padding:3px 9px;border-radius:5px;margin-left:7px;flex-shrink:0">⚠ à signer</span>` : ''}
+                ${nWarning>0 ? `<span style="font-size:12px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">⚠ ${nWarning} sans devis</span>` : ''}
+                ${nReel>0 ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
                 <span style="flex:1"></span>
-                <span style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-                  <span style="font-size:12px;font-weight:600;color:#fff">${fe(sE)}</span>
-                  ${sR>0 ? `<span style="display:flex;align-items:center;gap:6px">
-                    <div style="width:90px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0">
-                      <div style="width:${burnPct}%;height:100%;background:${burnCol};border-radius:3px"></div>
+                <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
+                  <span style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
+                  ${sR>0 ? `<span style="display:flex;align-items:center;gap:8px">
+                    <div style="width:120px;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;flex-shrink:0">
+                      <div style="width:${burnPct}%;height:100%;background:${burnCol};border-radius:4px"></div>
                     </div>
-                    <span style="font-size:11px;font-weight:700;color:${burnCol}">${burnPct}%</span>
-                  </span>` : `<span style="font-size:11px;color:var(--text-dim)">—</span>`}
+                    <span style="font-size:14px;font-weight:700;color:${burnCol};min-width:38px">${burnPct}%</span>
+                  </span>` : `<span style="font-size:13px;color:var(--text-dim)">—</span>`}
                 </span>
               </div>
             </td>
@@ -2426,12 +2433,13 @@ function go(id,tabEl){
   }
   const page=document.getElementById('page-'+id);
   if(!page) return;
+  const isTabChange = !page.classList.contains('on');
   page.classList.add('on');
   if(id==='bilan') renderBilan();
   else if(id==='transactions') { loadUnmatchedTransactions(); }
   else if(id==='releve') { renderReleve(); }
   else renderDept(id);
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(isTabChange) window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ═══ 3-FACE CAROUSEL ═══ */
