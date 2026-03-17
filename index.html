@@ -146,9 +146,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .tbl tr:hover td{background:rgba(255,255,255,.007)}
 .trow td{font-weight:700!important;color:#fff!important;background:rgba(255,255,255,.025);border-top:1px solid var(--border)!important;border-bottom:none!important}
 .shead{cursor:pointer}
-.shead td{background:var(--surface-2);font-size:.64em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:0;border-bottom:1px solid var(--border)!important}
+.shead td{background:var(--surface-2);padding:0;border-bottom:1px solid var(--border)!important}
 .shead:hover td{background:var(--surface-3)}
-.shead:hover .shead-name{color:#fff}
 .obs{min-width:150px;max-width:220px;color:var(--text-dim)!important;font-size:.78em!important;font-weight:400!important}
 .obs-inp{width:100%;min-width:140px;background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:var(--text-muted);font-size:.8em;font-family:inherit}
 .twrap{overflow-x:auto}
@@ -1395,28 +1394,23 @@ function renderDept(id){
         <thead>
           <tr class="shead" onclick="tog('${sid}')">
             <td colspan="9" style="padding:0">
-              <div style="display:flex;align-items:center;gap:0;padding:8px 10px">
-                <!-- Arrow + name -->
-                <span id="arr-${sid}" style="font-size:.6em;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:8px">▶</span>
-                <span style="font-weight:700;font-size:.72em;letter-spacing:.8px;color:var(--text-muted);flex-shrink:0">${sec.s}</span>
-                <!-- Ligne count -->
-                <span style="font-size:.58em;color:var(--text-dim);background:rgba(255,255,255,.05);padding:1px 6px;border-radius:4px;margin-left:8px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
-                <!-- Status indicators -->
-                ${allSigned ? `<span style="font-size:.58em;color:var(--green);margin-left:6px;flex-shrink:0">✓ tout signé</span>` :
-                  hasUnsigned ? `<span style="font-size:.58em;color:var(--amber);margin-left:6px;flex-shrink:0">⚠ à signer</span>` : ''}
-                ${nWarning>0 ? `<span style="font-size:.58em;color:var(--amber);background:rgba(251,191,36,.1);padding:1px 5px;border-radius:4px;margin-left:4px;flex-shrink:0">⚠ ${nWarning} sans devis</span>` : ''}
-                ${nReel>0 ? `<span style="font-size:.58em;color:var(--green);background:rgba(52,211,153,.08);padding:1px 5px;border-radius:4px;margin-left:4px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
-                <!-- Spacer -->
+              <div style="display:flex;align-items:center;gap:0;padding:10px 12px">
+                <span id="arr-${sid}" style="font-size:9px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:9px">▶</span>
+                <span style="font-weight:700;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);flex-shrink:0">${sec.s}</span>
+                <span style="font-size:10px;color:var(--text-dim);background:rgba(255,255,255,.06);padding:1px 7px;border-radius:4px;margin-left:8px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
+                ${allSigned ? `<span style="font-size:10px;color:var(--green);margin-left:7px;flex-shrink:0">✓ tout signé</span>` :
+                  hasUnsigned ? `<span style="font-size:10px;color:var(--amber);background:rgba(251,191,36,.08);padding:1px 7px;border-radius:4px;margin-left:6px;flex-shrink:0">⚠ à signer</span>` : ''}
+                ${nWarning>0 ? `<span style="font-size:10px;color:var(--amber);background:rgba(251,191,36,.08);padding:1px 7px;border-radius:4px;margin-left:5px;flex-shrink:0">⚠ ${nWarning} sans devis</span>` : ''}
+                ${nReel>0 ? `<span style="font-size:10px;color:var(--green);background:rgba(52,211,153,.08);padding:1px 7px;border-radius:4px;margin-left:5px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
                 <span style="flex:1"></span>
-                <!-- Budget + burn bar -->
                 <span style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-                  <span style="font-size:.72em;font-weight:600;color:#fff">${fe(sE)}</span>
-                  ${sR>0 ? `<span style="display:flex;align-items:center;gap:5px">
-                    <div style="width:80px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0">
+                  <span style="font-size:12px;font-weight:600;color:#fff">${fe(sE)}</span>
+                  ${sR>0 ? `<span style="display:flex;align-items:center;gap:6px">
+                    <div style="width:90px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0">
                       <div style="width:${burnPct}%;height:100%;background:${burnCol};border-radius:3px"></div>
                     </div>
-                    <span style="font-size:.65em;font-weight:700;color:${burnCol}">${burnPct}%</span>
-                  </span>` : `<span style="font-size:.62em;color:var(--text-dim)">—</span>`}
+                    <span style="font-size:11px;font-weight:700;color:${burnCol}">${burnPct}%</span>
+                  </span>` : `<span style="font-size:11px;color:var(--text-dim)">—</span>`}
                 </span>
               </div>
             </td>
