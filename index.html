@@ -3114,7 +3114,7 @@ function openEditLigne(deptId, sectionIdx, lineIdx) {
   buildEditDrawer(deptId, sectionIdx, lineIdx, false);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
   setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
@@ -3123,7 +3123,7 @@ function openAddLigne(deptId, sectionIdx) {
   buildEditDrawer(deptId, sectionIdx, -1, true);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
   setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
@@ -3385,7 +3385,7 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 // ════════════════════════════════════════════════════
@@ -3497,7 +3497,7 @@ function openReelDrawer(deptId, sectionIdx, lineIdx) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openDrawer(deptId, sectionIdx, lineIdx) {
@@ -3649,7 +3649,7 @@ function openCoutRepasDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openDeptComparisonDrawer(deptId) {
@@ -3749,7 +3749,7 @@ function openDeptComparisonDrawer(deptId) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openCashlessDrawer() {
@@ -3820,7 +3820,7 @@ function openCashlessDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openProductionPanel(type) {
@@ -3890,7 +3890,7 @@ function openProductionPanel(type) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openRepéragesPanel(type) {
@@ -3990,7 +3990,7 @@ function openRepéragesPanel(type) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openBilanBudgetsDrawer() {
@@ -4053,7 +4053,7 @@ function openBilanBudgetsDrawer() {
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 // ════════════════════════════════════════════════════
@@ -4136,7 +4136,7 @@ function openVhrRoomingDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function openVhrTransportDrawer() {
@@ -4206,15 +4206,18 @@ function openVhrTransportDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
   document.body.style.overflow = '';
+  document.body.style.top = '';
+  window.scrollTo(0, _drawerScrollY || 0);
   _drawerCurrentLine = null;
 }
+let _drawerScrollY = 0;
 
 function dissociateTransaction() {
   // Placeholder — would call Apps Script assignUnmatchedTransaction in reverse
@@ -4279,7 +4282,7 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
 }
 
 function populateAssignLines(tabName) {
