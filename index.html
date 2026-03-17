@@ -64,6 +64,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;align-items:start}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
+/* dept right cards fill height evenly */
+.dept-right-cards>.card{flex:1;display:flex;flex-direction:column}
 .mb{margin-bottom:14px}
 /* unified section blocks */
 .sec-block{margin-bottom:0}
@@ -1465,10 +1467,10 @@ function renderDept(id){
       </div>
     </div>
 
-    <div class="g2 mb" style="align-items:start">
+    <div class="g2 mb" style="align-items:stretch">
 
       <!-- LEFT CARD: KPI default + section detail carousel -->
-      <div class="card" style="padding:0;overflow:hidden">
+      <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
         <div class="fc-wrap" id="fc-${id}">
           <div class="fc-track" id="fct-${id}">
 
@@ -1551,7 +1553,7 @@ function renderDept(id){
       </div>
 
       <!-- RIGHT: dept-specific context cards -->
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:10px" class="dept-right-cards">
         ${buildDeptRightCards(id, dept, tot, allL, p)}
       </div>
 
