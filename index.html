@@ -86,7 +86,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .sdl{flex:1;height:1px;background:var(--border)}
 .sdt{font-size:.63em;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);font-weight:600;white-space:nowrap}
 /* ── Option C dept header ── */
-.dept-hdr{display:grid;grid-template-columns:3px 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin:8px 0 6px}
+.dept-hdr{display:grid;grid-template-columns:3px 1fr;border-radius:12px 12px 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none;margin:8px 0 0}
 .dept-hdr-rail{width:3px}
 .dept-hdr-body{background:var(--surface);padding:14px 18px}
 .dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
@@ -1631,7 +1631,7 @@ function renderDept(id){
       </div>
     </div>
 
-    <div style="border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;margin-bottom:14px">
+    <div style="border:1px solid rgba(255,255,255,.07);border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:14px">
     ${secHTML}
     </div>`;
 
