@@ -97,8 +97,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .dept-hdr-kpi:last-child{border-right:none;padding-right:0;margin-right:0;flex:1}
 .dept-hdr-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);margin-bottom:3px}
 .dept-hdr-val{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1}
-/* sticky dept summary bar */
-.dept-sticky{position:sticky;top:49px;z-index:90;background:rgba(8,8,13,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:8px 0 8px;margin:0 0 4px;display:flex;align-items:center;gap:16px;font-size:.72em}
 
 /* ── PROGRESS ────────────────────────── */
 .pt{height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:8px 0 4px;display:flex;gap:1px}
@@ -132,23 +130,15 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
 /* ── EDITABLE cells — clearly purple-tinted ── */
 .ce{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.85em;font-weight:500;color:#c4b5fd;text-align:right;width:100%;padding:3px 6px;transition:background .15s,border-color .15s,box-shadow .15s;min-width:70px;cursor:text}
-.ce:hover{border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.1)}
-.ce:focus{outline:none;border-color:rgba(168,85,247,.7);background:rgba(168,85,247,.14);box-shadow:0 0 0 2px rgba(168,85,247,.15)}
-@keyframes ce-saved{0%{background:rgba(52,211,153,.25);border-color:rgba(52,211,153,.6)}100%{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.18)}}
-.ce.saved{animation:ce-saved .8s ease-out forwards}
 .ce:hover{border-color:rgba(168,85,247,.38);background:rgba(168,85,247,.09)}
 .ce:focus{outline:none;border-color:var(--purple);background:rgba(168,85,247,.12);color:#e9d5ff;box-shadow:0 0 0 2px rgba(168,85,247,.12)}
+@keyframes ce-saved{0%{background:rgba(52,211,153,.25);border-color:rgba(52,211,153,.6)}100%{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.18)}}
+.ce.saved{animation:ce-saved .8s ease-out forwards}
 /* Read-only cells — dim, no border */
 .cro{font-size:.85em;color:#fff;text-align:right;display:block;padding:3px 6px}
 .cpos{color:var(--green);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
 .cneg{color:var(--red);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
 .cdim{color:var(--text-dim);font-size:.85em;text-align:right;display:block;padding:3px 6px}
-
-/* ── EDIT LEGEND ── */
-.eled{display:flex;align-items:center;gap:16px;font-size:.62em;color:var(--text-dim);padding:6px 12px;background:var(--surface-2);border-radius:6px;margin-bottom:10px}
-.esw{width:20px;height:13px;border-radius:3px}
-.esw.e{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3)}
-.esw.r{border:1px solid var(--border)}
 
 /* ── TABLES ──────────────────────────── */
 .tbl{width:100%;border-collapse:collapse}
@@ -178,7 +168,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .btbl .bgt td{font-weight:700;color:#fff;font-size:.9em;border-top:2px solid var(--purple)}
 .bpos{color:var(--green);font-weight:600}
 .bneg{color:var(--red);font-weight:600}
-.btbl td.ht-edit{padding:4px 6px}
 
 /* ── DEPT summary rows ── */
 .drow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s}
@@ -214,11 +203,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .details-toggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.72em;color:var(--text-muted);cursor:pointer;padding:8px 0 2px;user-select:none;transition:color .2s;width:100%;border:none;background:none;font-family:inherit}
 .details-toggle:hover{color:#fff}
 .details-toggle .arrow{font-size:0.75em;display:inline-block}
-/* Expand-all sections button — full-width Festiflow style */
-.expand-all-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px 0;margin:8px 0 4px;font-size:.68em;font-weight:600;color:var(--text-dim);background:none;border:none;border-top:1px solid var(--border);cursor:pointer;font-family:inherit;letter-spacing:.5px;text-transform:uppercase;transition:color .25s}
-.expand-all-btn:hover{color:var(--text-muted)}
-.expand-all-btn .chevron{display:inline-block;transition:transform .3s ease;font-style:normal;font-size:.85em}
-.expand-all-btn.open .chevron{transform:rotate(90deg)}
 .face-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
 .face-dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:background .25s}
 .face-dot.on{background:var(--amber)}
@@ -232,7 +216,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .hdr{flex-wrap:wrap;padding:12px 14px;gap:8px}
   .hpanel{grid-template-columns:1fr 1fr;padding:10px 14px}
   .mb{margin-bottom:10px}
-  .dept-sticky{font-size:.66em;gap:8px;padding:7px 0;flex-wrap:wrap}
 
   /* ── tables: hide non-essential cols, allow horizontal scroll only inside .twrap ── */
   .twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
@@ -316,15 +299,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .drawer-kpi-label{font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;margin-bottom:4px}
 .drawer-kpi-val{font-size:.92em;font-weight:700;color:#fff}
 
-.tx-item{background:var(--surface-2);border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.03)}
-.tx-item:last-child{margin-bottom:0}
-.tx-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
-.tx-item-name{font-size:.78em;font-weight:600;color:#fff;line-height:1.3}
-.tx-item-amt{font-size:.82em;font-weight:700;color:var(--red);white-space:nowrap;flex-shrink:0}
-.tx-item-amt.positive{color:var(--green)}
-.tx-item-meta{font-size:.65em;color:var(--text-dim)}
-.tx-item-note{font-size:.65em;color:var(--text-muted);margin-top:4px;font-style:italic}
-
 .drawer-empty{text-align:center;padding:32px 16px;color:var(--text-dim);font-size:.8em}
 .drawer-empty-icon{font-size:2em;margin-bottom:10px}
 
@@ -337,18 +311,10 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 /* Tx count badge on Réel cells */
 .tx-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.35);border-radius:50%;font-size:.55em;font-weight:700;color:#818cf8;margin-left:5px;vertical-align:middle;flex-shrink:0}
 
-/* Clickable budget line rows */
-.tbl tr.clickable-row{cursor:pointer;transition:background .15s}
-.tbl tr.clickable-row:hover td{background:rgba(99,102,241,.05)}
-
 /* Clickable cells (Au budget / Dépensé) */
 .clickable-cell{cursor:pointer;transition:background .15s;border-radius:4px}
 .clickable-cell:hover{background:rgba(99,102,241,.08)}
 .clickable-cell:hover .cro{color:#c4b5fd!important}
-
-/* TTC columns — hidden when toggled */
-.ttc-col{transition:opacity .2s}
-.ttc-hidden .ttc-col{display:none}
 
 /* Future feature badge */
 .future-badge{display:inline-flex;align-items:center;gap:5px;font-size:.58em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 10px;border-radius:20px;background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(99,102,241,.15));border:1px solid rgba(168,85,247,.25);color:#c4b5fd}
@@ -2413,8 +2379,6 @@ function upSt(sel){
   const dept=DEPTS.find(d=>d.id===id);
   dept.sections[si].lines[li].st=sel.value;
   sel.className='ss '+stcls(sel.value);
-  const cont=document.getElementById('page-'+id);
-  if(cont) cont._built=false;
 }
 function tog(sid){
   const tb=document.getElementById(sid);
@@ -2563,9 +2527,6 @@ function buildSecPie(id){
 
 /* ═══ INIT ═══ */
 function initApp(){
-  // Reset render cache so all dept pages rebuild with API data
-  document.querySelectorAll('[id^="page-"]').forEach(el=>{ el._built=false; });
-  // Render bilan first (summary page)
   renderBilan();
   // Render whichever dept tab is active
   const activeNav = document.querySelector('.nav-item.on');
@@ -2579,14 +2540,10 @@ function initApp(){
 // QONTO IMPORT ENGINE
 // ════════════════════════════════════════════════════
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFvEw8crxjNFLFTIzxG4vIdyazmA6Lox4m3dQzmQHVfM6iCXGVmT8ADfqjW8Hznu_O/exec';
-
 function triggerImport() {
   document.getElementById('qonto-file-input').click();
 }
 
-// ── Qonto column indices (0-based, matches export order) ──
-const QC = { CAT:0, SOUS:1, FOURN:2, NOTE:3, DATE:4, HT:5, TTC:6, REF:7, METHODE:8, INIT:9, CARTE:10 };
 const QONTO_TX_KEY = 'bf_qonto_tx';
 const QONTO_MATCH_KEY = 'bf_qonto_match';
 
@@ -2828,8 +2785,6 @@ async function refreshBudgetData() {
     if (!resp.ok) return;
     const json = await resp.json();
     DEPTS = Object.entries(json.data).map(([tab, rows]) => apiRowsToDept(tab, rows));
-    // Force re-render of all cached pages
-    document.querySelectorAll('[id^="page-"]').forEach(el => { el._built = false; });
     renderBilan();
     // Re-render active dept page if one is open
     const activeNl = document.querySelector('.nl.on');
@@ -3195,13 +3150,6 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
     }
 
     closeDrawer();
-    // Invalidate cache and reload
-    const page = document.getElementById('page-' + deptId);
-    if (page) page._built = false;
-    await refreshBudgetData();
-    closeDrawer();
-    const deptPage = document.getElementById('page-' + effectiveDeptId);
-    if (deptPage) deptPage._built = false;
     await refreshBudgetData();
     go(effectiveDeptId, null);
     showToast(
@@ -3215,7 +3163,6 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
   }
 }
 
-// ════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════
 // BILAN TABLE TTC TOGGLES (dep + rec)
 // ════════════════════════════════════════════════════
@@ -3565,22 +3512,8 @@ function buildTransactionList(line, tabName) {
 }
 
 // ════════════════════════════════════════════════════
-// BILAN — Budgets soumis drawer
 // ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// REPÉRAGES — Side panels
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// PRODUCTION — Side panels
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// BILAN — Cashless side panel
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// DEPT COMPARISON DRAWER — shared across all tabs
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// CATERING — Coût par repas drawer
+// DRAWER PANELS — Catering, Comparison, Cashless, etc.
 // ════════════════════════════════════════════════════
 function openCoutRepasDrawer() {
   const dept = DEPTS.find(d => d.id === 'catering');
@@ -4359,10 +4292,6 @@ function showToast(title, body, type = 'green') {
 function hideToast() {
   document.getElementById('import-toast').classList.remove('show');
 }
-
-// ════════════════════════════════════════════════════
-// PASSWORD GATE
-// ════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════
 // RELEVÉ QONTO PAGE
