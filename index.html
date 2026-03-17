@@ -1488,9 +1488,6 @@ function renderDept(id){
           ${unsignedAmt>0
             ? `<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">⚠ ${fe(unsignedAmt)} non signé</span>`
             : `<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">✓ Tout signé</span>`}
-          <span style="flex:1"></span>
-          <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
-          <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;margin:0;width:auto"><span class="chevron">▶</span> Tout déplier</button>
         </div>
         <div class="dept-hdr-kpis">
           <div class="dept-hdr-kpi">
@@ -1637,6 +1634,9 @@ function renderDept(id){
     </div>
 
     ${techniqueNote}
+    <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)">
+      <span class="chevron">▶</span><span>Tout déplier les sections</span>
+    </button>
 
     <div class="dept-sticky">
       <span style="font-weight:700;color:#fff;font-size:1.05em">${dept.name}</span>
