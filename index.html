@@ -83,17 +83,17 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .sdl{flex:1;height:1px;background:var(--border)}
 .sdt{font-size:.63em;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);font-weight:600;white-space:nowrap}
 /* ── Option C dept header ── */
-.dept-hdr{display:grid;grid-template-columns:4px 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
-.dept-hdr-rail{width:4px}
-.dept-hdr-inner{background:var(--surface);padding:16px 20px}
-.dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.dept-hdr-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.2px}
-.dept-hdr-meta{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:4px;font-weight:500}
+.dept-hdr{display:grid;grid-template-columns:3px 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin:8px 0 6px}
+.dept-hdr-rail{width:3px}
+.dept-hdr-body{background:var(--surface);padding:14px 18px}
+.dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.dept-hdr-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.dept-hdr-pill{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:2px 9px;border-radius:4px;font-weight:500}
 .dept-hdr-kpis{display:flex;align-items:flex-end;gap:0}
-.dept-hdr-kpi{flex-shrink:0;padding-right:22px;margin-right:22px;border-right:1px solid rgba(255,255,255,.07)}
+.dept-hdr-kpi{flex-shrink:0;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.07)}
 .dept-hdr-kpi:last-child{border-right:none;padding-right:0;margin-right:0;flex:1}
-.dept-hdr-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);margin-bottom:4px}
-.dept-hdr-val{font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1}
+.dept-hdr-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);margin-bottom:3px}
+.dept-hdr-val{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1}
 /* sticky dept summary bar */
 .dept-sticky{position:sticky;top:49px;z-index:90;background:rgba(8,8,13,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:8px 0 8px;margin:0 0 4px;display:flex;align-items:center;gap:16px;font-size:.72em}
 
@@ -1473,47 +1473,8 @@ function renderDept(id){
     </div>`;
   }).join('');
 
-  const deptIdx = DEPTS.findIndex(d=>d.id===id);
-  const deptColor = DEPT_COLORS[deptIdx] || 'var(--indigo)';
-  const unsignedAmt = allL.filter(l=>['ESTIMATION','EN COURS'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
-  const burnCol = p>=100?'var(--red)':p>=75?'var(--amber)':deptColor;
-
   cont.innerHTML=`
-    <div class="dept-hdr">
-      <div class="dept-hdr-rail" style="background:${deptColor}"></div>
-      <div class="dept-hdr-inner">
-        <div class="dept-hdr-top">
-          <span class="dept-hdr-name">${dept.name}</span>
-          <span class="dept-hdr-meta">${dept.sections.length} section${dept.sections.length>1?'s':''} · ${allL.filter(l=>l.est>0).length} lignes</span>
-          ${unsignedAmt>0
-            ? `<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">⚠ ${fe(unsignedAmt)} non signé</span>`
-            : `<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">✓ Tout signé</span>`}
-        </div>
-        <div class="dept-hdr-kpis">
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Au budget HT</div>
-            <div class="dept-hdr-val" style="color:#fff">${fe(tot.est)}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Dépensé HT</div>
-            <div class="dept-hdr-val" style="color:${tot.reel>0?'#fff':'rgba(255,255,255,.25)'}">${tot.reel?fe(tot.reel):'—'}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Non signé</div>
-            <div class="dept-hdr-val" style="color:${unsignedAmt>0?'var(--amber)':'var(--green)'}">${unsignedAmt>0?fe(unsignedAmt):'—'}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
-              <span class="dept-hdr-lbl">Consommé</span>
-              <span style="font-size:15px;font-weight:700;color:${burnCol}">${p}%</span>
-            </div>
-            <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${Math.min(p,100)}%;background:${burnCol};border-radius:3px;transition:width .6s"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="sdiv"><div class="sdl"></div><div class="sdt">${dept.name}</div><div class="sdl"></div></div>
 
     <!-- ── 4 stat chips ── -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
@@ -1634,22 +1595,43 @@ function renderDept(id){
     </div>
 
     ${techniqueNote}
-    <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)">
-      <span class="chevron">▶</span><span>Tout déplier les sections</span>
-    </button>
 
-    <div class="dept-sticky">
-      <span style="font-weight:700;color:#fff;font-size:1.05em">${dept.name}</span>
-      <span style="color:var(--text-dim)">·</span>
-      <span style="color:var(--text-muted)">${fe(tot.est)} <span style="color:var(--text-dim)">au budget</span></span>
-      <span style="color:var(--text-dim)">·</span>
-      <span style="${p>=100?'color:var(--red)':p>=75?'color:var(--amber)':'color:var(--green)'}">
-        ${tot.reel?fe(tot.reel):'—'} réel <span style="opacity:.7">(${p}%)</span>
-      </span>
-      <span style="color:var(--text-dim)">·</span>
-      <span style="color:${ec>=0?'var(--green)':'var(--red)'};font-weight:600">${ec>=0?'+':''}${fe(ec)} écart</span>
-      <span style="margin-left:auto;color:var(--text-dim);font-size:.9em">${dept.sections.length} sections · ${allL.length} lignes</span>
-      <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" title="Afficher/masquer colonnes TTC">TTC ⇄</button>
+    <div class="dept-hdr">
+      <div class="dept-hdr-rail" style="background:${DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'}"></div>
+      <div class="dept-hdr-body">
+        <div class="dept-hdr-top">
+          <span class="dept-hdr-name">${dept.name}</span>
+          <span class="dept-hdr-pill">${dept.sections.length} sections · ${allL.filter(l=>l.est>0).length} lignes</span>
+          ${(()=>{const u=allL.filter(l=>['ESTIMATION','EN COURS'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);return u>0?`<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:2px 9px;border-radius:4px">⚠ ${fe(u)} non signé</span>`:`<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:2px 9px;border-radius:4px">✓ Tout signé</span>`;})()}
+          <span style="margin-left:auto;display:flex;gap:6px">
+            <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
+            <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;margin:0;width:auto;display:flex;align-items:center;gap:5px"><span class="chevron">▶</span><span>Tout déplier</span></button>
+          </span>
+        </div>
+        <div class="dept-hdr-kpis">
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Au budget HT</div>
+            <div class="dept-hdr-val" style="color:#fff">${fe(tot.est)}</div>
+          </div>
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Dépensé HT</div>
+            <div class="dept-hdr-val" style="color:${tot.reel>0?'#fff':'rgba(255,255,255,.25)'}">${tot.reel?fe(tot.reel):'—'}</div>
+          </div>
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Écart</div>
+            <div class="dept-hdr-val" style="color:${ec>=0?'var(--green)':'var(--red)'}">${ec>=0?'+':''}${fe(ec)}</div>
+          </div>
+          <div class="dept-hdr-kpi">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span class="dept-hdr-lbl">Consommé</span>
+              <span style="font-size:14px;font-weight:700;color:${p>=100?'var(--red)':p>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'}">${p}%</span>
+            </div>
+            <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(p,100)}%;background:${p>=100?'var(--red)':p>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'};border-radius:3px;transition:width .6s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     ${secHTML}`;
