@@ -1490,11 +1490,11 @@ function renderDept(id){
       </div>
     </div>
 
-    <div class="g2 mb" style="align-items:stretch">
+    <div class="g2 mb" style="align-items:start">
 
       <!-- LEFT CARD: KPI default + section detail carousel -->
-      <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
-        <div class="fc-wrap" id="fc-${id}" style="flex:1">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="fc-wrap" id="fc-${id}">
           <div class="fc-track" id="fct-${id}">
 
             <!-- FACE 0 — Sections breakdown -->
@@ -1576,7 +1576,7 @@ function renderDept(id){
       </div>
 
       <!-- RIGHT: dept-specific context cards -->
-      <div style="display:flex;flex-direction:column;gap:10px;min-height:100%">
+      <div style="display:flex;flex-direction:column;gap:10px">
         ${buildDeptRightCards(id, dept, tot, allL, p)}
       </div>
 
