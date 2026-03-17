@@ -65,6 +65,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;align-items:start}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
 .mb{margin-bottom:14px}
+/* unified section blocks */
+.sec-block{margin-bottom:0}
+.sec-block+.sec-block .shead td{border-top:1px solid rgba(255,255,255,.06)}
 
 /* ── TYPOGRAPHY ──────────────────────── */
 .hero{font-size:2em;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.5px}
@@ -1407,7 +1410,7 @@ function renderDept(id){
     const allSigned = nLines>0 && nSigned===nLines;
     const hasUnsigned = sec.lines.filter(l=>l.est>0 && ['ESTIMATION','EN COURS'].includes(l.st)).length > 0;
 
-    return `<div class="mb">
+    return `<div class="sec-block">
       <div class="twrap">
       <table class="tbl">
         <thead>
@@ -1424,12 +1427,6 @@ function renderDept(id){
                 <span style="flex:1"></span>
                 <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
                   <span style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
-                  ${sR>0 ? `<span style="display:flex;align-items:center;gap:8px">
-                    <div style="width:120px;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;flex-shrink:0">
-                      <div style="width:${burnPct}%;height:100%;background:${burnCol};border-radius:4px"></div>
-                    </div>
-                    <span style="font-size:14px;font-weight:700;color:${burnCol};min-width:38px">${burnPct}%</span>
-                  </span>` : `<span style="font-size:13px;color:var(--text-dim)">—</span>`}
                 </span>
               </div>
             </td>
@@ -1634,7 +1631,9 @@ function renderDept(id){
       </div>
     </div>
 
-    ${secHTML}`;
+    <div style="border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;margin-bottom:14px">
+    ${secHTML}
+    </div>`;
 
   // Populate dept-scoped avancement card
   renderDeptAv(id);
