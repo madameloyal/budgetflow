@@ -82,6 +82,18 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .sdiv{display:flex;align-items:center;gap:12px;margin:28px 0 14px}
 .sdl{flex:1;height:1px;background:var(--border)}
 .sdt{font-size:.63em;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);font-weight:600;white-space:nowrap}
+/* ── Option C dept header ── */
+.dept-hdr{display:grid;grid-template-columns:4px 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
+.dept-hdr-rail{width:4px}
+.dept-hdr-inner{background:var(--surface);padding:16px 20px}
+.dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.dept-hdr-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.dept-hdr-meta{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:4px;font-weight:500}
+.dept-hdr-kpis{display:flex;align-items:flex-end;gap:0}
+.dept-hdr-kpi{flex-shrink:0;padding-right:22px;margin-right:22px;border-right:1px solid rgba(255,255,255,.07)}
+.dept-hdr-kpi:last-child{border-right:none;padding-right:0;margin-right:0;flex:1}
+.dept-hdr-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);margin-bottom:4px}
+.dept-hdr-val{font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1}
 /* sticky dept summary bar */
 .dept-sticky{position:sticky;top:49px;z-index:90;background:rgba(8,8,13,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:8px 0 8px;margin:0 0 4px;display:flex;align-items:center;gap:16px;font-size:.72em}
 
@@ -255,18 +267,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .db-pw-placeholder{color:#4a4a6a;font-size:14px}
 .db-pw-error{font-size:11px;color:#e17055;margin-bottom:8px;min-height:14px;text-align:left}
 
-/* ── DEPT PAGE HEADER (option C) ── */
-.dept-header{display:grid;grid-template-columns:4px 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px}
-.dept-header-rail{width:4px}
-.dept-header-inner{background:var(--surface);padding:18px 22px}
-.dept-header-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.dept-header-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.2px}
-.dept-header-meta{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:4px;font-weight:500}
-.dept-header-kpis{display:grid;grid-template-columns:auto auto auto 1fr;gap:0;align-items:end}
-.dept-header-kpi{padding-right:24px;border-right:1px solid var(--border);margin-right:24px}
-.dept-header-kpi:last-of-type{border-right:none;margin-right:0;padding-right:0}
-.dept-header-kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px}
-.dept-header-kpi-val{font-size:20px;font-weight:700;letter-spacing:-.3px;line-height:1}
+/* ── BILAN STAT CHIPS ── */
 .bchip{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;transition:border-color .2s}
 .bchip-label{font-size:.6em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;margin-bottom:6px}
 .bchip-val{font-size:1.35em;font-weight:700;color:#fff;letter-spacing:-.3px;line-height:1.1}
@@ -1478,42 +1479,67 @@ function renderDept(id){
   const burnCol = p>=100?'var(--red)':p>=75?'var(--amber)':deptColor;
 
   cont.innerHTML=`
-    <!-- ── Option C dept header ── -->
-    <div class="dept-header mb">
-      <div class="dept-header-rail" style="background:${deptColor}"></div>
-      <div class="dept-header-inner">
-        <div class="dept-header-top">
-          <span class="dept-header-name">${dept.name}</span>
-          <span class="dept-header-meta">${dept.sections.length} section${dept.sections.length>1?'s':''} · ${allL.filter(l=>l.est>0).length} lignes</span>
-          ${unsignedAmt>0?`<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:4px">⚠ ${fe(unsignedAmt)} non signé</span>`:'<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:4px">✓ Tout signé</span>'}
+    <div class="dept-hdr">
+      <div class="dept-hdr-rail" style="background:${deptColor}"></div>
+      <div class="dept-hdr-inner">
+        <div class="dept-hdr-top">
+          <span class="dept-hdr-name">${dept.name}</span>
+          <span class="dept-hdr-meta">${dept.sections.length} section${dept.sections.length>1?'s':''} · ${allL.filter(l=>l.est>0).length} lignes</span>
+          ${unsignedAmt>0
+            ? `<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">⚠ ${fe(unsignedAmt)} non signé</span>`
+            : `<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:4px;flex-shrink:0">✓ Tout signé</span>`}
           <span style="flex:1"></span>
-          <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap">TTC ⇄</button>
-          <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;margin:0;width:auto;border-top:1px solid var(--border)">
-            <span class="chevron" style="font-style:normal;transition:transform .3s">▶</span> Tout déplier
-          </button>
+          <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
+          <button class="expand-all-btn" id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.68em;font-weight:600;cursor:pointer;margin:0;width:auto"><span class="chevron">▶</span> Tout déplier</button>
         </div>
-        <div class="dept-header-kpis">
-          <div class="dept-header-kpi">
-            <div class="dept-header-kpi-lbl">Au budget HT</div>
-            <div class="dept-header-kpi-val" style="color:#fff">${fe(tot.est)}</div>
+        <div class="dept-hdr-kpis">
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Au budget HT</div>
+            <div class="dept-hdr-val" style="color:#fff">${fe(tot.est)}</div>
           </div>
-          <div class="dept-header-kpi">
-            <div class="dept-header-kpi-lbl">Dépensé HT</div>
-            <div class="dept-header-kpi-val" style="color:${tot.reel>0?'#fff':'var(--text-dim)'}">${tot.reel?fe(tot.reel):'—'}</div>
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Dépensé HT</div>
+            <div class="dept-hdr-val" style="color:${tot.reel>0?'#fff':'rgba(255,255,255,.25)'}">${tot.reel?fe(tot.reel):'—'}</div>
           </div>
-          <div class="dept-header-kpi">
-            <div class="dept-header-kpi-lbl">Non signé</div>
-            <div class="dept-header-kpi-val" style="color:${unsignedAmt>0?'var(--amber)':'var(--green)'}">${fe(unsignedAmt)||'—'}</div>
+          <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Non signé</div>
+            <div class="dept-hdr-val" style="color:${unsignedAmt>0?'var(--amber)':'var(--green)'}">${unsignedAmt>0?fe(unsignedAmt):'—'}</div>
           </div>
-          <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:5px;padding-left:24px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Consommé</span>
-              <span style="font-size:16px;font-weight:700;color:${burnCol}">${p}%</span>
+          <div class="dept-hdr-kpi">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+              <span class="dept-hdr-lbl">Consommé</span>
+              <span style="font-size:15px;font-weight:700;color:${burnCol}">${p}%</span>
             </div>
-            <div style="height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+            <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
               <div style="height:100%;width:${Math.min(p,100)}%;background:${burnCol};border-radius:3px;transition:width .6s"></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4 stat chips ── -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div class="bchip">
+        <div class="bchip-label">Au budget HT</div>
+        <div class="bchip-val">${fe(tot.est)}</div>
+        <div class="bchip-sub">${dept.sections.length} section${dept.sections.length>1?'s':''} · ${allL.filter(l=>l.est>0).length} lignes</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Dépensé HT</div>
+        <div class="bchip-val" style="color:${tot.reel>0?'#fff':'var(--text-dim)'}">${tot.reel?fe(tot.reel):'—'}</div>
+        <div class="bchip-sub">${tot.reel>0?'Réel confirmé':'Aucune dépense'}</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Restant</div>
+        <div class="bchip-val" style="color:var(--amber)">${fe(Math.max(0,tot.est-tot.reel))}</div>
+        <div class="bchip-sub">À engager</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Consommé</div>
+        <div class="bchip-val" style="color:${p>=100?'var(--red)':p>=75?'var(--amber)':'var(--green)'}">${p}%</div>
+        <div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(p,100)}%;background:${p>=100?'var(--red)':p>=75?'var(--amber)':'var(--green)'};border-radius:2px;transition:width .6s"></div>
         </div>
       </div>
     </div>
@@ -1623,7 +1649,7 @@ function renderDept(id){
       <span style="color:var(--text-dim)">·</span>
       <span style="color:${ec>=0?'var(--green)':'var(--red)'};font-weight:600">${ec>=0?'+':''}${fe(ec)} écart</span>
       <span style="margin-left:auto;color:var(--text-dim);font-size:.9em">${dept.sections.length} sections · ${allL.length} lignes</span>
-      <button onclick="toggleTTC(this)" id="ttc-toggle2-${id}" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap">TTC ⇄</button>
+      <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" title="Afficher/masquer colonnes TTC">TTC ⇄</button>
     </div>
 
     ${secHTML}`;
@@ -3241,13 +3267,10 @@ function toggleTTC(btn) {
   document.querySelectorAll('.show-ht').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
   document.querySelectorAll('.show-ttc').forEach(el => el.style.display = _ttcVisible ? '' : 'none');
   document.querySelectorAll('.tva-col').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
-  // Sync all TTC toggle buttons
-  document.querySelectorAll('[id^="ttc-toggle"]').forEach(b => {
-    b.textContent     = _ttcVisible ? 'HT ⇄' : 'TTC ⇄';
-    b.style.color     = _ttcVisible ? '#818cf8' : 'var(--text-dim)';
-    b.style.borderColor = _ttcVisible ? 'rgba(99,102,241,.4)' : 'var(--border)';
-    b.style.background  = _ttcVisible ? 'rgba(99,102,241,.1)' : 'var(--surface-2)';
-  });
+  btn.style.color       = _ttcVisible ? '#818cf8'              : 'var(--text-dim)';
+  btn.style.borderColor = _ttcVisible ? 'rgba(99,102,241,.4)'  : 'var(--border)';
+  btn.style.background  = _ttcVisible ? 'rgba(99,102,241,.1)'  : 'var(--surface-2)';
+  btn.textContent       = _ttcVisible ? 'HT ⇄' : 'TTC ⇄';
 }
 
 // ════════════════════════════════════════════════════
