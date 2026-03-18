@@ -1913,7 +1913,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${techCard}
       ${col3(
-        comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue'),
+        unmatchedCard(id),
         comingSoonCard('Fiches prestataires', 'Contacts et contrats des prestataires techniques.', 'green')
       )}
     `;
@@ -1923,7 +1923,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     ${burnCard()}
     ${engagementCard()}
     ${col3(
-      comingSoonCard('Mood board', 'Références visuelles et concepts validés pour chaque installation. Connecté au module Médias.', 'purple'),
+      unmatchedCard(id),
       comingSoonCard('Plans techniques', 'Implantations scénographiques et plans de montage.', 'blue')
     )}
   `;
@@ -1942,8 +1942,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${partCard}
       ${col3(
-        comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple'),
-        comingSoonCard('Contreparties', 'Suivi des contreparties dues aux partenaires confirmés.', 'amber')
+        unmatchedCard(id),
+        comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple')
       )}
     `;
   }
@@ -1952,8 +1952,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     ${burnCard()}
     ${engagementCard()}
     ${col3(
-      comingSoonCard('Stats newsletters', "Taux d'ouverture, clics et conversions. Connecté à votre compte Brevo.", 'blue'),
-      comingSoonCard('Médias accrédités', 'Presse, photographes, vidéastes — accréditations et livraisons. Connecté au module Médias.', 'green')
+      unmatchedCard(id),
+      comingSoonCard('Stats newsletters', "Taux d'ouverture, clics et conversions. Connecté à votre compte Brevo.", 'blue')
     )}
   `;
 
