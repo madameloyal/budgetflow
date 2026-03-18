@@ -1294,9 +1294,9 @@ function renderDept(id){
     const sid=`s${id}${si}`;
     const sE=sec.lines.reduce((a,l)=>a+(l.est||0),0);
     const sR=sec.lines.reduce((a,l)=>a+(l.reel||0),0);
-    const sEc=sE-sR;
     const sE_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.est,l.tva)||0),0);
     const sR_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.reel,l.tva)||0),0);
+    const sEc=sE-sR;
 
     const rows=sec.lines.map((line,li)=>{
       const isPlaceholder = !line.l || line.l.startsWith('(ligne');
@@ -1365,7 +1365,7 @@ function renderDept(id){
       <table class="tbl">
         <thead>
           <tr class="shead" onclick="tog('${sid}')">
-            <td colspan="9" style="padding:0">
+            <td colspan="7" style="padding:0">
               <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
                 <span id="arr-${sid}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:12px">▶</span>
                 <span style="font-weight:700;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
@@ -1377,7 +1377,7 @@ function renderDept(id){
                 <span style="flex:1"></span>
                 <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
                   <span class="show-ht" style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
-                  <span class="show-ttc" style="display:none;font-size:15px;font-weight:700;color:#fff">${fe(sE_ttc)}</span>
+                  <span class="show-ttc" style="display:none;font-size:15px;font-weight:700;color:#c4b5fd">${fe(Math.round(sE_ttc))}</span>
                 </span>
               </div>
             </td>
@@ -1402,7 +1402,7 @@ function renderDept(id){
         </thead>
         <tbody id="${sid}" style="display:none">${rows}
           <tr class="add-ligne-row">
-            <td colspan="9" style="padding:4px 10px">
+            <td colspan="7" style="padding:4px 10px">
               <button class="add-ligne-btn" onclick="openAddLigne('${id}',${si})">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Ajouter une ligne budgétaire
@@ -1411,18 +1411,18 @@ function renderDept(id){
           </tr>
           <tr class="trow">
             <td>TOTAL ${sec.s}</td>
-            <td class="tva-col"></td>
+            <td></td>
             <td>
               <span class="show-ht cro" style="font-weight:700;color:#fff">${fe(sE)}</span>
-              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${fe(sE_ttc)}</span>
+              <span class="show-ttc cro" style="display:none;font-weight:700;color:#c4b5fd">${fe(Math.round(sE_ttc))}</span>
             </td>
             <td>
               <span class="show-ht cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span>
-              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${sR_ttc?fe(sR_ttc):'—'}</span>
+              <span class="show-ttc cro" style="display:none;font-weight:700;color:#c4b5fd">${sR?fe(Math.round(sR_ttc)):'—'}</span>
             </td>
             <td>${ecH(sEc)}</td>
             <td></td>
-            <td class="obs"></td>
+            <td></td>
           </tr>
         </tbody>
       </table>
@@ -1459,38 +1459,36 @@ function renderDept(id){
       </div>
     </div>
 
-    <!-- ── Full-width card: Sections breakdown (like Budgets soumis) ── -->
-    <div class="card mb" style="padding:20px;cursor:pointer;transition:border-color .2s"
-      onmouseover="this.style.borderColor='rgba(99,102,241,.35)'" onmouseout="this.style.borderColor=''">
+    <!-- ── ROW: Sections breakdown — full width (Bilan-identical) ── -->
+    <div class="card mb" style="padding:20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Budget par section</div>
+          <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Répartition par section</div>
           <div style="font-size:.85em;font-weight:700;color:#fff">${fe(tot.est)}</div>
-          <div style="font-size:.65em;color:var(--text-muted)">${dept.sections.length} section${dept.sections.length>1?'s':''} · ${allL.filter(l=>l.est>0).length} lignes actives</div>
+          <div style="font-size:.65em;color:var(--text-muted)">${dept.sections.length} section${dept.sections.length>1?'s':''}</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(${Math.min(dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).length,5)},1fr);gap:8px">
-        ${dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
-          const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
-          const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
-          const sP=pct(sR,sE);
-          const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
-          const sCol=sP>=100?'var(--red)':sP>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)';
-          return `<div>
-            <div style="font-size:.62em;font-weight:600;color:var(--text-muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.s}</div>
-            <div style="font-size:.78em;font-weight:700;color:#fff;margin-bottom:4px">${fe(sE)}</div>
-            <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${burnW}%;background:${sCol};opacity:.75;border-radius:3px;transition:width .6s"></div>
-            </div>
-            ${sR>0?`<div style="font-size:.52em;color:${sCol};margin-top:3px">${sP}% consommé</div>`:`<div style="font-size:.52em;color:var(--text-dim);margin-top:3px">Aucun réel</div>`}
-          </div>`;
-        }).join('')}
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(dept.sections.length,5)},1fr);gap:6px">
+      ${dept.sections.map(s=>{
+        const sE2=s.lines.reduce((a,l)=>a+(l.est||0),0);
+        const sR2=s.lines.reduce((a,l)=>a+(l.reel||0),0);
+        const sP2=pct(sR2,sE2);
+        const sCol2=sP2>=100?'var(--red)':sP2>=75?'var(--amber)':'var(--indigo)';
+        const hasBudget=sE2>0;
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:100%;height:32px;border-radius:7px;background:${hasBudget?sCol2+'22':'rgba(255,255,255,.04)'};border:1px solid ${hasBudget?sCol2+'55':'rgba(255,255,255,.07)'};display:flex;align-items:center;justify-content:center;font-size:.65em;color:${hasBudget?sCol2:'var(--text-dim)'}">
+            ${hasBudget?(sR2>0?sP2+'%':'✓'):'·'}
+          </div>
+          <div style="font-size:.52em;color:${hasBudget?'var(--text-muted)':'var(--text-dim)'};text-align:center;white-space:nowrap;overflow:hidden;max-width:100%;text-overflow:ellipsis;font-weight:${hasBudget?'600':'400'}">${s.s}</div>
+          <div style="font-size:.52em;color:var(--text-dim)">${hasBudget?fe(sE2):'—'}</div>
+        </div>`;
+      }).join('')}
       </div>
     </div>
 
-    <!-- ── g3: 2 solid cards + col3 stacked (identical to Bilan layout) ── -->
+    <!-- ── ROW: g3 grid — 3 columns (Bilan-identical) ── -->
     <div class="g3 mb">
-      ${buildDeptCards(id, dept, tot, allL, p)}
+      ${buildDeptG3Cards(id, dept, tot, allL, p)}
     </div>
 
     <div class="sdiv" style="align-items:center">
@@ -1542,13 +1540,16 @@ function renderDept(id){
     <div style="border:1px solid rgba(255,255,255,.07);border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:14px">
     ${secHTML}
     </div>`;
-
 }
 
+/* ╔═══ DEPT AVANCEMENT (right card) ═══ */
 // ════════════════════════════════════════════════════
-// PER-DEPT CARDS — Bilan-style: card1 | card2 | col3 (3 stacked small)
+// PER-DEPT G3 CARDS — Bilan-identical 3-column layout
+// Col 1: solid card (padding:20px)
+// Col 2: solid card (padding:20px)
+// Col 3: 3 stacked dashed cards (flex:1), last = Comparaison
 // ════════════════════════════════════════════════════
-function buildDeptCards(id, dept, tot, allL, p) {
+function buildDeptG3Cards(id, dept, tot, allL, p) {
   const fe2=v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v).replace(/\u202f/g,'\u00a0');
   const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
   const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
@@ -1558,26 +1559,34 @@ function buildDeptCards(id, dept, tot, allL, p) {
   const signedAmt=(stAmts['DEVIS SIGNÉ']||0)+(stAmts['VALIDÉ']||0)+(stAmts['PAYÉ']||0);
 
   const cardLabel = txt => `<div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:10px">${txt}</div>`;
+
   const futureBadge = (color='purple') => {
-    const colors = {purple:'rgba(168,85,247,.1)|rgba(168,85,247,.25)|#c084fc',green:'rgba(52,211,153,.1)|rgba(52,211,153,.25)|#34d399',amber:'rgba(251,191,36,.1)|rgba(251,191,36,.25)|#fbbf24',blue:'rgba(99,102,241,.1)|rgba(99,102,241,.25)|#818cf8'};
+    const colors = {
+      purple: 'rgba(168,85,247,.1)|rgba(168,85,247,.25)|#c084fc',
+      green:  'rgba(52,211,153,.1)|rgba(52,211,153,.25)|#34d399',
+      amber:  'rgba(251,191,36,.1)|rgba(251,191,36,.25)|#fbbf24',
+      blue:   'rgba(99,102,241,.1)|rgba(99,102,241,.25)|#818cf8',
+    };
     const [bg,border,col] = colors[color].split('|');
     return `<span style="font-size:.55em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 7px;border-radius:4px;background:${bg};border:1px solid ${border};color:${col};white-space:nowrap">✦ Bientôt</span>`;
   };
-  const smallCard = (label, desc, color='purple', opts={}) => `
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(${color==='purple'?'168,85,247':color==='green'?'52,211,153':color==='amber'?'251,191,36':'99,102,241'},.2);flex:1;${opts.clickable?'cursor:pointer;transition:border-color .2s;':''}"
+
+  const comingSoonCard = (label, desc, color='purple', extraHtml='', opts={}) => `
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(${color==='purple'?'168,85,247':color==='green'?'52,211,153':color==='amber'?'251,191,36':'99,102,241'},.2);flex:1;${opts.clickable?'cursor:pointer;transition:border-color .2s;':''}${opts.style||''}"
       ${opts.clickable?`onclick="${opts.clickable}" onmouseover="this.style.borderColor='rgba(${color==='blue'?'99,102,241':color==='green'?'52,211,153':color==='amber'?'251,191,36':'168,85,247'},.5)'" onmouseout="this.style.borderColor=''"`:''}>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">${label}</div>
-        <div style="display:flex;align-items:center;gap:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        ${cardLabel(label)}
+        <div style="display:flex;align-items:center;gap:6px">
           ${futureBadge(color)}
-          ${opts.clickable?`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`:''}
+          ${opts.clickable?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`:''}
         </div>
       </div>
-      <div style="font-size:.6em;color:var(--text-dim)">${desc}</div>
+      <div style="font-size:.68em;color:var(--text-dim);line-height:1.6">${desc}</div>
+      ${extraHtml}
     </div>`;
 
-  // ── Comparison card — identical to Bilan (opens drawer for section detail) ──
-  const comparisonCard = () => `
+  // ── Bilan-style Comparaison card — always 3rd in col 3 ─────
+  const bilanComparisonCard = () => `
     <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(168,85,247,.2);flex:1;cursor:pointer;transition:border-color .2s"
       onclick="openDeptComparisonDrawer('${id}')"
       onmouseover="this.style.borderColor='rgba(168,85,247,.45)'" onmouseout="this.style.borderColor='rgba(168,85,247,.2)'">
@@ -1594,129 +1603,354 @@ function buildDeptCards(id, dept, tot, allL, p) {
       <div style="font-size:.6em;color:var(--text-dim)">Disponible via Festiflow</div>
     </div>`;
 
-  // ── Layout helper: card1 + card2 + col3(small1, small2, comparison) ──
-  const layout = (card1, card2, small1, small2) => `
-    <!-- Card 1 -->
-    <div class="card" style="padding:20px;display:flex;flex-direction:column">${card1}</div>
-    <!-- Card 2 -->
-    <div class="card" style="padding:20px;display:flex;flex-direction:column">${card2}</div>
-    <!-- Col 3: 3 stacked small cards -->
+  // ── Wrap col 3 ─────
+  const col3 = (card1, card2) => `
     <div style="display:flex;flex-direction:column;gap:10px;height:100%">
-      ${small1}
-      ${small2}
-      ${comparisonCard()}
+      ${card1}
+      ${card2}
+      ${bilanComparisonCard()}
     </div>`;
 
-  // ═══ PER-DEPT CONTENT ═══
-
-  if (id === 'reperages') {
-    const engagementHtml = STORDER.filter(s=>stAmts[s]>0).map(s=>{
-      const pctW=tot.est>0?Math.round(stAmts[s]/tot.est*100):0;
-      return `<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="chip chip-${stcls(s)}">${s}</span><span style="font-size:.68em;color:#fff;font-weight:600">${fe2(stAmts[s])} <span style="color:var(--text-dim)">${pctW}%</span></span></div><div style="height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden"><div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px"></div></div></div>`;
+  // ── Pipeline statuts — solid card (used as Card 1 or 2) ─────
+  const engagementCard = () => {
+    const bars = STORDER.filter(s=>stAmts[s]>0).map(s=>{
+      const pctW = tot.est>0 ? Math.round(stAmts[s]/tot.est*100) : 0;
+      return `<div style="margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span class="chip chip-${s==='ESTIMATION'?'est':s==='EN COURS'?'ec':s==='DEVIS SIGNÉ'?'ds':s==='VALIDÉ'?'val':'pay'}">${s}</span>
+          <span style="font-size:.68em;color:#fff;font-weight:600">${fe2(stAmts[s])} <span style="color:var(--text-dim);font-weight:400">${pctW}%</span></span>
+        </div>
+        <div style="height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden">
+          <div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px;transition:width .6s"></div>
+        </div>
+      </div>`;
     }).join('');
-    return layout(
-      `${cardLabel('Engagement par statut')}${engagementHtml}${unsignedAmt>0?`<div style="margin-top:10px;padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/tot.est*100)}% du budget</div>`:''}`,
-      `${cardLabel('Frais par intervenant')}<div style="display:flex;flex-direction:column;gap:5px">${[{name:'Hugo Le Guellec',role:'Directeur technique',frais:'—'},{name:'Chloe Adour',role:'Prod. exécutive',frais:'—'},{name:'Leon Saturnin',role:'Régisseur général',frais:'—'}].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px"><div><div style="font-size:.65em;color:var(--text-muted)">${p.name}</div><div style="font-size:.58em;color:var(--text-dim)">${p.role}</div></div><span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span></div>`).join('')}</div>`,
-      smallCard('Prochains repérages', 'Visites de site, dates et lieux', 'blue', {clickable:`openRepéragesPanel('reperages_visits')`}),
-      smallCard('Planning repérages', 'Calendrier des déplacements prévus', 'green', {clickable:`openRepéragesPanel('reperages_contacts')`})
-    );
-  }
+    const alertHtml = unsignedAmt > 0 && tot.est > 0 ? `
+      <div style="margin-top:10px;padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber);line-height:1.5">
+        ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/tot.est*100)}% du budget
+      </div>` : signedAmt>0 ? `
+      <div style="margin-top:10px;padding:7px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px;font-size:.62em;color:var(--green)">
+        ✓ ${fe2(signedAmt)} confirmé · ${Math.round(signedAmt/Math.max(tot.est,1)*100)}% du budget
+      </div>` : '';
+    return `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Engagement par statut')}
+      ${bars}
+      ${alertHtml}
+    </div>`;
+  };
+
+  // ── Consommation par section — solid card ─────
+  const burnCard = () => {
+    const maxEst = Math.max(...dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)),1);
+    const rows = dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
+      const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
+      const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
+      const sP=pct(sR,sE);
+      const col=sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--indigo)';
+      const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
+      const budgW=Math.round(sE/maxEst*100);
+      return `<div style="padding:4px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:.68em;font-weight:600;color:var(--text-muted)">${s.s}</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:.65em;color:var(--text-dim)">${fe(sE)}</span>
+            ${sR>0?`<span style="font-size:.65em;font-weight:700;color:${col}">${sP}%</span>`:''}
+          </span>
+        </div>
+        <div style="position:relative;height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+          <div style="position:absolute;left:0;top:0;height:100%;width:${budgW}%;background:rgba(255,255,255,.07);border-radius:3px"></div>
+          <div style="position:absolute;left:0;top:0;height:100%;width:${burnW}%;background:${col};opacity:.8;border-radius:3px;transition:width .6s"></div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Consommation par section')}
+      ${rows}
+    </div>`;
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // PER-DEPT LAYOUTS — Card1 | Card2 | Col3 (3 dashed)
+  // ══════════════════════════════════════════════════════════
+
+  if (id === 'reperages') return `
+    ${burnCard()}
+    ${engagementCard()}
+    ${col3(
+      comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
+        `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
+          ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
+            `<div style="font-size:.65em;padding:5px 8px;background:var(--surface-2);border-radius:5px;color:var(--text-dim)">${v}</div>`
+          ).join('')}
+        </div>`,
+        {clickable:"openRepéragesPanel('reperages_visits')"}),
+      comingSoonCard('Frais par intervenant', "Notes de frais individuelles par membre de l'équipe. Connecté au module Contacts & RH.", 'green', '',
+        {clickable:"openRepéragesPanel('reperages_contacts')"})
+    )}
+  `;
 
   if (id === 'vhr') {
-    const hotelLines=allL.filter(l=>/h.tel|chambre|h.berg|nuit/i.test(l.l));
-    const transLines=allL.filter(l=>/transport|navette|train|avion|taxi|voiture|v.hicule|van|camion|location/i.test(l.l));
-    const otherLines=allL.filter(l=>!hotelLines.includes(l)&&!transLines.includes(l));
-    const hotelEst=hotelLines.reduce((a,l)=>a+(l.est||0),0);
-    const transEst=transLines.reduce((a,l)=>a+(l.est||0),0);
-    const hotelReel=hotelLines.reduce((a,l)=>a+(l.reel||0),0);
-    const transReel=transLines.reduce((a,l)=>a+(l.reel||0),0);
-    const hotelSigned=hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
-    const transSigned=transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
-    const catRows=[{label:'🏨 Hébergement',est:hotelEst,reel:hotelReel,signed:hotelSigned,col:'#60a5fa',lines:hotelLines.length},{label:'🚐 Transports',est:transEst,reel:transReel,signed:transSigned,col:'#fb923c',lines:transLines.length},...(otherLines.length?[{label:'📦 Autres',est:otherLines.reduce((a,l)=>a+(l.est||0),0),reel:otherLines.reduce((a,l)=>a+(l.reel||0),0),signed:0,col:'var(--text-dim)',lines:otherLines.length}]:[])];
-    return layout(
-      `${cardLabel('Budget par catégorie')}<div style="display:flex;flex-direction:column;gap:8px">${catRows.map(c=>{const bp=c.est>0?Math.round(c.reel/c.est*100):0;const sp=c.est>0?Math.round(c.signed/c.est*100):0;return`<div style="background:var(--surface-2);border-radius:9px;padding:11px 13px"><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="font-size:.7em;font-weight:600;color:var(--text-muted)">${c.label}</span><span style="font-size:.68em;font-weight:700;color:#fff">${c.est?fe2(c.est):'—'}</span></div><div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:5px"><div style="width:${Math.min(bp,100)}%;height:100%;background:${c.col};opacity:.8;border-radius:3px"></div></div><div style="display:flex;justify-content:space-between"><span style="font-size:.58em;color:var(--text-dim)">${c.lines} ligne${c.lines>1?'s':''}</span>${c.signed>0?`<span style="font-size:.58em;color:var(--green)">✓ ${sp}% confirmé</span>`:`<span style="font-size:.58em;color:var(--amber)">⚠ Aucun devis signé</span>`}</div></div>`;}).join('')}</div>${unsignedAmt>0?`<div style="margin-top:10px;padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé</div>`:''}`,
-      `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-      smallCard('Rooming list', 'Hôtels, chambres, personnes logées', 'blue', {clickable:`openVhrRoomingDrawer()`}),
-      smallCard('Planning transports', 'Navettes, aéroport, véhicules', 'amber', {clickable:`openVhrTransportDrawer()`})
-    );
+    const hotelLines  = allL.filter(l => /h.tel|chambre|h.berg|nuit/i.test(l.l));
+    const transLines  = allL.filter(l => /transport|navette|train|avion|taxi|voiture|v.hicule|van|camion|location/i.test(l.l));
+    const otherLines  = allL.filter(l => !hotelLines.includes(l) && !transLines.includes(l));
+    const hotelEst    = hotelLines.reduce((a,l)=>a+(l.est||0),0);
+    const transEst    = transLines.reduce((a,l)=>a+(l.est||0),0);
+    const hotelReel   = hotelLines.reduce((a,l)=>a+(l.reel||0),0);
+    const transReel   = transLines.reduce((a,l)=>a+(l.reel||0),0);
+    const hotelSigned = hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+    const transSigned = transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+
+    // Card 1: Budget par catégorie
+    const vhrCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Budget par catégorie')}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        ${[
+          {label:'🏨 Hébergement', est:hotelEst, reel:hotelReel, signed:hotelSigned, col:'#60a5fa', lines:hotelLines.length},
+          {label:'🚐 Transports',  est:transEst, reel:transReel, signed:transSigned, col:'#fb923c', lines:transLines.length},
+          ...(otherLines.length ? [{label:'📦 Autres', est:otherLines.reduce((a,l)=>a+(l.est||0),0), reel:otherLines.reduce((a,l)=>a+(l.reel||0),0), signed:0, col:'var(--text-dim)', lines:otherLines.length}] : [])
+        ].map(c=>{
+          const burnPct = c.est>0 ? Math.round(c.reel/c.est*100) : 0;
+          const signPct = c.est>0 ? Math.round(c.signed/c.est*100) : 0;
+          return `<div style="background:var(--surface-2);border-radius:9px;padding:11px 13px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <span style="font-size:.7em;font-weight:600;color:var(--text-muted)">${c.label}</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:.68em;font-weight:700;color:#fff">${c.est?fe2(c.est):'—'}</span>
+                ${c.reel>0?`<span style="font-size:.6em;color:${c.col};font-weight:700">${burnPct}%</span>`:''}
+              </span>
+            </div>
+            <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:5px">
+              <div style="width:${Math.min(burnPct,100)}%;height:100%;background:${c.col};opacity:.8;border-radius:3px;transition:width .6s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:.58em;color:var(--text-dim)">${c.lines} ligne${c.lines>1?'s':''}</span>
+              ${c.signed>0
+                ?`<span style="font-size:.58em;color:var(--green)">✓ ${signPct}% confirmé</span>`
+                :`<span style="font-size:.58em;color:var(--amber)">⚠ Aucun devis signé</span>`}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${unsignedAmt>0?`
+      <div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">
+        ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}% du budget VHR
+      </div>`:''}
+    </div>`;
+
+    return `
+      ${vhrCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Rooming list', 'Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.', 'blue', '', {clickable:"openVhrRoomingDrawer()"}),
+        comingSoonCard('Planning transports', 'Données issues du LOG_STAFF (SUIVI TRANSPORT). Disponible via Festiflow Transport.', 'amber', '', {clickable:"openVhrTransportDrawer()"})
+      )}
+    `;
   }
 
   if (id === 'production') {
-    const topUnsigned=allL.filter(l=>['ESTIMATION','EN COURS'].includes(l.st)&&(l.est||0)>0).sort((a,b)=>(b.est||0)-(a.est||0)).slice(0,5);
-    const topHtml=topUnsigned.length?topUnsigned.map(l=>{const pp=tot.est>0?Math.round((l.est||0)/tot.est*100):0;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface-2);border-radius:7px;border-left:2px solid ${l.st==='EN COURS'?'var(--amber)':'rgba(255,255,255,.1)'}"><div style="flex:1;min-width:0"><div style="font-size:.68em;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.l}</div><div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${l.st} · ${pp}%</div></div><span style="font-size:.72em;font-weight:700;color:#fff;margin-left:10px;white-space:nowrap">${fe2(l.est)}</span></div>`;}).join(''):`<div style="font-size:.72em;color:var(--green);padding:8px 0">✓ Tout est signé</div>`;
-    return layout(
-      `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">${cardLabel('À signer en priorité')}${unsignedAmt>0?`<span style="font-size:.62em;font-weight:700;color:var(--amber)">${fe2(unsignedAmt)} non signé</span>`:''}</div><div style="display:flex;flex-direction:column;gap:5px">${topHtml}</div>`,
-      `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-      smallCard('Comparaison éditions', 'Coûts 2025 vs 2026 par section', 'blue', {clickable:`openProductionPanel('comparaison')`}),
-      smallCard('Fonctionnalité à venir', 'Module disponible prochainement', 'purple')
-    );
+    const topUnsigned = allL
+      .filter(l => ['ESTIMATION','EN COURS'].includes(l.st) && (l.est||0) > 0)
+      .sort((a,b) => (b.est||0) - (a.est||0))
+      .slice(0, 5);
+
+    const topUnsignedHtml = topUnsigned.length ? `
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
+        ${topUnsigned.map(l => {
+          const pctOfTotal = tot.est > 0 ? Math.round((l.est||0)/tot.est*100) : 0;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface-2);border-radius:7px;border-left:2px solid ${l.st==='EN COURS'?'var(--amber)':'rgba(255,255,255,.1)'}">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.68em;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.l}</div>
+              <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${l.st} · ${pctOfTotal}% du budget</div>
+            </div>
+            <span style="font-size:.72em;font-weight:700;color:#fff;margin-left:10px;white-space:nowrap">${fe2(l.est)}</span>
+          </div>`;
+        }).join('')}
+      </div>` : `<div style="font-size:.72em;color:var(--green);padding:8px 0">✓ Tout est signé</div>`;
+
+    const prodCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        ${cardLabel('À signer en priorité')}
+        ${unsignedAmt > 0 ? `<span style="font-size:.62em;font-weight:700;color:var(--amber)">${fe2(unsignedAmt)} non signé</span>` : `<span style="font-size:.62em;color:var(--green)">✓ Tout signé</span>`}
+      </div>
+      ${topUnsignedHtml}
+      ${unsignedAmt > 0 ? `
+        <div style="margin-top:10px;height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
+          <div style="width:${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}%;height:100%;background:var(--amber);opacity:.6;border-radius:2px"></div>
+        </div>` : ''}
+    </div>`;
+
+    return `
+      ${prodCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Planning montage', 'Timeline de montage J-5 à J-1. Connecté au module Calendrier.', 'blue'),
+        comingSoonCard('Prestataires clés', 'Suivi des contrats prestataires principaux. Connecté au module Contacts.', 'green')
+      )}
+    `;
   }
 
   if (id === 'catering') {
-    const secGrid=dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);const sp=sE>0?Math.round(s.lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0)/sE*100):0;return`<div style="background:var(--surface-2);border-radius:8px;padding:9px 11px"><div style="font-size:.58em;color:var(--text-dim);margin-bottom:3px">${s.s}</div><div style="font-size:.82em;font-weight:700;color:#fff;margin-bottom:4px">${fe2(sE)}</div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="width:${sp}%;height:100%;background:${sp>=100?'var(--green)':sp>0?'var(--amber)':'rgba(255,255,255,.1)'};border-radius:2px"></div></div><div style="font-size:.55em;color:${sp>0?'var(--amber)':'var(--text-dim)'};margin-top:3px">${sp}% signé</div></div>`;}).join('');
-    return layout(
-      `${cardLabel('Fournisseurs & engagement')}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">${secGrid}</div>${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé</div>`:''}`,
-      `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-      smallCard('Coût par repas', 'Budget ÷ effectif ÷ jours', 'amber', {clickable:`openCoutRepasDrawer()`}),
-      smallCard('Présence & régimes', 'Effectifs et régimes alimentaires', 'green')
-    );
+    const cateringCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Fournisseurs & engagement')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        ${dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
+          const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
+          const signPct=sE>0?Math.round(s.lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0)/sE*100):0;
+          return `<div style="background:var(--surface-2);border-radius:8px;padding:9px 11px">
+            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:3px">${s.s}</div>
+            <div style="font-size:.82em;font-weight:700;color:#fff;margin-bottom:4px">${fe2(sE)}</div>
+            <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
+              <div style="width:${signPct}%;height:100%;background:${signPct>=100?'var(--green)':signPct>0?'var(--amber)':'rgba(255,255,255,.1)'};border-radius:2px"></div>
+            </div>
+            <div style="font-size:.55em;color:${signPct>0?'var(--amber)':'var(--text-dim)'};margin-top:3px">${signPct}% signé</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé — fournisseur à confirmer</div>`:''}
+    </div>`;
+
+    return `
+      ${cateringCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur.', 'amber', '', {clickable:"openCoutRepasDrawer()"}),
+        comingSoonCard('Planning livraisons', 'Suivi des créneaux de livraison et confirmations traiteur.', 'green')
+      )}
+    `;
   }
 
   if (id === 'bar') {
-    const recBar=REC.find(c=>c.cat==='BAR')||REC.find(c=>c.cat&&c.cat.includes('BAR'));
-    const barRev=recBar?recBar.rows.reduce((a,r)=>a+r.ht,0):0;
-    const roi=barRev>0&&tot.est>0?((barRev-tot.est)/tot.est*100).toFixed(0):null;
-    return layout(
-      `${cardLabel('ROI Bar estimé')}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div style="background:var(--surface-2);border-radius:8px;padding:10px 12px"><div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Recettes prévues</div><div style="font-size:.9em;font-weight:700;color:var(--green)">${barRev>0?fe2(barRev):'—'}</div></div><div style="background:var(--surface-2);border-radius:8px;padding:10px 12px"><div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Coûts Bar</div><div style="font-size:.9em;font-weight:700;color:var(--red)">${fe2(tot.est)}</div></div></div>${roi!==null?`<div style="padding:8px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;font-size:.72em;color:var(--green);font-weight:600">ROI estimé : +${roi}% · Marge ${fe2(barRev-tot.est)}</div>`:`<div style="font-size:.65em;color:var(--text-dim)">Recettes Bar non renseignées</div>`}`,
-      `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-      smallCard('Ventes temps réel', 'CA live cashless / TPE', 'green'),
-      smallCard('Stocks & commandes', 'Suivi alcool, soft, merch', 'amber')
-    );
+    const recBar = REC.find(c=>c.cat==='BAR')||REC.find(c=>c.cat&&c.cat.includes('BAR'));
+    const barRev = recBar ? recBar.rows.reduce((a,r)=>a+r.ht,0) : 0;
+    const roi = barRev>0&&tot.est>0 ? ((barRev-tot.est)/tot.est*100).toFixed(0) : null;
+
+    const barCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('ROI Bar estimé')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Recettes prévues</div>
+          <div style="font-size:.9em;font-weight:700;color:var(--green)">${barRev>0?fe2(barRev):'—'}</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Coûts Bar</div>
+          <div style="font-size:.9em;font-weight:700;color:var(--red)">${fe2(tot.est)}</div>
+        </div>
+      </div>
+      ${roi!==null ? `<div style="padding:8px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;font-size:.72em;color:var(--green);font-weight:600">ROI estimé : +${roi}% · Marge ${fe2(barRev-tot.est)}</div>` : `<div style="font-size:.65em;color:var(--text-dim)">Recettes Bar non renseignées dans le P&L</div>`}
+    </div>`;
+
+    return `
+      ${barCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie.', 'green'),
+        comingSoonCard('Stock & commandes', 'Suivi des niveaux de stock alcool, soft, merch.', 'amber')
+      )}
+    `;
   }
 
-  if (id === 'artistique') return layout(
-    `${cardLabel('Contrats & fees')}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div style="background:var(--surface-2);border-radius:8px;padding:10px 12px"><div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Fees signés</div><div style="font-size:.9em;font-weight:700;color:var(--green)">${fe2(signedAmt)}</div></div><div style="background:var(--surface-2);border-radius:8px;padding:10px 12px"><div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Non confirmés</div><div style="font-size:.9em;font-weight:700;color:var(--red)">${fe2(unsignedAmt)}</div></div></div>${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red)">⚠ ${fe2(unsignedAmt)} sans contrat signé</div>`:''}`,
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    smallCard('Fiches artistes', 'Riders, contacts, management', 'purple'),
-    smallCard('Programmation', 'Planning scènes et horaires', 'blue')
-  );
+  if (id === 'artistique') {
+    const artCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Contrats & fees')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Fees signés</div>
+          <div style="font-size:.9em;font-weight:700;color:var(--green)">${fe2(signedAmt)}</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:.58em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Non confirmés</div>
+          <div style="font-size:.9em;font-weight:700;color:var(--red)">${fe2(unsignedAmt)}</div>
+        </div>
+      </div>
+      ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">⚠ ${fe2(unsignedAmt)} de fees sans contrat signé — risque contractuel</div>`:''}
+    </div>`;
 
-  if (id === 'technique') return layout(
-    `${cardLabel('Prestataires techniques')}${dept.sections.map(s=>{const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);const signed=s.lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);const sp=sE>0?Math.round(signed/sE*100):0;return sE>0?`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:.68em;color:var(--text-muted)">${s.s}</span><span style="display:flex;align-items:center;gap:8px"><span style="font-size:.65em;color:var(--text-dim)">${fe2(sE)}</span><span style="font-size:.62em;font-weight:700;color:${sp>=100?'var(--green)':sp>0?'var(--amber)':'var(--text-dim)'}">${sp}% signé</span></span></div>`:''}).join('')}`,
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    smallCard('Planning montage', 'Timeline J-5 à J-1', 'blue'),
-    smallCard('Fiches techniques', 'Plans scènes et équipements', 'green')
-  );
+    return `
+      ${artCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple'),
+        comingSoonCard('Planning sets', 'Running order et créneaux DJ/live par scène.', 'blue')
+      )}
+    `;
+  }
 
-  if (id === 'sceno') return layout(
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    `${cardLabel('Prestataires scéno')}${dept.sections.map(s=>{const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);return sE>0?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:.68em;color:var(--text-muted)">${s.s}</span><span style="font-size:.65em;color:var(--text-dim)">${fe2(sE)}</span></div>`:''}).join('')}`,
-    smallCard('Mood board', 'Références visuelles et concepts', 'purple'),
-    smallCard('Plans & 3D', 'Implantation scénographique', 'blue')
-  );
+  if (id === 'technique') {
+    const techCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Prestataires techniques')}
+      ${dept.sections.map(s=>{
+        const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
+        const signed=s.lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
+        const signPct=sE>0?Math.round(signed/sE*100):0;
+        return sE>0?`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="font-size:.68em;color:var(--text-muted)">${s.s}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:.65em;color:var(--text-dim)">${fe2(sE)}</span>
+            <span style="font-size:.62em;font-weight:700;color:${signPct>=100?'var(--green)':signPct>0?'var(--amber)':'var(--text-dim)'}">${signPct}% signé</span>
+          </span>
+        </div>`:''
+      }).join('')}
+    </div>`;
 
-  if (id === 'partenariat') return layout(
-    `${cardLabel('Objectif revenus partenariats')}<div style="font-size:1.3em;font-weight:700;color:var(--text-dim);margin-bottom:6px">— €</div><div style="font-size:.65em;color:var(--text-dim);margin-bottom:10px">Aucun objectif défini — ajouter une ligne recette Partenariat dans le P&L</div><div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden"><div style="width:0%;height:100%;background:var(--indigo);border-radius:3px"></div></div>`,
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    smallCard('CRM Partenaires', 'Prospects, négociations, relances', 'purple'),
-    smallCard('Contreparties', 'Suivi des engagements partenaires', 'green')
-  );
+    return `
+      ${techCard1}
+      ${engagementCard()}
+      ${col3(
+        comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue'),
+        comingSoonCard('Fiches prestataires', 'Contacts et contrats des prestataires techniques.', 'green')
+      )}
+    `;
+  }
 
-  if (id === 'communication') return layout(
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    `${cardLabel('Prestataires comm')}<div style="font-size:.68em;color:var(--text-dim);line-height:1.6">Aucun prestataire engagé. Lancer les appels d'offres pour graphisme, vidéo et RP.</div>`,
-    smallCard('Stats newsletters', 'Ouverture, clics, conversions', 'blue'),
-    smallCard('Médias accrédités', 'Presse, photo, vidéo', 'green')
-  );
+  if (id === 'sceno') return `
+    ${burnCard()}
+    ${engagementCard()}
+    ${col3(
+      comingSoonCard('Mood board', 'Références visuelles et concepts validés pour chaque installation. Connecté au module Médias.', 'purple'),
+      comingSoonCard('Plans techniques', 'Implantations scénographiques et plans de montage.', 'blue')
+    )}
+  `;
 
-  // Fallback
-  return layout(
-    `${cardLabel('Engagement contractuel')}<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px"><div style="flex:${Math.max(signedAmt,1)};background:#818cf8;border-radius:3px"></div><div style="flex:${Math.max(unsignedAmt,1)};background:rgba(255,255,255,.08);border-radius:3px"></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#818cf8"></span>Signé ${fe2(signedAmt)}</span><span style="font-size:.62em;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.08)"></span>Non signé ${fe2(unsignedAmt)}</span></div>`,
-    `${cardLabel('Vue générale')}<div style="font-size:.68em;color:var(--text-dim)">Données disponibles dans le tableau ci-dessous.</div>`,
-    smallCard('Fonctionnalité à venir', 'Module disponible prochainement', 'purple'),
-    smallCard('Fonctionnalité à venir', 'Module disponible prochainement', 'blue')
-  );
+  if (id === 'partenariat') {
+    const partCard2 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      ${cardLabel('Objectif revenus partenariats')}
+      <div style="font-size:1.3em;font-weight:700;color:var(--text-dim);margin-bottom:6px">— €</div>
+      <div style="font-size:.65em;color:var(--text-dim);margin-bottom:10px">Aucun objectif défini — ajouter une ligne recette Partenariat dans le P&L</div>
+      <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+        <div style="width:0%;height:100%;background:var(--indigo);border-radius:3px"></div>
+      </div>
+    </div>`;
+
+    return `
+      ${engagementCard()}
+      ${partCard2}
+      ${col3(
+        comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple'),
+        comingSoonCard('Contreparties', 'Suivi des contreparties dues aux partenaires confirmés.', 'amber')
+      )}
+    `;
+  }
+
+  if (id === 'communication') return `
+    ${burnCard()}
+    ${engagementCard()}
+    ${col3(
+      comingSoonCard('Stats newsletters', "Taux d'ouverture, clics et conversions. Connecté à votre compte Brevo.", 'blue'),
+      comingSoonCard('Médias accrédités', 'Presse, photographes, vidéastes — accréditations et livraisons. Connecté au module Médias.', 'green')
+    )}
+  `;
+
+  // Fallback — generic
+  return `
+    ${burnCard()}
+    ${engagementCard()}
+    ${col3(
+      comingSoonCard('Module en développement', 'Fonctionnalités supplémentaires bientôt disponibles.', 'purple'),
+      comingSoonCard('Historique', 'Comparaison avec les éditions précédentes.', 'blue')
+    )}
+  `;
 }
+
 
 function upCell(inp){
   if(!inp.dataset.id) return;
