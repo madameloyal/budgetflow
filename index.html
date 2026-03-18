@@ -1481,7 +1481,6 @@ function renderDept(id){
           ${(()=>{const u=allL.filter(l=>['ESTIMATION','EN COURS'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);return u>0?`<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:2px 9px;border-radius:4px">⚠ ${fe(u)} non signé</span>`:`<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:2px 9px;border-radius:4px">✓ Tout signé</span>`;})()}
           <span style="margin-left:auto;display:flex;gap:6px">
             <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
-            <button id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;margin:0;width:auto;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px"><span class="chevron" style="font-size:9px;transition:transform .3s;display:inline-block">▶</span><span>TOUT DÉPLIER</span></button>
           </span>
         </div>
         <div class="dept-hdr-kpis">
@@ -2419,35 +2418,46 @@ function renderUnmatchedTab(rows) {
 
   // Update table headers to match real data
   const thead = table?.querySelector('thead tr');
+  const thSt = 'padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px';
   if (thead) thead.innerHTML = `
-    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Date</th>
-    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Fournisseur</th>
-    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Note</th>
-    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Catégorie</th>
-    <th style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px;text-align:right">Montant TTC</th>
-    <th class="tl" style="padding:8px 14px;color:var(--text-dim);font-size:.65em;font-weight:600;text-transform:uppercase;letter-spacing:1px">Initiateur</th>
+    <th class="tl" style="${thSt}">Date</th>
+    <th class="tl" style="${thSt}">Département</th>
+    <th class="tl" style="${thSt}">Fournisseur</th>
+    <th class="tl" style="${thSt}">Note</th>
+    <th style="${thSt};text-align:right">Montant TTC</th>
+    <th class="tl" style="${thSt}">Initiateur</th>
     <th style="padding:8px 14px"></th>
   `;
 
   if (!tbody) return;
   tbody.innerHTML = rows.map((row) => {
-    const d = row.date ? row.date.toString().slice(0,10).split('-').reverse().join('/') : '—';
     const amt = row.ttc ? `−${fmtAmt(Math.abs(row.ttc))}` : '—';
+    const deptLabel = row.dept || '—';
+    const secLabel = row.section ? `<div style="font-size:.6em;color:var(--text-dim);font-weight:600;text-transform:uppercase;margin-top:1px">${row.section}</div>` : '';
+    // Parse date: could be "YYYY/MM/DD", "DD-MM-YYYY HH:MM:SS", or serial number
+    let dateStr = '—';
+    if (row.date) {
+      const d = row.date.toString().trim();
+      if (d.includes('/')) { const p = d.split('/'); dateStr = p.length===3 ? (p[0].length===4 ? `${p[2]}/${p[1]}/${p[0]}` : d.slice(0,10)) : d; }
+      else if (d.includes('-')) { dateStr = d.slice(0,10).split('-').reverse().join('/'); }
+      else dateStr = d.slice(0,10);
+    }
     return `<tr style="border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.015)'" onmouseout="this.style.background=''">
-      <td style="padding:10px 14px;color:var(--text-dim);font-family:monospace;font-size:.78em;white-space:nowrap">${d}</td>
+      <td style="padding:10px 14px;color:var(--text-dim);font-family:monospace;font-size:.75em;white-space:nowrap">${dateStr}</td>
+      <td style="padding:10px 14px;font-size:.78em;white-space:nowrap">
+        <div style="color:var(--text-muted)">${deptLabel}</div>
+        ${secLabel}
+      </td>
       <td style="padding:10px 14px">
         <div style="font-size:.78em;font-weight:600;color:#fff">${row.fourn || '—'}</div>
       </td>
       <td style="padding:10px 14px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         <div style="font-size:.75em;color:var(--text-muted)">${row.note || '—'}</div>
       </td>
-      <td style="padding:10px 14px">
-        ${row.cat ? `<span style="font-size:.65em;font-weight:600;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text-muted)">${row.cat}</span>` : '<span style="color:var(--text-dim);font-size:.75em">—</span>'}
-      </td>
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:.85em;font-weight:700;color:var(--red);white-space:nowrap">${amt}</td>
       <td style="padding:10px 14px;color:var(--text-dim);font-size:.78em">${row.init || ''}</td>
       <td style="padding:10px 14px;text-align:right">
-        <button onclick="openAssignDrawer(${row.idx},'${(row.fourn||'').replace(/'/g,"\\'")}','${(row.note||'').replace(/'/g,"\\'")}',${row.ttc||0},'${row.cat||''}')"
+        <button onclick="openAssignDrawer(${row.idx},'${(row.fourn||'').replace(/'/g,"\\'")}','${(row.note||'').replace(/'/g,"\\'")}',${row.ttc||0},'${(row.dept||'')}')"
           style="font-size:.7em;padding:5px 12px;border-radius:5px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;white-space:nowrap"
           onmouseover="this.style.background='rgba(99,102,241,.22)'" onmouseout="this.style.background='rgba(99,102,241,.1)'">
           Assigner →
