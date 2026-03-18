@@ -1557,6 +1557,36 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${extraHtml}
     </div>`;
 
+  // ── Transactions non reliées card — dashed, shows dept unmatched count ─────
+  const unmatchedCard = (deptId) => {
+    const deptRows = _unmatchedRows.filter(r => (r.dept||'').toUpperCase().includes(deptId.toUpperCase()));
+    const count = deptRows.length;
+    const totalTTC = deptRows.reduce((a,r) => a + Math.abs(r.ttc||0), 0);
+    const topRows = deptRows.slice(0, 3);
+    const listHtml = topRows.length ? topRows.map(r =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
+        <span style="font-size:.65em;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">${r.fourn||r.note||'—'}</span>
+        <span style="font-size:.65em;font-weight:600;color:var(--red);white-space:nowrap">${r.ttc ? '−'+fmtAmt(Math.abs(r.ttc)) : '—'}</span>
+      </div>`
+    ).join('') : `<div style="font-size:.68em;color:var(--text-dim);padding:4px 0">${_unmatchedRows.length ? 'Aucune pour ce pôle' : 'Données en attente…'}</div>`;
+    const moreLabel = count > 3 ? `<div style="font-size:.6em;color:var(--text-dim);text-align:center;margin-top:4px">+ ${count - 3} autre${count-3>1?'s':''}</div>` : '';
+    return `
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(248,113,113,.2);flex:1;cursor:pointer;transition:border-color .2s"
+      onclick="go('transactions',null)"
+      onmouseover="this.style.borderColor='rgba(248,113,113,.45)'" onmouseout="this.style.borderColor='rgba(248,113,113,.2)'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Transactions non reliées</div>
+        <div style="display:flex;align-items:center;gap:5px">
+          ${count > 0 ? `<span style="font-size:.6em;font-weight:700;color:var(--red);background:rgba(248,113,113,.1);padding:2px 7px;border-radius:4px">${count}</span>` : `<span style="font-size:.6em;color:var(--green)">✓ 0</span>`}
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,.4)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      ${count > 0 ? `<div style="font-size:.72em;font-weight:600;color:var(--red);margin-bottom:8px">−${fmtAmt(totalTTC)}</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:4px">${listHtml}</div>
+      ${moreLabel}
+    </div>`;
+  };
+
   // ── Bilan-style Comparaison card — always 3rd in col 3 ─────
   const bilanComparisonCard = () => `
     <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(168,85,247,.2);flex:1;cursor:pointer;transition:border-color .2s"
@@ -1650,13 +1680,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     ${burnCard()}
     ${engagementCard()}
     ${col3(
-      comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
-        `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
-          ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
-            `<div style="font-size:.65em;padding:5px 8px;background:var(--surface-2);border-radius:5px;color:var(--text-dim)">${v}</div>`
-          ).join('')}
-        </div>`,
-        {clickable:"openRepéragesPanel('reperages_visits')"}),
+      unmatchedCard(id),
       comingSoonCard('Frais par intervenant', "Notes de frais individuelles par membre de l'équipe. Connecté au module Contacts & RH.", 'green', '',
         {clickable:"openRepéragesPanel('reperages_contacts')"})
     )}
