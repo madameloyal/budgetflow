@@ -1467,8 +1467,7 @@ function renderDept(id){
 
     <div class="g2 mb" style="align-items:start">
 
-      <!-- LEFT COLUMN: carousel + optional extra cards -->
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <!-- LEFT CARD: KPI default + section detail carousel -->
       <div class="card" style="padding:0;overflow:hidden">
         <div class="fc-wrap" id="fc-${id}">
           <div class="fc-track" id="fct-${id}">
@@ -1550,8 +1549,6 @@ function renderDept(id){
           </div>
         </div>
       </div>
-      ${buildDeptLeftCards(id, dept, tot, allL, p)}
-      </div>
 
       <!-- RIGHT: dept-specific context cards -->
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -1617,53 +1614,6 @@ function renderDept(id){
 }
 
 /* ╔═══ DEPT AVANCEMENT (right card) ═══ */
-// ════════════════════════════════════════════════════
-// PER-DEPT LEFT CARDS — below carousel, per tab
-// ════════════════════════════════════════════════════
-function buildDeptLeftCards(id, dept, tot, allL, p) {
-  // Shared helpers (same as right cards)
-  const fe2=v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v).replace(/\u202f/g,'\u00a0');
-  const cardLabel = txt => `<div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:10px">${txt}</div>`;
-  const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
-  const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
-  const stAmts={};
-  STORDER.forEach(s=>{ stAmts[s]=allL.filter(l=>l.st===s).reduce((a,l)=>a+(l.est||0),0); });
-  const unsignedAmt=(stAmts['ESTIMATION']||0)+(stAmts['EN COURS']||0);
-  const signedAmt=(stAmts['DEVIS SIGNÉ']||0)+(stAmts['VALIDÉ']||0)+(stAmts['PAYÉ']||0);
-
-  const pipelineCard = () => {
-    const bars = STORDER.filter(s=>stAmts[s]>0).map(s=>{
-      const pctW = tot.est>0 ? Math.round(stAmts[s]/tot.est*100) : 0;
-      return `<div style="margin-bottom:7px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span class="chip chip-${s==='ESTIMATION'?'est':s==='EN COURS'?'ec':s==='DEVIS SIGNÉ'?'ds':s==='VALIDÉ'?'val':'pay'}">${s}</span>
-          <span style="font-size:.68em;color:#fff;font-weight:600">${fe2(stAmts[s])} <span style="color:var(--text-dim);font-weight:400">${pctW}%</span></span>
-        </div>
-        <div style="height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden">
-          <div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px;transition:width .6s"></div>
-        </div>
-      </div>`;
-    }).join('');
-    const alertHtml = unsignedAmt > 0 && tot.est > 0 ? `
-      <div style="margin-top:10px;padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber);line-height:1.5">
-        ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/tot.est*100)}% du budget
-      </div>` : signedAmt>0 ? `
-      <div style="margin-top:10px;padding:7px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px;font-size:.62em;color:var(--green)">
-        ✓ ${fe2(signedAmt)} confirmé · ${Math.round(signedAmt/Math.max(tot.est,1)*100)}% du budget
-      </div>` : '';
-    return `<div class="card" style="padding:16px">
-      ${cardLabel('Engagement par statut')}
-      ${bars}
-      ${alertHtml}
-    </div>`;
-  };
-
-  if (id === 'reperages') return pipelineCard();
-
-  // Default: nothing extra on the left
-  return '';
-}
-
 // ════════════════════════════════════════════════════
 // PER-DEPT RIGHT CARDS — context-specific stacked cards
 // ════════════════════════════════════════════════════
@@ -1793,6 +1743,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
   };
 
   if (id === 'reperages') return `
+    ${pipelineCard()}
     ${comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
       `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
         ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
