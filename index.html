@@ -1615,24 +1615,25 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   // ── Consommation par section — solid card ─────
   const burnCard = () => {
     const maxEst = Math.max(...dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)),1);
-    const rows = dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
+    const rows = dept.sections.map(s=>{
       const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
       const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
       const sP=pct(sR,sE);
       const col=sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--indigo)';
       const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
-      const budgW=Math.round(sE/maxEst*100);
-      return `<div style="padding:4px 0">
+      const budgW=sE>0?Math.round(sE/maxEst*100):0;
+      const hasBudget=sE>0;
+      return `<div style="padding:4px 0${hasBudget?'':';opacity:.45'}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <span style="font-size:.68em;font-weight:600;color:var(--text-muted)">${s.s}</span>
           <span style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:.65em;color:var(--text-dim)">${fe(sE)}</span>
+            <span style="font-size:.65em;color:var(--text-dim)">${hasBudget?fe(sE):'—'}</span>
             ${sR>0?`<span style="font-size:.65em;font-weight:700;color:${col}">${sP}%</span>`:''}
           </span>
         </div>
         <div style="position:relative;height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
-          <div style="position:absolute;left:0;top:0;height:100%;width:${budgW}%;background:rgba(255,255,255,.07);border-radius:3px"></div>
-          <div style="position:absolute;left:0;top:0;height:100%;width:${burnW}%;background:${col};opacity:.8;border-radius:3px;transition:width .6s"></div>
+          ${hasBudget?`<div style="position:absolute;left:0;top:0;height:100%;width:${budgW}%;background:rgba(255,255,255,.07);border-radius:3px"></div>
+          <div style="position:absolute;left:0;top:0;height:100%;width:${burnW}%;background:${col};opacity:.8;border-radius:3px;transition:width .6s"></div>`:''}
         </div>
       </div>`;
     }).join('');
