@@ -2206,6 +2206,53 @@ function initApp(){
   if(activeNav && activeNav.dataset.page && activeNav.dataset.page !== 'bilan' && activeNav.dataset.page !== 'transactions'){
     renderDept(activeNav.dataset.page);
   }
+  // Load QONTO_RAW and rebuild match map (so Dépensé drawer shows tx details)
+  loadAndMatchQontoRaw();
+}
+
+async function loadAndMatchQontoRaw() {
+  // Skip if match map already exists in sessionStorage
+  try {
+    const existing = sessionStorage.getItem(QONTO_MATCH_KEY);
+    if (existing && JSON.parse(existing) && Object.keys(JSON.parse(existing)).length > 0) return;
+  } catch(e) {}
+
+  try {
+    const resp = await fetch(`${API}/api/qonto-raw`, { headers: {'Accept':'application/json'} });
+    if (!resp.ok) return;
+    const json = await resp.json();
+    const all = json.data || [];
+    if (!all.length) return;
+
+    // Build match index same as storeQontoTransactions
+    const byLine = {};
+    all.filter(tx => (tx.ttc||0) < 0).forEach(tx => {
+      const normCat = normStr(tx.cat||'');
+      const tabName = POLE_MAP_CLIENT[normCat];
+      if (!tabName) return;
+      const dept = DEPTS.find(d => d.id === tabName.toLowerCase());
+      if (!dept) return;
+      const allLines = dept.sections.flatMap(s => s.lines).filter(l => l.l && !l.l.match(/^\(ligne/i));
+      const noteDesc = extractDesc(tx.note);
+      const match = allLines.find(l =>
+        (noteDesc && fuzzyMatchClient(normStr(l.l), normStr(noteDesc))) ||
+        fuzzyMatchClient(normStr(l.l), normStr(tx.fourn||''))
+      );
+      if (match) {
+        const key = `${tabName}|${match.l}`;
+        if (!byLine[key]) byLine[key] = [];
+        byLine[key].push(tx);
+      }
+    });
+
+    try {
+      sessionStorage.setItem(QONTO_TX_KEY, JSON.stringify(all));
+      sessionStorage.setItem(QONTO_MATCH_KEY, JSON.stringify(byLine));
+      console.log(`✅ Qonto RAW loaded: ${all.length} tx, ${Object.keys(byLine).length} lignes matched`);
+    } catch(e) {}
+  } catch(e) {
+    console.warn('loadAndMatchQontoRaw failed:', e);
+  }
 }
 
 
