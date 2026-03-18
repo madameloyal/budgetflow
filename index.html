@@ -190,23 +190,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .page.on{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── CAROUSEL ── */
-.fc-wrap{overflow:hidden;border-radius:16px;height:100%}
-.fc-track{display:flex;transition:transform .4s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
-.fc-face{min-width:100%;width:100%;padding:28px;box-sizing:border-box;flex-shrink:0;display:flex;flex-direction:column;height:100%}
-.fc-body{flex:1;overflow-y:auto}
-.fc-body.scrollable{overflow-y:auto;max-height:260px}
-.fc-foot{padding-top:8px}
-/* Bilan carousel: cap faces so the card stays same height as its neighbours */
-#fct-av>.fc-face{max-height:360px}
-/* Details toggle */
-.details-toggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.72em;color:var(--text-muted);cursor:pointer;padding:8px 0 2px;user-select:none;transition:color .2s;width:100%;border:none;background:none;font-family:inherit}
-.details-toggle:hover{color:#fff}
-.details-toggle .arrow{font-size:0.75em;display:inline-block}
-.face-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
-.face-dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:background .25s}
-.face-dot.on{background:var(--amber)}
-.fc-title{font-size:.63em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:10px}
 
 @media(max-width:720px){
   /* ── layout ── */
@@ -230,7 +213,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
   /* ── cards ── */
   .card{padding:18px 16px}
-  .fc-face{padding:18px 16px}
   .hero{font-size:1.6em}
 
   /* ── nav brand hidden on small screens ── */
@@ -1465,95 +1447,37 @@ function renderDept(id){
       </div>
     </div>
 
-    <div class="g2 mb" style="align-items:start">
+    <div class="g3 mb">
 
-      <!-- LEFT CARD: KPI default + section detail carousel -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="fc-wrap" id="fc-${id}">
-          <div class="fc-track" id="fct-${id}">
-
-            <!-- FACE 0 — Sections breakdown -->
-            <div class="fc-face">
-              <div class="fc-body">
-                <div class="chead" style="margin-bottom:14px"><div class="clabel">Par section</div></div>
-                ${dept.sections.map(s=>{
-                  const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
-                  const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
-                  const sP=pct(sR,sE);
-                  const sCol=sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--indigo)';
-                  const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
-                  return `<div style="margin-bottom:12px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                      <span style="font-size:.72em;font-weight:600;color:var(--text-muted)">${s.s}</span>
-                      <span style="display:flex;align-items:center;gap:8px">
-                        <span style="font-size:.68em;color:var(--text-dim)">${fe(sE)}</span>
-                        ${sR>0?`<span style="font-size:.68em;font-weight:700;color:${sCol}">${sP}%</span>`:''}
-                      </span>
-                    </div>
-                    <div style="height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
-                      <div style="height:100%;width:${burnW}%;background:${sCol};opacity:.75;border-radius:3px;transition:width .6s"></div>
-                    </div>
-                  </div>`;
-                }).join('')}
-                <div class="div"></div>
-                <div class="mrow"><span class="mk">Total au budget</span><span class="mv">${fe(tot.est)}</span></div>
-                <div class="mrow"><span class="mk">Total dépensé</span><span class="mv">${tot.reel?fe(tot.reel):'—'}</span></div>
-              </div>
-              <div class="fc-foot">
-                <div class="face-dots"><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span></div>
-                <button class="details-toggle" onclick="nextFace('${id}')"><span>Au budget vs Dépensé</span><span class="arrow">▶</span></button>
-              </div>
+      <!-- COL 1: Static sections breakdown card -->
+      <div class="card" style="padding:16px">
+        <div class="chead" style="margin-bottom:14px"><div class="clabel">Par section</div></div>
+        ${dept.sections.map(s=>{
+          const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
+          const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
+          const sP=pct(sR,sE);
+          const sCol=sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--indigo)';
+          const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
+          return `<div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:.72em;font-weight:600;color:var(--text-muted)">${s.s}</span>
+              <span style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:.68em;color:var(--text-dim)">${fe(sE)}</span>
+                ${sR>0?`<span style="font-size:.68em;font-weight:700;color:${sCol}">${sP}%</span>`:''}
+              </span>
             </div>
-
-            <!-- FACE 1 — Bar chart -->
-            <div class="fc-face">
-              <div class="fc-body">
-                <div class="fc-title">Au budget vs Dépensé — par section (HT)</div>
-                <div style="background:var(--surface-2);border-radius:10px;padding:14px 12px;position:relative;height:220px">
-                  <canvas id="sec-bar-${id}" style="width:100%;height:100%"></canvas>
-                </div>
-              </div>
-              <div class="fc-foot">
-                <div class="face-dots"><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span><span class="face-dot"></span></div>
-                <button class="details-toggle" onclick="nextFace('${id}')"><span>Répartition</span><span class="arrow">▶</span></button>
-              </div>
+            <div style="height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${burnW}%;background:${sCol};opacity:.75;border-radius:3px;transition:width .6s"></div>
             </div>
-
-            <!-- FACE 2 — Donut -->
-            <div class="fc-face">
-              <div class="fc-body">
-                <div class="fc-title">Répartition estimation (HT)</div>
-                <div style="background:var(--surface-2);border-radius:10px;padding:14px 12px;position:relative;height:200px">
-                  <canvas id="sec-pie-${id}" style="width:100%;height:100%"></canvas>
-                </div>
-                <div id="pie-leg-${id}" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;font-size:.6em;color:var(--text-dim)"></div>
-              </div>
-              <div class="fc-foot">
-                <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span><span class="face-dot"></span></div>
-                <button class="details-toggle" onclick="nextFace('${id}')"><span>Statuts</span><span class="arrow">▶</span></button>
-              </div>
-            </div>
-
-            <!-- FACE 3 — Statuts pipeline -->
-            <div class="fc-face">
-              <div class="fc-body">
-                <div class="chead" style="margin-bottom:12px"><div class="clabel">Statuts</div><span class="wbadge">${allL.length} lignes</span></div>
-                <div style="display:flex;flex-direction:column;gap:8px" id="av-pipe-${id}"></div>
-              </div>
-              <div class="fc-foot">
-                <div class="face-dots"><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot"></span><span class="face-dot on"></span></div>
-                <button class="details-toggle" onclick="nextFace('${id}')"><span>Par section</span><span class="arrow">▶</span></button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+          </div>`;
+        }).join('')}
+        <div class="div"></div>
+        <div class="mrow"><span class="mk">Total au budget</span><span class="mv">${fe(tot.est)}</span></div>
+        <div class="mrow"><span class="mk">Total dépensé</span><span class="mv">${tot.reel?fe(tot.reel):'—'}</span></div>
       </div>
 
-      <!-- RIGHT: dept-specific context cards -->
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${buildDeptRightCards(id, dept, tot, allL, p)}
-      </div>
+      <!-- COL 2 & 3: dept-specific cards -->
+      ${buildDeptRightCards(id, dept, tot, allL, p)}
 
     </div>
 
@@ -1606,11 +1530,6 @@ function renderDept(id){
     <div style="border:1px solid rgba(255,255,255,.07);border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:14px">
     ${secHTML}
     </div>`;
-
-  // Populate dept-scoped avancement card
-  renderDeptAv(id);
-  // Equalize face heights so button stays at same position on all faces
-  setTimeout(()=>{ equalizeFaces('fct-'+id); equalizeFaces('fct-av-'+id); }, 60);
 }
 
 /* ╔═══ DEPT AVANCEMENT (right card) ═══ */
@@ -1656,35 +1575,6 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       ${extraHtml}
     </div>`;
 
-  // Pipeline statuts card — shared across all tabs
-  const pipelineCard = () => {
-    const bars = STORDER.filter(s=>stAmts[s]>0).map(s=>{
-      const pctW = tot.est>0 ? Math.round(stAmts[s]/tot.est*100) : 0;
-      return `<div style="margin-bottom:7px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span class="chip chip-${s==='ESTIMATION'?'est':s==='EN COURS'?'ec':s==='DEVIS SIGNÉ'?'ds':s==='VALIDÉ'?'val':'pay'}">${s}</span>
-          <span style="font-size:.68em;color:#fff;font-weight:600">${fe2(stAmts[s])} <span style="color:var(--text-dim);font-weight:400">${pctW}%</span></span>
-        </div>
-        <div style="height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden">
-          <div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px;transition:width .6s"></div>
-        </div>
-      </div>`;
-    }).join('');
-    const alertHtml = unsignedAmt > 0 && tot.est > 0 ? `
-      <div style="margin-top:10px;padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber);line-height:1.5">
-        ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/tot.est*100)}% du budget
-      </div>` : signedAmt>0 ? `
-      <div style="margin-top:10px;padding:7px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px;font-size:.62em;color:var(--green)">
-        ✓ ${fe2(signedAmt)} confirmé · ${Math.round(signedAmt/Math.max(tot.est,1)*100)}% du budget
-      </div>` : '';
-    return `<div class="card" style="padding:16px">
-      ${cardLabel('Engagement par statut')}
-      ${bars}
-      ${alertHtml}
-    </div>`;
-  };
-
-  // ── Per-dept specific cards ──────────────────────────
 
   // ── Shared comparison card — used on every tab ─────
   const comparisonCard = (deptId, deptName) => {
@@ -1742,37 +1632,42 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     </div>`;
   };
 
+  // ── Helper: empty "Bientôt" placeholder card ──
+  const bientotCard = () => comingSoonCard('Fonctionnalité à venir', 'Ce module sera disponible dans une prochaine version de BudgetFlow.', 'purple');
+
+  // ═══ REPÉRAGES — 4 cards: col2 stacks 2, col3 stacks 2 ═══
   if (id === 'reperages') return `
-    ${pipelineCard()}
-    ${comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
-      `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
-        ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
-          `<div style="font-size:.65em;padding:5px 8px;background:var(--surface-2);border-radius:5px;color:var(--text-dim)">${v}</div>`
-        ).join('')}
-      </div>`,
-      {clickable:`openRepéragesPanel('reperages_visits')`}
-    )}
-    ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
-      `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
-        ${[
-          {name:'Hugo Le Guellec', role:'Directeur technique', frais:'—'},
-          {name:'Chloe Adour', role:'Prod. exécutive', frais:'—'},
-          {name:'Leon Saturnin', role:'Régisseur général', frais:'—'},
-        ].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
-          <div>
-            <div style="font-size:.65em;color:var(--text-muted)">${p.name}</div>
-            <div style="font-size:.58em;color:var(--text-dim)">${p.role}</div>
-          </div>
-          <span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span>
-        </div>`).join('')}
-      </div>`,
-      {clickable:`openRepéragesPanel('reperages_contacts')`}
-    )}
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
+        `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
+          ${['J-45 · Villepinte — inspection technique','J-30 · Villepinte — validation scéno','J-15 · Paris — réunion finale'].map(v=>
+            `<div style="font-size:.65em;padding:5px 8px;background:var(--surface-2);border-radius:5px;color:var(--text-dim)">${v}</div>`
+          ).join('')}
+        </div>`,
+        {clickable:`openRepéragesPanel('reperages_visits')`}
+      )}
+      ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
+        `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
+          ${[
+            {name:'Hugo Le Guellec', role:'Directeur technique', frais:'—'},
+            {name:'Chloe Adour', role:'Prod. exécutive', frais:'—'},
+            {name:'Leon Saturnin', role:'Régisseur général', frais:'—'},
+          ].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
+            <div>
+              <div style="font-size:.65em;color:var(--text-muted)">${p.name}</div>
+              <div style="font-size:.58em;color:var(--text-dim)">${p.role}</div>
+            </div>
+            <span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span>
+          </div>`).join('')}
+        </div>`,
+        {clickable:`openRepéragesPanel('reperages_contacts')`}
+      )}
+    </div>
     ${comparisonCard('reperages', 'Repérages')}
   `;
 
+  // ═══ VHR — 4 cards: col2 = budget catégorie, col3 stacks rooming + transports ═══
   if (id === 'vhr') {
-    // Smart line categorization from budget data
     const hotelLines  = allL.filter(l => /h.tel|chambre|h.berg|nuit/i.test(l.l));
     const transLines  = allL.filter(l => /transport|navette|train|avion|taxi|voiture|v.hicule|van|camion|location/i.test(l.l));
     const otherLines  = allL.filter(l => !hotelLines.includes(l) && !transLines.includes(l));
@@ -1780,13 +1675,10 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     const transEst    = transLines.reduce((a,l)=>a+(l.est||0),0);
     const hotelReel   = hotelLines.reduce((a,l)=>a+(l.reel||0),0);
     const transReel   = transLines.reduce((a,l)=>a+(l.reel||0),0);
-    const hotelBurn   = hotelEst>0 ? Math.round(hotelReel/hotelEst*100) : 0;
-    const transBurn   = transEst>0 ? Math.round(transReel/transEst*100) : 0;
     const hotelSigned = hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
     const transSigned = transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
 
     return `
-    <!-- CARD 1: Hébergement vs Transports — detailed split -->
     <div class="card" style="padding:16px">
       ${cardLabel('Budget par catégorie')}
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -1822,70 +1714,66 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
         ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}% du budget VHR
       </div>`:''}
     </div>
-
-    <!-- CARD 2: Rooming list — coming soon -->
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(96,165,250,.2);cursor:pointer;transition:border-color .2s"
-      onclick="openVhrRoomingDrawer()"
-      onmouseover="this.style.borderColor='rgba(96,165,250,.4)'" onmouseout="this.style.borderColor='rgba(96,165,250,.2)'">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        ${cardLabel('Rooming list')}
-        <div style="display:flex;align-items:center;gap:6px">
-          ${futureBadge('blue')}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(96,165,250,.2);cursor:pointer;transition:border-color .2s;flex:1"
+        onclick="openVhrRoomingDrawer()"
+        onmouseover="this.style.borderColor='rgba(96,165,250,.4)'" onmouseout="this.style.borderColor='rgba(96,165,250,.2)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          ${cardLabel('Rooming list')}
+          <div style="display:flex;align-items:center;gap:6px">
+            ${futureBadge('blue')}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px">
+          ${[
+            ['🏨 Hôtels prévus','—'],['🛏 Chambres','—'],
+            ['👥 Personnes logées','— / 213'],['💶 Coût / nuitée moy.','—'],
+          ].map(([l,v])=>`
+            <div style="background:var(--surface-2);border-radius:6px;padding:8px 10px;opacity:.6">
+              <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">${l}</div>
+              <div style="font-size:.82em;font-weight:700;color:var(--text-dim)">${v}</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
+          Disponible via Festiflow Hébergement.
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px">
-        ${[
-          ['🏨 Hôtels prévus','—'],['🛏 Chambres','—'],
-          ['👥 Personnes logées','— / 213'],['💶 Coût / nuitée moy.','—'],
-        ].map(([l,v])=>`
-          <div style="background:var(--surface-2);border-radius:6px;padding:8px 10px;opacity:.6">
-            <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">${l}</div>
-            <div style="font-size:.82em;font-weight:700;color:var(--text-dim)">${v}</div>
-          </div>`).join('')}
-      </div>
-      <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
-        Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.
-      </div>
-    </div>
-
-    <!-- CARD 3: Planning transports — coming soon -->
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s;flex:1"
-      onclick="openVhrTransportDrawer()"
-      onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        ${cardLabel('Planning transports')}
-        <div style="display:flex;align-items:center;gap:6px">
-          ${futureBadge('amber')}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s;flex:1"
+        onclick="openVhrTransportDrawer()"
+        onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          ${cardLabel('Planning transports')}
+          <div style="display:flex;align-items:center;gap:6px">
+            ${futureBadge('amber')}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.5)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          ${[
+            ['🚐 Navettes gare/site','—'],
+            ['✈️ Trajets aéroport','—'],
+            ['🚙 Locations véhicules','—'],
+            ['🎫 Cartes avantage SNCF','—'],
+          ].map(([icon,v])=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px;opacity:.6">
+              <span style="font-size:.65em;color:var(--text-dim)">${icon}</span>
+              <span style="font-size:.65em;font-weight:600;color:var(--text-dim)">${v}</span>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
+          Disponible via Festiflow Transport.
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-        ${[
-          ['🚐 Navettes gare/site','—'],
-          ['✈️ Trajets aéroport','—'],
-          ['🚙 Locations véhicules','—'],
-          ['🎫 Cartes avantage SNCF','—'],
-        ].map(([icon,v])=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px;opacity:.6">
-            <span style="font-size:.65em;color:var(--text-dim)">${icon}</span>
-            <span style="font-size:.65em;font-weight:600;color:var(--text-dim)">${v}</span>
-          </div>`).join('')}
-      </div>
-      <div style="font-size:.62em;color:var(--text-dim);line-height:1.5">
-        Données issues du LOG_STAFF (SUIVI TRANSPORT). Disponible via Festiflow Transport.
-      </div>
     </div>
-    ${comparisonCard('vhr', 'VHR')}
   `;}
 
+  // ═══ PRODUCTION — 2 cards + bientôt placeholder ═══
   if (id === 'production') {
-    // Top 5 unsigned lines by amount
     const topUnsigned = allL
       .filter(l => ['ESTIMATION','EN COURS'].includes(l.st) && (l.est||0) > 0)
       .sort((a,b) => (b.est||0) - (a.est||0))
       .slice(0, 5);
-
     const topUnsignedHtml = topUnsigned.length ? `
       <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
         ${topUnsigned.map((l,i) => {
@@ -1901,7 +1789,6 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>` : `<div style="font-size:.72em;color:var(--green);padding:8px 0">✓ Tout est signé</div>`;
 
     return `
-    <!-- Card 1: Top lignes non signées -->
     <div class="card" style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         ${cardLabel('À signer en priorité')}
@@ -1913,32 +1800,10 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
           <div style="width:${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}%;height:100%;background:var(--amber);opacity:.6;border-radius:2px"></div>
         </div>` : ''}
     </div>
-
-    <!-- Card 2: Comparaison éditions — coming soon, clickable -->
-    ${comingSoonCard('Comparaison éditions', 'Coûts Production Paris XXL 2025 vs 2026 par section. Identifier les dérives et les économies réalisées.', 'blue',
-      `<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;opacity:.55">
-        ${[
-          ['Logistique & sécu','89 200 €','—'],
-          ['Permis & admin','12 400 €','—'],
-          ['Personnel technique','67 800 €','—'],
-          ['Infrastructure','45 100 €','—'],
-        ].map(([s,prev,curr])=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--surface-2);border-radius:5px">
-            <span style="font-size:.62em;color:var(--text-dim)">${s}</span>
-            <span style="display:flex;gap:10px;font-size:.62em">
-              <span style="color:var(--text-dim)">2025: ${prev}</span>
-              <span style="color:var(--text-muted)">2026: ${curr}</span>
-            </span>
-          </div>`).join('')}
-      </div>`,
-      {clickable:`openProductionPanel('comparaison')`}
-    )}
-
-    <!-- Card 3: Comparaison éditions -->
     ${comparisonCard('production', 'Production')}
   `;}
 
-
+  // ═══ CATERING — 3 cards: fournisseurs | coût repas | comparison ═══
   if (id === 'catering') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Fournisseurs & engagement')}
@@ -1976,9 +1841,9 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>`,
       {clickable:`openCoutRepasDrawer()`}
     )}
-    ${comparisonCard('catering', 'Catering')}
   `;
 
+  // ═══ BAR — 3 cards: ROI | ventes | comparison ═══
   if (id === 'bar') {
     const recBar = REC.find(c=>c.cat==='BAR')||REC.find(c=>c.cat&&c.cat.includes('BAR'));
     const barRev = recBar ? recBar.rows.reduce((a,r)=>a+r.ht,0) : 0;
@@ -2007,9 +1872,9 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
           </div>`).join('')}
       </div>`
     )}
-    ${comparisonCard('bar', 'Bar')}
   `;}
 
+  // ═══ ARTISTIQUE — 3 cards ═══
   if (id === 'artistique') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Contrats & fees')}
@@ -2026,9 +1891,9 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">⚠ ${fe2(unsignedAmt)} de fees sans contrat signé — risque contractuel</div>`:''}
     </div>
     ${comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple')}
-    ${comparisonCard('artistique', 'Artistique')}
   `;
 
+  // ═══ TECHNIQUE — 3 cards ═══
   if (id === 'technique') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Prestataires techniques')}
@@ -2046,11 +1911,10 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       }).join('')}
     </div>
     ${comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue')}
-    ${comparisonCard('technique', 'Technique')}
   `;
 
+  // ═══ SCÉNO — 3 cards ═══
   if (id === 'sceno') return `
-    ${pipelineCard()}
     ${comingSoonCard('Mood board', 'Références visuelles et concepts validés pour chaque installation. Connecté au module Médias.', 'purple',
       `<div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;opacity:.4">
         ${Array(6).fill(0).map((_,i)=>`<div style="aspect-ratio:1;background:var(--surface-2);border-radius:5px;border:1px solid var(--border)"></div>`).join('')}
@@ -2059,234 +1923,45 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
     ${comparisonCard('sceno', 'Scéno')}
   `;
 
+  // ═══ PARTENARIAT — 4 cards: col2 stacks objectif + CRM, col3 = comparison ═══
   if (id === 'partenariat') return `
-    ${pipelineCard()}
-    <div class="card" style="padding:16px">
-      ${cardLabel('Objectif revenus partenariats')}
-      <div style="font-size:1.3em;font-weight:700;color:var(--text-dim);margin-bottom:6px">— €</div>
-      <div style="font-size:.65em;color:var(--text-dim);margin-bottom:10px">Aucun objectif défini — ajouter une ligne recette Partenariat dans le P&L</div>
-      <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
-        <div style="width:0%;height:100%;background:var(--indigo);border-radius:3px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="padding:16px">
+        ${cardLabel('Objectif revenus partenariats')}
+        <div style="font-size:1.3em;font-weight:700;color:var(--text-dim);margin-bottom:6px">— €</div>
+        <div style="font-size:.65em;color:var(--text-dim);margin-bottom:10px">Aucun objectif défini — ajouter une ligne recette Partenariat dans le P&L</div>
+        <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+          <div style="width:0%;height:100%;background:var(--indigo);border-radius:3px"></div>
+        </div>
       </div>
+      ${comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple')}
     </div>
-    ${comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple')}
     ${comparisonCard('partenariat', 'Partenariat')}
   `;
 
+  // ═══ COMMUNICATION — 4 cards: col2 stacks stats + médias, col3 = comparison ═══
   if (id === 'communication') return `
-    ${pipelineCard()}
-    ${comingSoonCard('Stats newsletters', 'Taux d\'ouverture, clics et conversions. Connecté à votre compte Brevo.', 'blue',
-      `<div style="margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;opacity:.5">
-        ${[['Envois','—'],['Ouverture','—'],['Clics','—']].map(([l,v])=>
-          `<div style="background:var(--surface-2);border-radius:6px;padding:7px 8px;text-align:center">
-            <div style="font-size:.55em;color:var(--text-dim)">${l}</div>
-            <div style="font-size:.82em;font-weight:700;color:var(--text-dim);margin-top:2px">${v}</div>
-          </div>`
-        ).join('')}
-      </div>`
-    )}
-    ${comingSoonCard('Médias accrédités', 'Presse, photographes, vidéastes — accréditations et livraisons. Connecté au module Médias.', 'green')}
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${comingSoonCard('Stats newsletters', 'Taux d\'ouverture, clics et conversions. Connecté à votre compte Brevo.', 'blue',
+        `<div style="margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;opacity:.5">
+          ${[['Envois','—'],['Ouverture','—'],['Clics','—']].map(([l,v])=>
+            `<div style="background:var(--surface-2);border-radius:6px;padding:7px 8px;text-align:center">
+              <div style="font-size:.55em;color:var(--text-dim)">${l}</div>
+              <div style="font-size:.82em;font-weight:700;color:var(--text-dim);margin-top:2px">${v}</div>
+            </div>`
+          ).join('')}
+        </div>`
+      )}
+      ${comingSoonCard('Médias accrédités', 'Presse, photographes, vidéastes — accréditations et livraisons. Connecté au module Médias.', 'green')}
+    </div>
     ${comparisonCard('communication', 'Communication')}
   `;
 
-  // Fallback — generic pipeline + comparison
-  return pipelineCard() + comparisonCard(id, dept.name);
-}
-
-function renderDeptAv(id){
-  const dept=DEPTS.find(d=>d.id===id);
-  if(!dept) return;
-  const allL=dept.sections.flatMap(s=>s.lines);
-  const total=allL.length;
-
-  if(!total||allL.every(l=>!(l.est||0)&&!(l.reel||0))){
-    const wrap=document.getElementById('fc-av-'+id);
-    if(wrap) wrap.closest('.card').innerHTML=
-      '<div style="padding:28px;color:var(--text-dim);font-size:.78em;height:100%;display:flex;align-items:center;justify-content:center">Aucun poste actif</div>';
-    return;
-  }
-
-  const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
-  const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
-  const STCHIP={'ESTIMATION':'chip-est','EN COURS':'chip-ec','DEVIS SIGNÉ':'chip-ds','VALIDÉ':'chip-val','PAYÉ':'chip-pay'};
-  const fe2=v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v).replace(/\u202f/g,'\u00a0');
-
-  const tEst=allL.reduce((a,l)=>a+(l.est||0),0);
-  const tReel=allL.reduce((a,l)=>a+(l.reel||0),0);
-  const stCounts={},stAmts={};
-  STORDER.forEach(s=>{stCounts[s]=0;stAmts[s]=0;});
-  allL.forEach(l=>{stCounts[l.st]=(stCounts[l.st]||0)+1;stAmts[l.st]=(stAmts[l.st]||0)+(l.est||0);});
-  const reelC=allL.filter(l=>l.rh==='C').reduce((a,l)=>a+(l.reel||0),0);
-  const unsignedAmt=(stAmts['ESTIMATION']||0)+(stAmts['EN COURS']||0);
-  const signedAmt=(stAmts['DEVIS SIGNÉ']||0)+(stAmts['VALIDÉ']||0)+(stAmts['PAYÉ']||0);
-  const reelWithoutDevis=tReel>0&&signedAmt<tReel*0.3;
-  const sLines=allL.filter(l=>l.typ==='S');
-  const gLines=allL.filter(l=>l.typ==='G');
-
-  // Per-dept config
-  const CFGS={
-    reperages:{t0:'Statuts — Planification',t1:'Budget prévisionnel',t2:'Sections à mobiliser',t3:'Types de frais',btn0:'Budget',btn1:'Par section',btn2:'Types de frais',t2badge:'Planifié',t2badgeCls:'tg',alert:'⚠ Aucun réel — déplacements/repas à confirmer',alertRgb:'251,191,36',f3:'tva'},
-    vhr:{t0:'Statuts — Hôtels & Transports',t1:'Engagements hébergement',t2:'Non signé par catégorie',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'1 devis signé',t2badgeCls:'tg',alert:'✔ '+fe2(tReel)+' dépensé confirmé (hôtels) sans devis signé',alertRgb:'251,146,60',f3:'sg'},
-    production:{t0:'Statuts — Production',t1:'Budgets par statut',t2:'Sections à signer en priorité',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'6 EN COURS',t2badgeCls:'tr',alert:null,alertRgb:'251,191,36',f3:'sg'},
-    catering:{t0:'Statuts — Catering',t1:'Budget traiteur',t2:'Sections engagées',t3:'Régimes TVA',btn0:'Montants',btn1:'Par section',btn2:'TVA',t2badge:'Régulariser',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' engagé sans devis signé — régulariser',alertRgb:'251,146,60',f3:'tva'},
-    bar:{t0:'Statuts — Bar & Commis',t1:'Budget boissons & staff',t2:'Sections à commander',t3:'Staff (AE/URSSAF) vs Achats',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Tout à engager',t2badgeCls:'tr',alert:'⚠ Commande alcool non passée — anticiper délais fournisseur',alertRgb:'248,113,113',f3:'sg'},
-    artistique:{t0:'Statuts — Cachets artistes',t1:'Fees & cachets',t2:'Artistes non confirmés',t3:'Régimes (TVA / URSSAF)',btn0:'Montants',btn1:'Par artiste/catégorie',btn2:'Répartition',t2badge:'Critique',t2badgeCls:'tr',alert:'⚠ '+fe2(unsignedAmt)+' de fees non signés — contrats à finaliser',alertRgb:'248,113,113',f3:'tva'},
-    technique:{t0:'Statuts — Technique',t1:'Payé vs Au budget',t2:'Prestataires par section',t3:'Répartition prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Statuts à corriger',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' payé — statuts ESTIMATION à mettre à jour',alertRgb:'251,146,60',f3:'sg'},
-    sceno:{t0:'Statuts — Scénographie',t1:'Engagé vs Au budget',t2:'Prestataires par section',t3:'Staff vs Prestataires',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'Statuts à régulariser',t2badgeCls:'tr',alert:'⚠ '+fe2(tReel)+' engagé sans statut signé',alertRgb:'251,146,60',f3:'sg'},
-    partenariat:{t0:'Statuts',t1:'Montants',t2:'Par section',t3:'Répartition',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'',t2badgeCls:'tg',alert:null,alertRgb:'251,191,36',f3:'tva'},
-    communication:{t0:'Statuts — Communication',t1:'Budget communication',t2:'Prestataires à engager',t3:'Régimes TVA',btn0:'Montants',btn1:'Par poste',btn2:'TVA',t2badge:'Aucun confirmé',t2badgeCls:'tr',alert:'⚠ Aucun prestataire engagé — lancer les appels d’offres',alertRgb:'251,191,36',f3:'tva'}
-  };
-  const c=CFGS[id]||{t0:'Statuts',t1:'Montants',t2:'Par section',t3:'Répartition',btn0:'Montants',btn1:'Par section',btn2:'Répartition',t2badge:'',t2badgeCls:'tg',alert:null,alertRgb:'251,191,36',f3:'sg'};
-
-  // Update dynamic labels
-  const setTxt=(eid,v)=>{const e=document.getElementById(eid+id);if(e)e.textContent=v;};
-  setTxt('av-t0-',c.t0); setTxt('av-t1-',c.t1); setTxt('av-t2-',c.t2); setTxt('av-t3-',c.t3);
-  setTxt('av-btn0-',c.btn0); setTxt('av-btn1-',c.btn1); setTxt('av-btn2-',c.btn2);
-  const t2b=document.getElementById('av-t2-badge-'+id);
-  if(t2b){ if(c.t2badge){t2b.textContent=c.t2badge;t2b.className='tag '+c.t2badgeCls;t2b.style.cssText='font-size:.58em;padding:2px 7px';}else t2b.style.display='none'; }
-
-  // FACE 0 - pipeline
-  const bdg=document.getElementById('av-badge-'+id);
-  if(bdg) bdg.textContent=total+' ligne'+(total>1?'s':'');
-  const pipe=document.getElementById('av-pipe-'+id);
-  if(pipe){
-    const alertHtml=c.alert?`<div style="font-size:.65em;padding:6px 9px;border-radius:6px;background:rgba(${c.alertRgb},.07);border:1px solid rgba(${c.alertRgb},.2);color:rgb(${c.alertRgb});margin-bottom:8px;line-height:1.5">${c.alert}</div>`:'';
-    const bars=STORDER.filter(s=>stCounts[s]>0).map(s=>{
-      const n=stCounts[s],pctW=Math.round(n/total*100);
-      return `<div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span class="chip ${STCHIP[s]}">${s}</span>
-          <span style="font-size:.7em;color:var(--text-muted)">${n}<span style="color:var(--text-dim);margin-left:4px">${pctW}%</span></span>
-        </div>
-        <div style="height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden">
-          <div style="width:${pctW}%;height:100%;background:${STCOL[s]};border-radius:2px"></div>
-        </div>
-      </div>`;}).join('');
-    pipe.innerHTML=alertHtml+bars;
-  }
-
-  // FACE 1 - montants
-  const unsLbl=document.getElementById('av-uns-lbl-'+id);
-  const confLbl=document.getElementById('av-conf-lbl-'+id);
-  const unsEl=document.getElementById('av-uns-'+id);
-  const confEl=document.getElementById('av-conf-'+id);
-  const montEl=document.getElementById('av-mont-'+id);
-  if(unsLbl) unsLbl.textContent='Non signé';
-  if(confLbl) confLbl.textContent=reelWithoutDevis?'Dépensé (sans devis)':'Confirmé (dépensé C)';
-  if(unsEl) unsEl.innerHTML=`<span style="color:${unsignedAmt/Math.max(tEst,1)>.5?'var(--red)':'var(--amber)'};font-weight:600">${fe(unsignedAmt)}</span>`;
-  if(confEl) confEl.innerHTML=`<span style="color:var(--green);font-weight:600">${fe(reelWithoutDevis?tReel:reelC)}</span>`;
-  if(montEl){
-    const maxAmt=Math.max(...STORDER.map(s=>stAmts[s]||0),tReel,1);
-    let rows=STORDER.filter(s=>stAmts[s]>0).map(s=>`
-      <div style="margin-bottom:9px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span class="chip ${STCHIP[s]}">${s}</span>
-          <span style="font-size:.72em;font-weight:600;color:#fff">${fe(stAmts[s])}</span>
-        </div>
-        <div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
-          <div style="width:${Math.round(stAmts[s]/maxAmt*100)}%;height:100%;background:${STCOL[s]};opacity:.75;border-radius:3px"></div>
-        </div>
-      </div>`).join('');
-    if(reelWithoutDevis&&tReel>0) rows+=`
-      <div style="margin-bottom:9px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span style="font-size:.6em;font-weight:700;text-transform:uppercase;color:var(--green);background:rgba(52,211,153,.1);padding:2px 8px;border-radius:4px">DÉPENSÉ</span>
-          <span style="font-size:.72em;font-weight:600;color:var(--green)">${fe(tReel)}</span>
-        </div>
-        <div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
-          <div style="width:${Math.round(tReel/maxAmt*100)}%;height:100%;background:var(--green);opacity:.5;border-radius:3px"></div>
-        </div>
-      </div>`;
-    montEl.innerHTML=rows;
-  }
-
-  // FACE 2 - urgency by section
-  const urgEl=document.getElementById('av-urg-'+id);
-  if(urgEl){
-    const rows=dept.sections.map(s=>{
-      const sReel=s.lines.reduce((a,l)=>a+(l.reel||0),0);
-      const sEst=s.lines.reduce((a,l)=>a+(l.est||0),0);
-      const unsig=s.lines.filter(l=>l.st==='ESTIMATION'||l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
-      const uPct=sEst>0?Math.round(unsig/sEst*100):0;
-      return {name:s.s,unsig,sReel,sEst,uPct};
-    }).filter(r=>r.sEst>0||r.sReel>0).sort((a,b)=>b.unsig-a.unsig);
-    const maxU=Math.max(...rows.map(r=>r.unsig),1);
-    urgEl.innerHTML=rows.length?rows.map(r=>{
-      const col=r.uPct>=80?'var(--red)':r.uPct>=50?'var(--amber)':'#818cf8';
-      const reelNote=r.sReel>0?` <span style="color:var(--green);font-size:.85em">✓ ${fe(r.sReel)}</span>`:'';
-      return `<div style="margin-bottom:9px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted)">${r.name}${reelNote}</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            ${r.unsig>0
-              ?`<span style="font-size:.65em;font-weight:600;color:#fff">${fe(r.unsig)}</span><span style="font-size:.6em;font-weight:700;color:${col};background:${col}22;padding:1px 5px;border-radius:3px">${r.uPct}%</span>`
-              :'<span style="font-size:.62em;color:var(--green)">✓ signé</span>'}
-          </span>
-        </div>
-        ${r.unsig>0?`<div style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden"><div style="width:${Math.round(r.unsig/maxU*100)}%;height:100%;background:${col};opacity:.6;border-radius:2px"></div></div>`:''}
-      </div>`;
-    }).join(''):'<div style="font-size:.75em;color:var(--green);padding:8px 0">✓ Tout est signé</div>';
-  }
-
-  // FACE 3 - TVA breakdown OR S vs G
-  const sgEl=document.getElementById('av-sg-'+id);
-  if(sgEl){
-    if(c.f3==='tva'){
-      const TVA_LABELS={'0.2':'TVA 20%','0.1':'TVA 10%','0.055':'TVA 5.5%','URSSAF':'URSSAF (salarié)','AE':'Auto-entrepreneur','AUTO-ENTRE':'Auto-entrepreneur','INTERMITTANT':'Intermittent','NA':'Sans TVA','null':'Non renseigné'};
-      const tG={};
-      allL.forEach(l=>{
-        const tv=l.tva===null||l.tva===undefined?'null':String(l.tva);
-        const lbl=TVA_LABELS[tv]||tv;
-        if(!tG[lbl]) tG[lbl]={n:0,est:0};
-        tG[lbl].n++; tG[lbl].est+=(l.est||0);
-      });
-      const tRows=Object.entries(tG).sort((a,b)=>b[1].est-a[1].est);
-      const maxT=Math.max(...tRows.map(r=>r[1].est),1);
-      sgEl.innerHTML=`<div style="font-size:.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:10px">Répartition par régime</div>`+
-        tRows.map(([lbl,v])=>`<div style="margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-            <span style="font-size:.68em;color:var(--text-muted);font-weight:600">${lbl}</span>
-            <span style="font-size:.68em;color:#fff">${v.est>0?fe(v.est):'—'} <span style="color:var(--text-dim)">(${v.n})</span></span>
-          </div>
-          <div style="height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden">
-            <div style="width:${v.est>0?Math.round(v.est/maxT*100):8}%;height:100%;background:var(--indigo);opacity:.6;border-radius:2px"></div>
-          </div>
-        </div>`).join('');
-    } else {
-      const sgStat=(lines,label,color)=>{
-        if(!lines.length) return '';
-        const tot3=lines.reduce((a,l)=>a+(l.est||0),0);
-        if(!tot3) return '';
-        const signed=lines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
-        const inProg=lines.filter(l=>l.st==='EN COURS').reduce((a,l)=>a+(l.est||0),0);
-        const estOnly=lines.filter(l=>l.st==='ESTIMATION').reduce((a,l)=>a+(l.est||0),0);
-        const reelLines=lines.reduce((a,l)=>a+(l.reel||0),0);
-        const pctSign=Math.round(signed/tot3*100);
-        return `<div style="background:var(--surface-2);border-radius:10px;padding:11px 14px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-            <span style="font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:${color}">${label}</span>
-            <span style="font-size:.7em;font-weight:600;color:#fff">${fe(tot3)} <span style="color:var(--text-dim);font-weight:400">(${lines.length})</span></span>
-          </div>
-          <div style="display:flex;height:6px;border-radius:4px;overflow:hidden;gap:1px;margin-bottom:7px">
-            <div style="flex:${signed||0.001};background:var(--green);opacity:.8"></div>
-            <div style="flex:${inProg||0.001};background:var(--amber);opacity:.8"></div>
-            <div style="flex:${estOnly||0.001};background:rgba(255,255,255,.1)"></div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:.62em;color:var(--text-dim)">
-            <span><span style="color:var(--green);font-weight:600">✓ ${pctSign}%</span> signé</span>
-            ${inProg>0?`<span><span style="color:var(--amber)">${fe(inProg)}</span> en cours</span>`:''}
-            <span>${fe(estOnly)} à engager</span>
-            ${reelLines>0?`<span>→ <span style="color:var(--green)">${fe(reelLines)}</span> réel</span>`:''}
-          </div>
-        </div>`;
-      };
-      const nL=allL.filter(l=>!l.typ&&(l.est||0)>0);
-      sgEl.innerHTML=
-        sgStat(sLines,'Staff / Salaires','#c4b5fd')+
-        sgStat(gLines,'Prestataires / Fournisseurs','var(--indigo)')+
-        (nL.length?`<div style="font-size:.62em;color:var(--text-dim);padding:3px 2px">Non catégorisé : ${fe(nL.reduce((a,l)=>a+(l.est||0),0))}</div>`:'');
-    }
-  }
+  // Fallback — comparison + bientôt
+  return `
+    ${comparisonCard(id, dept.name)}
+    ${bientotCard()}
+  `;
 }
 
 function upCell(inp){
@@ -2442,93 +2117,6 @@ function go(id,tabEl){
   else if(id==='releve') { renderReleve(); }
   else renderDept(id);
   if(isTabChange) window.scrollTo({top:0,behavior:'smooth'});
-}
-
-/* ═══ 3-FACE CAROUSEL ═══ */
-const secCharts={};
-const faceState={};  // id → current face index (0/1/2)
-
-/* equalize face heights within a carousel so the button stays fixed */
-function equalizeFaces(trackId){
-  // Don't force equal face heights — let content drive naturally
-  // Only equalize the bilan avancement carousel which has a fixed context
-  if(trackId==='fct-av') return;
-  // For dept carousels: just ensure the track container matches the tallest face
-  const track=document.getElementById(trackId);
-  if(!track) return;
-  const faces=[...track.children];
-  if(!faces.length) return;
-  faces.forEach(f=>{ f.style.height=''; f.style.minHeight=''; });
-}
-
-function nextFace(id){
-  const cur=(faceState[id]||0);
-  const track=document.getElementById('fct-'+id);
-  if(!track) return;
-  const total=track.children.length;
-  const next=(cur+1)%total;
-  faceState[id]=next;
-  track.style.transform=`translateX(-${next*100}%)`;
-  if(!id.startsWith('av-')){
-    setTimeout(()=>{
-      if(next===2) buildSecBar(id);
-      if(next===3) buildSecPie(id);
-      setTimeout(()=>equalizeFaces('fct-'+id), 80);
-    },50);
-  }
-}
-
-const SECTION_COLORS=[
-  'rgba(99,102,241,.65)','rgba(168,85,247,.65)','rgba(52,211,153,.55)',
-  'rgba(251,191,36,.55)','rgba(248,113,113,.55)','rgba(99,102,241,.4)',
-  'rgba(168,85,247,.4)','rgba(52,211,153,.35)',
-];
-
-function buildSecBar(id){
-  const dept=DEPTS.find(d=>d.id===id);
-  if(!dept) return;
-  const canvas=document.getElementById('sec-bar-'+id);
-  if(!canvas) return;
-  if(secCharts['bar-'+id]){secCharts['bar-'+id].destroy();delete secCharts['bar-'+id];}
-  const labels=dept.sections.map(s=>s.s);
-  const estV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0));
-  const reelV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.reel||0),0));
-  secCharts['bar-'+id]=new Chart(canvas,{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Au budget HT', data:estV, backgroundColor:'rgba(99,102,241,.45)',borderColor:'rgba(99,102,241,.75)',borderWidth:1,borderRadius:3},
-      {label:'Dépensé HT',   data:reelV,backgroundColor:'rgba(168,85,247,.45)',borderColor:'rgba(168,85,247,.75)',borderWidth:1,borderRadius:3},
-    ]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#a0a0b0',font:{size:10,family:'DM Sans'},boxWidth:10,boxHeight:10}},
-        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fe(c.raw)}}},
-      scales:{
-        x:{ticks:{color:'#5a5a6a',font:{size:9},callback:v=>Math.round(v/1000)+'k'},grid:{color:'rgba(255,255,255,.025)'},border:{color:'rgba(255,255,255,.04)'}},
-        y:{ticks:{color:'#a0a0b0',font:{size:9,family:'DM Sans'},maxRotation:0},grid:{display:false},border:{display:false}}
-      }
-    }
-  });
-}
-
-function buildSecPie(id){
-  const dept=DEPTS.find(d=>d.id===id);
-  if(!dept) return;
-  const canvas=document.getElementById('sec-pie-'+id);
-  if(!canvas) return;
-  if(secCharts['pie-'+id]){secCharts['pie-'+id].destroy();delete secCharts['pie-'+id];}
-  const labels=dept.sections.map(s=>s.s);
-  const estV=dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0));
-  const colors=dept.sections.map((_,i)=>SECTION_COLORS[i%SECTION_COLORS.length]);
-  secCharts['pie-'+id]=new Chart(canvas,{
-    type:'doughnut',
-    data:{labels,datasets:[{data:estV,backgroundColor:colors,borderColor:'#08080d',borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
-      layout:{padding:4},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+fe(c.raw)}}}}
-  });
-  // Custom legend
-  const leg=document.getElementById('pie-leg-'+id);
-  if(leg) leg.innerHTML=labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:1px;background:${colors[i]};flex-shrink:0"></span>${l}</span>`).join('');
 }
 
 /* ═══ INIT ═══ */
