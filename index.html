@@ -1860,8 +1860,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${barCard}
       ${col3(
-        comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie.', 'green'),
-        comingSoonCard('Stock & commandes', 'Suivi des niveaux de stock alcool, soft, merch.', 'amber')
+        unmatchedCard(id),
+        comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie.', 'green')
       )}
     `;
   }
