@@ -1459,34 +1459,7 @@ function renderDept(id){
       </div>
     </div>
 
-    <!-- ── ROW: Sections breakdown — full width (Bilan-identical) ── -->
-    <div class="card mb" style="padding:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Répartition par section</div>
-          <div style="font-size:.85em;font-weight:700;color:#fff">${fe(tot.est)}</div>
-          <div style="font-size:.65em;color:var(--text-muted)">${dept.sections.length} section${dept.sections.length>1?'s':''}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(${Math.min(dept.sections.length,5)},1fr);gap:6px">
-      ${dept.sections.map(s=>{
-        const sE2=s.lines.reduce((a,l)=>a+(l.est||0),0);
-        const sR2=s.lines.reduce((a,l)=>a+(l.reel||0),0);
-        const sP2=pct(sR2,sE2);
-        const sCol2=sP2>=100?'var(--red)':sP2>=75?'var(--amber)':'var(--indigo)';
-        const hasBudget=sE2>0;
-        return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="width:100%;height:32px;border-radius:7px;background:${hasBudget?sCol2+'22':'rgba(255,255,255,.04)'};border:1px solid ${hasBudget?sCol2+'55':'rgba(255,255,255,.07)'};display:flex;align-items:center;justify-content:center;font-size:.65em;color:${hasBudget?sCol2:'var(--text-dim)'}">
-            ${hasBudget?(sR2>0?sP2+'%':'✓'):'·'}
-          </div>
-          <div style="font-size:.52em;color:${hasBudget?'var(--text-muted)':'var(--text-dim)'};text-align:center;white-space:nowrap;overflow:hidden;max-width:100%;text-overflow:ellipsis;font-weight:${hasBudget?'600':'400'}">${s.s}</div>
-          <div style="font-size:.52em;color:var(--text-dim)">${hasBudget?fe(sE2):'—'}</div>
-        </div>`;
-      }).join('')}
-      </div>
-    </div>
-
-    <!-- ── ROW: g3 grid — 3 columns (Bilan-identical) ── -->
+    <!-- ── ROW: g3 grid — 3 columns ── -->
     <div class="g3 mb">
       ${buildDeptG3Cards(id, dept, tot, allL, p)}
     </div>
