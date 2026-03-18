@@ -1295,6 +1295,8 @@ function renderDept(id){
     const sE=sec.lines.reduce((a,l)=>a+(l.est||0),0);
     const sR=sec.lines.reduce((a,l)=>a+(l.reel||0),0);
     const sEc=sE-sR;
+    const sE_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.est,l.tva)||0),0);
+    const sR_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.reel,l.tva)||0),0);
 
     const rows=sec.lines.map((line,li)=>{
       const isPlaceholder = !line.l || line.l.startsWith('(ligne');
@@ -1374,7 +1376,8 @@ function renderDept(id){
                 ${nReel>0 ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
                 <span style="flex:1"></span>
                 <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-                  <span style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
+                  <span class="show-ht" style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
+                  <span class="show-ttc" style="display:none;font-size:15px;font-weight:700;color:#fff">${fe(sE_ttc)}</span>
                 </span>
               </div>
             </td>
@@ -1407,10 +1410,19 @@ function renderDept(id){
             </td>
           </tr>
           <tr class="trow">
-            <td>TOTAL ${sec.s}</td><td></td>
-            <td><span class="cro" style="font-weight:700;color:#fff">${fe(sE)}</span></td><td></td>
-            <td><span class="cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span></td><td></td>
-            <td>${ecH(sEc)}</td><td></td>
+            <td>TOTAL ${sec.s}</td>
+            <td class="tva-col"></td>
+            <td>
+              <span class="show-ht cro" style="font-weight:700;color:#fff">${fe(sE)}</span>
+              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${fe(sE_ttc)}</span>
+            </td>
+            <td>
+              <span class="show-ht cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span>
+              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${sR_ttc?fe(sR_ttc):'—'}</span>
+            </td>
+            <td>${ecH(sEc)}</td>
+            <td></td>
+            <td class="obs"></td>
           </tr>
         </tbody>
       </table>
