@@ -1830,8 +1830,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${cateringCard}
       ${col3(
-        comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur.', 'amber', '', {clickable:"openCoutRepasDrawer()"}),
-        unmatchedCard(id)
+        unmatchedCard(id),
+        comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur.', 'amber', '', {clickable:"openCoutRepasDrawer()"})
       )}
     `;
   }
