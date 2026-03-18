@@ -3205,14 +3205,53 @@ function buildTransactionList(line, tabName) {
   const txList = getMatchedTx(tabName, line.l);
 
   if (!txList || txList.length === 0) {
-    // Réel exists but no client-side match found (import not done in this session)
+    // No fuzzy match found — search all raw Qonto tx for this dept
+    const allTx = getAllQontoTx() || [];
+    // Find Qonto categories that map to this dept tab
+    const deptCats = new Set();
+    deptCats.add(tabName);
+    Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) deptCats.add(qCat); });
+    const deptTx = allTx.filter(tx => {
+      const normCat = normStr(tx.cat||'');
+      return [...deptCats].some(c => normStr(c) === normCat) && (tx.ttc||0) < 0;
+    });
+
+    if (deptTx.length > 0) {
+      const total2 = deptTx.reduce((a, t) => a + Math.abs(t.ttc), 0);
+      const rows2 = deptTx.map(tx => {
+        const d = formatQontoDate(tx.date);
+        const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
+        return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
+          <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
+          <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
+          <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
+          <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
+        </div>`;
+      }).join('');
+
+      return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
+          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${deptTx.length} transaction${deptTx.length > 1 ? 's' : ''} · ${tabName}</span>
+          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total2)} € TTC</span>
+        </div>
+        <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
+          <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
+        </div>
+        ${rows2}
+        <div style="padding:8px 14px;font-size:.62em;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
+          Toutes les transactions ${tabName} · la ligne « ${line.l} » représente ${fe(line.reel)} HT
+        </div>
+      </div>`;
+    }
+
+    // No raw data at all
     return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
         <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
         <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
       </div>
       <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
-        Réimportez le relevé Qonto pour voir le détail des transactions dans cette session.
+        Importez un relevé Qonto pour voir le détail des transactions.
       </div>
     </div>`;
   }
