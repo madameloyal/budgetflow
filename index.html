@@ -3953,7 +3953,8 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
   }
 
   document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-dissociate').style.display = 'none';
+  const dissBtn = document.getElementById('drawer-dissociate');
+  if (dissBtn) dissBtn.style.display = 'none';
 
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
