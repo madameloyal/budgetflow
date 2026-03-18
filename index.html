@@ -3783,32 +3783,21 @@ function openVhrTransportDrawer() {
     </div>
 
     <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Planning par jour
-        <span class="future-badge" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--amber)">✦ Bientôt</span>
-      </div>
-      <div style="border:1px dashed rgba(251,191,36,.2);border-radius:10px;padding:14px;opacity:.75">
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${[
-            ['J-2 · 11 mars','🚙 Livraison matériel scéno','Villepinte · 08h00','Équipe scéno (6)'],
-            ['J-1 · 12 mars','🚐 Navette Gare du Nord','→ Villepinte · 18h00','12 personnes'],
-            ['J-1 · 12 mars','✈️ Navette CDG','→ Villepinte · 14h00','6 personnes'],
-            ['J · 13 mars','🚐 Navette matin','→ Villepinte · 07h00','Staff montage'],
-            ['J+1 · 14 mars','🚐 Retours gares','→ Paris · 23h00','Équipe démo'],
-          ].map(([day,traj,heure,pax])=>`
-            <div style="background:var(--surface);border-radius:7px;padding:9px 12px">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                <div style="flex:1">
-                  <div style="font-size:.6em;color:var(--amber);font-weight:600;margin-bottom:2px">${day}</div>
-                  <div style="font-size:.72em;font-weight:600;color:var(--text-muted)">${traj}</div>
-                  <div style="font-size:.6em;color:var(--text-dim);margin-top:2px">${heure} · ${pax}</div>
-                </div>
-              </div>
-            </div>`).join('')}
-        </div>
-        <div style="margin-top:10px;font-size:.62em;color:var(--text-dim);text-align:center">
-          Données du LOG_STAFF (SUIVI TRANSPORT) — disponible via Festiflow Transport
-        </div>
+      <div class="drawer-section-title">Vue d'ensemble hébergement</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${[
+          ['🏨 Hôtels contractualisés','—','Confirmés'],
+          ['🛏 Chambres réservées','—','Total'],
+          ['👥 Personnes à loger','— / 213','Staff confirmé'],
+          ['📅 Nuitées totales','—','J-2 à J+2'],
+          ['💶 Budget hébergement','—','Au budget'],
+          ['✓ Devis signés','—','Hôtels'],
+        ].map(([l,v,s])=>`
+          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
+            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
+            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
+          </div>`).join('')}
       </div>
     </div>
 
