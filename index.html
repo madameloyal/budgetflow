@@ -1579,8 +1579,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
   // ── Shared comparison card — used on every tab ─────
   const comparisonCard = (deptId, deptName) => {
     const sections2026 = dept.sections
-      .filter(s => s.lines.reduce((a,l)=>a+(l.est||0),0) > 0)
-      .slice(0, 3);
+      .filter(s => s.lines.reduce((a,l)=>a+(l.est||0),0) > 0);
     return `
     <div class="card" style="padding:16px;cursor:pointer;transition:border-color .2s;flex:1"
       onclick="openDeptComparisonDrawer('${deptId}')"
@@ -1635,7 +1634,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
   // ── Helper: empty "Bientôt" placeholder card ──
   const bientotCard = () => comingSoonCard('Fonctionnalité à venir', 'Ce module sera disponible dans une prochaine version de BudgetFlow.', 'purple');
 
-  // ═══ REPÉRAGES — 4 cards: col2 stacks 2, col3 stacks 2 ═══
+  // ═══ REPÉRAGES — col2 stacks repérages + comparaison, col3 = frais ═══
   if (id === 'reperages') return `
     <div style="display:flex;flex-direction:column;gap:10px">
       ${comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
@@ -1646,24 +1645,24 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
         </div>`,
         {clickable:`openRepéragesPanel('reperages_visits')`}
       )}
-      ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
-        `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
-          ${[
-            {name:'Hugo Le Guellec', role:'Directeur technique', frais:'—'},
-            {name:'Chloe Adour', role:'Prod. exécutive', frais:'—'},
-            {name:'Leon Saturnin', role:'Régisseur général', frais:'—'},
-          ].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
-            <div>
-              <div style="font-size:.65em;color:var(--text-muted)">${p.name}</div>
-              <div style="font-size:.58em;color:var(--text-dim)">${p.role}</div>
-            </div>
-            <span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span>
-          </div>`).join('')}
-        </div>`,
-        {clickable:`openRepéragesPanel('reperages_contacts')`}
-      )}
+      ${comparisonCard('reperages', 'Repérages')}
     </div>
-    ${comparisonCard('reperages', 'Repérages')}
+    ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
+      `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
+        ${[
+          {name:'Hugo Le Guellec', role:'Directeur technique', frais:'—'},
+          {name:'Chloe Adour', role:'Prod. exécutive', frais:'—'},
+          {name:'Leon Saturnin', role:'Régisseur général', frais:'—'},
+        ].map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface-2);border-radius:5px">
+          <div>
+            <div style="font-size:.65em;color:var(--text-muted)">${p.name}</div>
+            <div style="font-size:.58em;color:var(--text-dim)">${p.role}</div>
+          </div>
+          <span style="font-size:.65em;color:var(--text-dim)">${p.frais}</span>
+        </div>`).join('')}
+      </div>`,
+      {clickable:`openRepéragesPanel('reperages_contacts')`}
+    )}
   `;
 
   // ═══ VHR — 4 cards: col2 = budget catégorie, col3 stacks rooming + transports ═══
@@ -1765,6 +1764,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
           Disponible via Festiflow Transport.
         </div>
       </div>
+      ${comparisonCard('vhr', 'VHR')}
     </div>
   `;}
 
@@ -1824,6 +1824,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>
       ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé — fournisseur à confirmer</div>`:''}
     </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
     ${comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur vs éditions précédentes.', 'amber',
       `<div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;opacity:.55">
         <div style="background:var(--surface-2);border-radius:6px;padding:8px 6px;text-align:center">
@@ -1841,6 +1842,8 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>`,
       {clickable:`openCoutRepasDrawer()`}
     )}
+    ${comparisonCard('catering', 'Catering')}
+    </div>
   `;
 
   // ═══ BAR — 3 cards: ROI | ventes | comparison ═══
@@ -1863,6 +1866,7 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>
       ${roi!==null ? `<div style="padding:8px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;font-size:.72em;color:var(--green);font-weight:600">ROI estimé : +${roi}% · Marge ${fe2(barRev-tot.est)}</div>` : `<div style="font-size:.65em;color:var(--text-dim)">Recettes Bar non renseignées dans le P&L</div>`}
     </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
     ${comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie (alcool, soft, merch).', 'green',
       `<div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;opacity:.5">
         ${[['🍺 Alcool','—'],['🥤 Soft drinks','—'],['🎽 Merch','—']].map(([l,v])=>`
@@ -1872,6 +1876,8 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
           </div>`).join('')}
       </div>`
     )}
+    ${comparisonCard('bar', 'Bar')}
+    </div>
   `;}
 
   // ═══ ARTISTIQUE — 3 cards ═══
@@ -1890,7 +1896,10 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
       </div>
       ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">⚠ ${fe2(unsignedAmt)} de fees sans contrat signé — risque contractuel</div>`:''}
     </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
     ${comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple')}
+    ${comparisonCard('artistique', 'Artistique')}
+    </div>
   `;
 
   // ═══ TECHNIQUE — 3 cards ═══
@@ -1910,7 +1919,10 @@ function buildDeptRightCards(id, dept, tot, allL, p) {
         </div>`:''
       }).join('')}
     </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
     ${comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue')}
+    ${comparisonCard('technique', 'Technique')}
+    </div>
   `;
 
   // ═══ SCÉNO — 3 cards ═══
