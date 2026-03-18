@@ -1558,8 +1558,28 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
   // ── Transactions non reliées card — dashed, shows dept unmatched count ─────
+  // Build set of Qonto categories that map to this dept
+  const deptQontoCats = (deptId) => {
+    // Find the tab name (uppercase) for this deptId
+    const tabName = Object.keys(DEPT_META).find(k => DEPT_META[k].id === deptId) || deptId.toUpperCase();
+    // Collect all Qonto categories that map to this tab name
+    const cats = new Set();
+    cats.add(tabName); // always include the tab name itself
+    Object.entries(POLE_MAP_CLIENT).forEach(([qontoCat, mappedTab]) => {
+      if (mappedTab === tabName) cats.add(qontoCat);
+    });
+    return cats;
+  };
+  const unmatchedForDept = (deptId) => {
+    const cats = deptQontoCats(deptId);
+    return _unmatchedRows.filter(r => {
+      const rCat = normStr(r.dept||'');
+      return [...cats].some(c => normStr(c) === rCat);
+    });
+  };
+
   const unmatchedCard = (deptId) => {
-    const deptRows = _unmatchedRows.filter(r => (r.dept||'').toUpperCase().includes(deptId.toUpperCase()));
+    const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
     const totalTTC = deptRows.reduce((a,r) => a + Math.abs(r.ttc||0), 0);
     const topRows = deptRows.slice(0, 3);
@@ -3176,7 +3196,15 @@ function openCoutRepasDrawer() {
 function openUnmatchedDrawer(deptId) {
   const dept = DEPTS.find(d => d.id === deptId);
   const deptName = dept ? dept.name : deptId;
-  const deptRows = _unmatchedRows.filter(r => (r.dept||'').toUpperCase().includes(deptId.toUpperCase()));
+  // Build set of Qonto categories for this dept
+  const tabName = Object.keys(DEPT_META).find(k => DEPT_META[k].id === deptId) || deptId.toUpperCase();
+  const cats = new Set();
+  cats.add(tabName);
+  Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) cats.add(qCat); });
+  const deptRows = _unmatchedRows.filter(r => {
+    const rCat = normStr(r.dept||'');
+    return [...cats].some(c => normStr(c) === rCat);
+  });
   const totalTTC = deptRows.reduce((a,r) => a + Math.abs(r.ttc||0), 0);
 
   document.getElementById('drawer-title').innerHTML = `<span style="color:var(--red)">⚠</span> Transactions non reliées`;
