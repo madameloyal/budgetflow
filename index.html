@@ -2576,7 +2576,7 @@ function renderUnmatchedTab(rows) {
       <td style="padding:10px 14px;text-align:right;font-family:monospace;font-size:.85em;font-weight:700;color:var(--red);white-space:nowrap">${amt}</td>
       <td style="padding:10px 14px;color:var(--text-dim);font-size:.78em">${row.init || ''}</td>
       <td style="padding:10px 14px;text-align:right">
-        <button onclick="openAssignDrawer(${row.idx},'${(row.fourn||'').replace(/'/g,"\\'")}','${(row.note||'').replace(/'/g,"\\'")}',${row.ttc||0},'${(row.dept||'')}')"
+        <button class="assign-btn" data-idx="${row.idx}" data-fourn="${(row.fourn||'').replace(/"/g,'&quot;')}" data-note="${(row.note||'').replace(/"/g,'&quot;')}" data-ttc="${row.ttc||0}" data-dept="${(row.dept||'').replace(/"/g,'&quot;')}"
           style="font-size:.7em;padding:5px 12px;border-radius:5px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;white-space:nowrap"
           onmouseover="this.style.background='rgba(99,102,241,.22)'" onmouseout="this.style.background='rgba(99,102,241,.1)'">
           Assigner →
@@ -2584,6 +2584,18 @@ function renderUnmatchedTab(rows) {
       </td>
     </tr>`;
   }).join('');
+
+  // Delegated click for assign buttons
+  if (tbody) tbody.addEventListener('click', function(e) {
+    const btn = e.target.closest('.assign-btn');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx);
+    const fourn = btn.dataset.fourn || '';
+    const note = btn.dataset.note || '';
+    const ttc = parseFloat(btn.dataset.ttc) || 0;
+    const dept = btn.dataset.dept || '';
+    openAssignDrawer(idx, fourn, note, ttc, dept);
+  });
 }
 
 // ════════════════════════════════════════════════════
