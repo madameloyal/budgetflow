@@ -3080,7 +3080,7 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
 // ════════════════════════════════════════════════════
 // PANEL 3 — DÉPENSÉ (Qonto transactions + expected)
 // ════════════════════════════════════════════════════
-function openReelDrawer(deptId, sectionIdx, lineIdx) {
+async function openReelDrawer(deptId, sectionIdx, lineIdx) {
   const dept = DEPTS.find(d => d.id === deptId);
   if (!dept) return;
   const line = dept.sections[sectionIdx]?.lines[lineIdx];
@@ -3094,17 +3094,15 @@ function openReelDrawer(deptId, sectionIdx, lineIdx) {
   const pct2    = line.est ? Math.round((line.reel||0)/line.est*100) : 0;
   const pctColor= pct2>=100?'var(--red)':pct2>=75?'var(--amber)':'var(--green)';
 
-  // Expected expenses: other lines in same section with statut EN COURS / DEVIS SIGNÉ and no réel yet
   const expectedLines = dept.sections[sectionIdx]?.lines.filter(l =>
     l.l && !l.l.startsWith('(ligne') && l !== line &&
     ['EN COURS','DEVIS SIGNÉ'].includes(l.st) && !(l.reel > 0)
   ) || [];
 
-  const txHTML = buildTransactionList(line, tabName);
-
   document.getElementById('drawer-title').innerHTML = `<span style="color:var(--red)">💳</span> Dépenses réelles`;
   document.getElementById('drawer-sub').innerHTML = `<strong style="color:#fff">${line.l}</strong> · ${dept.name} › ${section}`;
 
+  // Show drawer immediately with loading placeholder for transactions
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
       <div class="drawer-section-title">Résumé</div>
@@ -3135,10 +3133,10 @@ function openReelDrawer(deptId, sectionIdx, lineIdx) {
       </div>
     </div>
 
-    <!-- Transactions -->
-    <div class="drawer-section">
+    <!-- Transactions — will be populated async -->
+    <div class="drawer-section" id="reel-tx-section">
       <div class="drawer-section-title">Transactions Qonto</div>
-      ${txHTML}
+      <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:.78em">Chargement…</div>
     </div>
 
     <!-- Expected expenses -->
@@ -3187,6 +3185,150 @@ function openReelDrawer(deptId, sectionIdx, lineIdx) {
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+
+  // Now fetch match-log async and update the transactions section
+  const txSection = document.getElementById('reel-tx-section');
+  if (!txSection) return;
+
+  if (!line.reel || line.reel === 0) {
+    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
+      <div class="drawer-empty">
+        <div class="drawer-empty-icon">💳</div>
+        Aucune transaction Qonto associée.<br>
+        <span style="font-size:.85em;color:var(--text-dim)">Importez un relevé pour alimenter cette ligne.</span>
+      </div>`;
+    return;
+  }
+
+  // 1. Try match-log API (exact transactions for this line)
+  let matchLogTx = [];
+  try {
+    const resp = await fetch(`${API}/api/match-log?dept=${encodeURIComponent(tabName)}&ligne=${encodeURIComponent(line.l)}`, { headers: {'Accept':'application/json'} });
+    if (resp.ok) {
+      const json = await resp.json();
+      matchLogTx = json.data || [];
+    }
+  } catch(e) { console.warn('match-log fetch failed:', e); }
+
+  if (matchLogTx.length > 0) {
+    // Exact match from MATCH_LOG — card layout with full details
+    const total = matchLogTx.reduce((a,t) => a + Math.abs(t.ttc||0), 0);
+    const _deptId = deptId;
+    const _lineL = line.l;
+    const _si = sectionIdx;
+    const _li = lineIdx;
+    const rows = matchLogTx.map((tx, txIdx) => {
+      const d = formatQontoDate(tx.date);
+      const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
+      const amtHT = tx.ht ? `−${fmtAmt(Math.abs(tx.ht))} HT` : '';
+      const src = tx.source === 'manual' ? `<span style="font-size:.58em;padding:1px 6px;border-radius:3px;background:rgba(168,85,247,.1);color:#c4b5fd">assigné</span>` : `<span style="font-size:.58em;padding:1px 6px;border-radius:3px;background:rgba(99,102,241,.1);color:#818cf8">auto</span>`;
+      return `<div style="background:var(--surface);border-radius:8px;padding:12px 14px;border:1px solid rgba(255,255,255,.04);margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-size:.78em;font-weight:600;color:#fff">${tx.fourn || '—'}</span>
+              ${src}
+            </div>
+            <div style="font-size:.68em;color:var(--text-muted);line-height:1.5;word-break:break-word">${tx.note || '—'}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:12px">
+            <div style="font-family:monospace;font-size:.88em;font-weight:700;color:var(--red)">${amt}</div>
+            ${amtHT ? `<div style="font-size:.6em;color:var(--text-dim);margin-top:1px">${amtHT}</div>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.62em;color:var(--text-dim)">${d}${tx.section ? ' · '+tx.section : ''}</span>
+          <button class="dissociate-btn" data-dept="${tabName}" data-ligne="${_lineL.replace(/"/g,'&quot;')}" data-fourn="${(tx.fourn||'').replace(/"/g,'&quot;')}" data-note="${(tx.note||'').replace(/"/g,'&quot;')}" data-ht="${tx.ht||0}" data-ttc="${tx.ttc||0}" data-deptid="${_deptId}" data-si="${_si}" data-li="${_li}"
+            style="font-size:.6em;padding:3px 8px;border-radius:4px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.06);color:var(--red);cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s"
+            onmouseover="this.style.background='rgba(248,113,113,.15)'" onmouseout="this.style.background='rgba(248,113,113,.06)'">
+            ✕ Dissocier
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
+      <div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
+          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${matchLogTx.length} transaction${matchLogTx.length > 1 ? 's' : ''} assignée${matchLogTx.length > 1 ? 's' : ''}</span>
+          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total)} € TTC</span>
+        </div>
+        <div style="padding:10px 14px">
+          ${rows}
+        </div>
+      </div>`;
+
+    // Delegated click for dissociate buttons
+    txSection.addEventListener('click', function(e) {
+      const btn = e.target.closest('.dissociate-btn');
+      if (!btn) return;
+      dissociateTransaction(
+        btn.dataset.dept, btn.dataset.ligne, btn.dataset.fourn, btn.dataset.note,
+        parseFloat(btn.dataset.ht)||0, parseFloat(btn.dataset.ttc)||0,
+        btn.dataset.deptid, parseInt(btn.dataset.si), parseInt(btn.dataset.li)
+      );
+    });
+    return;
+  }
+
+  // 2. Fallback: session-matched tx
+  const txList = getMatchedTx(tabName, line.l);
+  if (txList && txList.length > 0) {
+    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>` + buildTransactionList(line, tabName);
+    return;
+  }
+
+  // 3. Fallback: dept-wide raw transactions
+  const allTx = getAllQontoTx() || [];
+  const deptCats = new Set();
+  deptCats.add(tabName);
+  Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) deptCats.add(qCat); });
+  const deptTx = allTx.filter(tx => {
+    const normCat = normStr(tx.cat||'');
+    return [...deptCats].some(c => normStr(c) === normCat) && (tx.ttc||0) < 0;
+  });
+
+  if (deptTx.length > 0) {
+    const total2 = deptTx.reduce((a, t) => a + Math.abs(t.ttc), 0);
+    const rows2 = deptTx.map(tx => {
+      const d = formatQontoDate(tx.date);
+      const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
+      return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em">
+        <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
+        <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
+        <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
+        <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
+      </div>`;
+    }).join('');
+
+    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
+      <div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
+          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${deptTx.length} transaction${deptTx.length > 1 ? 's' : ''} · ${tabName}</span>
+          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total2)} € TTC</span>
+        </div>
+        <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
+          <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
+        </div>
+        ${rows2}
+        <div style="padding:8px 14px;font-size:.62em;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
+          Toutes les transactions ${tabName} · la ligne « ${line.l} » représente ${fe(line.reel)} HT
+        </div>
+      </div>`;
+    return;
+  }
+
+  // 4. No data at all
+  txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
+    <div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
+        <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
+        <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
+      </div>
+      <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
+        Importez un relevé Qonto pour voir le détail des transactions.
+      </div>
+    </div>`;
 }
 
 function openDrawer(deptId, sectionIdx, lineIdx) {
@@ -3205,14 +3347,53 @@ function buildTransactionList(line, tabName) {
   const txList = getMatchedTx(tabName, line.l);
 
   if (!txList || txList.length === 0) {
-    // Réel exists but no client-side match found (import not done in this session)
+    // No fuzzy match found — search all raw Qonto tx for this dept
+    const allTx = getAllQontoTx() || [];
+    // Find Qonto categories that map to this dept tab
+    const deptCats = new Set();
+    deptCats.add(tabName);
+    Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) deptCats.add(qCat); });
+    const deptTx = allTx.filter(tx => {
+      const normCat = normStr(tx.cat||'');
+      return [...deptCats].some(c => normStr(c) === normCat) && (tx.ttc||0) < 0;
+    });
+
+    if (deptTx.length > 0) {
+      const total2 = deptTx.reduce((a, t) => a + Math.abs(t.ttc), 0);
+      const rows2 = deptTx.map(tx => {
+        const d = formatQontoDate(tx.date);
+        const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
+        return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
+          <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
+          <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
+          <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
+          <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
+        </div>`;
+      }).join('');
+
+      return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
+          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${deptTx.length} transaction${deptTx.length > 1 ? 's' : ''} · ${tabName}</span>
+          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total2)} € TTC</span>
+        </div>
+        <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
+          <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
+        </div>
+        ${rows2}
+        <div style="padding:8px 14px;font-size:.62em;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
+          Toutes les transactions ${tabName} · la ligne « ${line.l} » représente ${fe(line.reel)} HT
+        </div>
+      </div>`;
+    }
+
+    // No raw data at all
     return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
         <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
         <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
       </div>
       <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
-        Réimportez le relevé Qonto pour voir le détail des transactions dans cette session.
+        Importez un relevé Qonto pour voir le détail des transactions.
       </div>
     </div>`;
   }
@@ -4079,6 +4260,32 @@ async function confirmAssign(unmatchedIdx) {
   } catch (e) {
     if (btn) { btn.textContent = 'Confirmer →'; btn.disabled = false; }
     showToast('⚠ Erreur assignment', e.message, 'red');
+  }
+}
+
+async function dissociateTransaction(dept, ligne, fourn, note, ht, ttc, deptId, si, li) {
+  if (!confirm(`Dissocier cette transaction de « ${ligne} » ?\n\n${fourn} · −${fmtAmt(Math.abs(ttc))} €\n\nLa transaction sera replacée dans les non reliées.`)) return;
+
+  try {
+    const resp = await fetch(`${API}/api/dissociate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dept, ligne, fourn, note, ht: Math.abs(ht), ttc: Math.abs(ttc) }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
+
+    closeDrawer();
+    await Promise.all([refreshBudgetData(), loadUnmatchedTransactions()]);
+    showToast('✅ Transaction dissociée', `${fourn} · −${fmtAmt(Math.abs(ttc))} € retiré de « ${ligne} »`, 'green');
+
+    // Re-open the drawer to show updated state
+    setTimeout(() => openReelDrawer(deptId, si, li), 300);
+  } catch (e) {
+    showToast('⚠ Erreur dissociation', e.message, 'red');
   }
 }
 
