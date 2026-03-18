@@ -1436,8 +1436,6 @@ function renderDept(id){
     </div>`;
   }).join('');
 
-  const _cards = buildDeptCards(id, dept, tot, allL, p);
-
   cont.innerHTML=`
     <div class="sdiv"><div class="sdl"></div><div class="sdt">${dept.name}</div><div class="sdl"></div></div>
 
@@ -1469,10 +1467,7 @@ function renderDept(id){
 
     <div class="g2 mb" style="align-items:start">
 
-      <!-- LEFT COLUMN: carousel + extra cards below -->
-      <div style="display:flex;flex-direction:column;gap:10px">
-
-      <!-- Carousel card -->
+      <!-- LEFT CARD: KPI default + section detail carousel -->
       <div class="card" style="padding:0;overflow:hidden">
         <div class="fc-wrap" id="fc-${id}">
           <div class="fc-track" id="fct-${id}">
@@ -1555,14 +1550,9 @@ function renderDept(id){
         </div>
       </div>
 
-      <!-- Left column extra cards (below carousel) -->
-      ${_cards.left}
-
-      </div><!-- /left column -->
-
-      <!-- RIGHT COLUMN -->
+      <!-- RIGHT: dept-specific context cards -->
       <div style="display:flex;flex-direction:column;gap:10px">
-        ${_cards.right}
+        ${buildDeptRightCards(id, dept, tot, allL, p)}
       </div>
 
     </div>
@@ -1625,9 +1615,9 @@ function renderDept(id){
 
 /* ╔═══ DEPT AVANCEMENT (right card) ═══ */
 // ════════════════════════════════════════════════════
-// PER-DEPT CARDS — distributed across left & right columns
+// PER-DEPT RIGHT CARDS — context-specific stacked cards
 // ════════════════════════════════════════════════════
-function buildDeptCards(id, dept, tot, allL, p) {
+function buildDeptRightCards(id, dept, tot, allL, p) {
   const fe2=v=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v).replace(/\u202f/g,'\u00a0');
   const STCOL={'ESTIMATION':'var(--text-dim)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
   const STORDER=['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
@@ -1752,7 +1742,7 @@ function buildDeptCards(id, dept, tot, allL, p) {
     </div>`;
   };
 
-  if (id === 'reperages') return {left: `
+  if (id === 'reperages') return `
     ${pipelineCard()}
     ${comingSoonCard('Prochains repérages', 'Planification des visites de site, dates et lieux. Connecté au module Calendrier Festiflow.', 'blue',
       `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
@@ -1762,7 +1752,6 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>`,
       {clickable:`openRepéragesPanel('reperages_visits')`}
     )}
-  `, right: `
     ${comingSoonCard('Frais par intervenant', 'Notes de frais individuelles par membre de l\'équipe. Connecté au module Contacts & RH.', 'green',
       `<div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;opacity:.5">
         ${[
@@ -1780,7 +1769,7 @@ function buildDeptCards(id, dept, tot, allL, p) {
       {clickable:`openRepéragesPanel('reperages_contacts')`}
     )}
     ${comparisonCard('reperages', 'Repérages')}
-  `};
+  `;
 
   if (id === 'vhr') {
     // Smart line categorization from budget data
@@ -1796,7 +1785,8 @@ function buildDeptCards(id, dept, tot, allL, p) {
     const hotelSigned = hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
     const transSigned = transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
 
-    return {left: `
+    return `
+    <!-- CARD 1: Hébergement vs Transports — detailed split -->
     <div class="card" style="padding:16px">
       ${cardLabel('Budget par catégorie')}
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
@@ -1832,6 +1822,8 @@ function buildDeptCards(id, dept, tot, allL, p) {
         ⚠ ${fe2(unsignedAmt)} non signé · ${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}% du budget VHR
       </div>`:''}
     </div>
+
+    <!-- CARD 2: Rooming list — coming soon -->
     <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(96,165,250,.2);cursor:pointer;transition:border-color .2s"
       onclick="openVhrRoomingDrawer()"
       onmouseover="this.style.borderColor='rgba(96,165,250,.4)'" onmouseout="this.style.borderColor='rgba(96,165,250,.2)'">
@@ -1856,8 +1848,9 @@ function buildDeptCards(id, dept, tot, allL, p) {
         Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.
       </div>
     </div>
-    `, right: `
-    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s"
+
+    <!-- CARD 3: Planning transports — coming soon -->
+    <div class="card" style="padding:16px;border-style:dashed;border-color:rgba(251,191,36,.2);cursor:pointer;transition:border-color .2s;flex:1"
       onclick="openVhrTransportDrawer()"
       onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(251,191,36,.2)'">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -1884,13 +1877,15 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>
     </div>
     ${comparisonCard('vhr', 'VHR')}
-  `};}
+  `;}
 
   if (id === 'production') {
+    // Top 5 unsigned lines by amount
     const topUnsigned = allL
       .filter(l => ['ESTIMATION','EN COURS'].includes(l.st) && (l.est||0) > 0)
       .sort((a,b) => (b.est||0) - (a.est||0))
       .slice(0, 5);
+
     const topUnsignedHtml = topUnsigned.length ? `
       <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
         ${topUnsigned.map((l,i) => {
@@ -1905,7 +1900,8 @@ function buildDeptCards(id, dept, tot, allL, p) {
         }).join('')}
       </div>` : `<div style="font-size:.72em;color:var(--green);padding:8px 0">✓ Tout est signé</div>`;
 
-    return {left: `
+    return `
+    <!-- Card 1: Top lignes non signées -->
     <div class="card" style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         ${cardLabel('À signer en priorité')}
@@ -1917,7 +1913,8 @@ function buildDeptCards(id, dept, tot, allL, p) {
           <div style="width:${Math.round(unsignedAmt/Math.max(tot.est,1)*100)}%;height:100%;background:var(--amber);opacity:.6;border-radius:2px"></div>
         </div>` : ''}
     </div>
-    `, right: `
+
+    <!-- Card 2: Comparaison éditions — coming soon, clickable -->
     ${comingSoonCard('Comparaison éditions', 'Coûts Production Paris XXL 2025 vs 2026 par section. Identifier les dérives et les économies réalisées.', 'blue',
       `<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;opacity:.55">
         ${[
@@ -1936,10 +1933,13 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>`,
       {clickable:`openProductionPanel('comparaison')`}
     )}
-    ${comparisonCard('production', 'Production')}
-  `};}
 
-  if (id === 'catering') return {left: `
+    <!-- Card 3: Comparaison éditions -->
+    ${comparisonCard('production', 'Production')}
+  `;}
+
+
+  if (id === 'catering') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Fournisseurs & engagement')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -1959,7 +1959,6 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>
       ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:7px;font-size:.62em;color:var(--amber)">⚠ ${fe2(unsignedAmt)} non signé — fournisseur à confirmer</div>`:''}
     </div>
-  `, right: `
     ${comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur vs éditions précédentes.', 'amber',
       `<div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;opacity:.55">
         <div style="background:var(--surface-2);border-radius:6px;padding:8px 6px;text-align:center">
@@ -1978,13 +1977,13 @@ function buildDeptCards(id, dept, tot, allL, p) {
       {clickable:`openCoutRepasDrawer()`}
     )}
     ${comparisonCard('catering', 'Catering')}
-  `};
+  `;
 
   if (id === 'bar') {
     const recBar = REC.find(c=>c.cat==='BAR')||REC.find(c=>c.cat&&c.cat.includes('BAR'));
     const barRev = recBar ? recBar.rows.reduce((a,r)=>a+r.ht,0) : 0;
     const roi = barRev>0&&tot.est>0 ? ((barRev-tot.est)/tot.est*100).toFixed(0) : null;
-    return {left: `
+    return `
     <div class="card" style="padding:16px">
       ${cardLabel('ROI Bar estimé')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -1999,7 +1998,6 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>
       ${roi!==null ? `<div style="padding:8px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;font-size:.72em;color:var(--green);font-weight:600">ROI estimé : +${roi}% · Marge ${fe2(barRev-tot.est)}</div>` : `<div style="font-size:.65em;color:var(--text-dim)">Recettes Bar non renseignées dans le P&L</div>`}
     </div>
-    `, right: `
     ${comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie (alcool, soft, merch).', 'green',
       `<div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;opacity:.5">
         ${[['🍺 Alcool','—'],['🥤 Soft drinks','—'],['🎽 Merch','—']].map(([l,v])=>`
@@ -2010,9 +2008,9 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>`
     )}
     ${comparisonCard('bar', 'Bar')}
-  `};}
+  `;}
 
-  if (id === 'artistique') return {left: `
+  if (id === 'artistique') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Contrats & fees')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -2027,12 +2025,11 @@ function buildDeptCards(id, dept, tot, allL, p) {
       </div>
       ${unsignedAmt>0?`<div style="padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">⚠ ${fe2(unsignedAmt)} de fees sans contrat signé — risque contractuel</div>`:''}
     </div>
-  `, right: `
     ${comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple')}
     ${comparisonCard('artistique', 'Artistique')}
-  `};
+  `;
 
-  if (id === 'technique') return {left: `
+  if (id === 'technique') return `
     <div class="card" style="padding:16px">
       ${cardLabel('Prestataires techniques')}
       ${dept.sections.map(s=>{
@@ -2048,23 +2045,21 @@ function buildDeptCards(id, dept, tot, allL, p) {
         </div>`:''
       }).join('')}
     </div>
-  `, right: `
     ${comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue')}
     ${comparisonCard('technique', 'Technique')}
-  `};
+  `;
 
-  if (id === 'sceno') return {left: `
+  if (id === 'sceno') return `
     ${pipelineCard()}
-  `, right: `
     ${comingSoonCard('Mood board', 'Références visuelles et concepts validés pour chaque installation. Connecté au module Médias.', 'purple',
       `<div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;opacity:.4">
         ${Array(6).fill(0).map((_,i)=>`<div style="aspect-ratio:1;background:var(--surface-2);border-radius:5px;border:1px solid var(--border)"></div>`).join('')}
       </div>`
     )}
     ${comparisonCard('sceno', 'Scéno')}
-  `};
+  `;
 
-  if (id === 'partenariat') return {left: `
+  if (id === 'partenariat') return `
     ${pipelineCard()}
     <div class="card" style="padding:16px">
       ${cardLabel('Objectif revenus partenariats')}
@@ -2074,12 +2069,11 @@ function buildDeptCards(id, dept, tot, allL, p) {
         <div style="width:0%;height:100%;background:var(--indigo);border-radius:3px"></div>
       </div>
     </div>
-  `, right: `
     ${comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple')}
     ${comparisonCard('partenariat', 'Partenariat')}
-  `};
+  `;
 
-  if (id === 'communication') return {left: `
+  if (id === 'communication') return `
     ${pipelineCard()}
     ${comingSoonCard('Stats newsletters', 'Taux d\'ouverture, clics et conversions. Connecté à votre compte Brevo.', 'blue',
       `<div style="margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;opacity:.5">
@@ -2091,13 +2085,12 @@ function buildDeptCards(id, dept, tot, allL, p) {
         ).join('')}
       </div>`
     )}
-  `, right: `
     ${comingSoonCard('Médias accrédités', 'Presse, photographes, vidéastes — accréditations et livraisons. Connecté au module Médias.', 'green')}
     ${comparisonCard('communication', 'Communication')}
-  `};
+  `;
 
   // Fallback — generic pipeline + comparison
-  return {left: pipelineCard(), right: comparisonCard(id, dept.name)};
+  return pipelineCard() + comparisonCard(id, dept.name);
 }
 
 function renderDeptAv(id){
