@@ -1643,7 +1643,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   };
 
   // ══════════════════════════════════════════════════════════
-  // PER-DEPT LAYOUTS — Card1 | Card2 | Col3 (3 dashed)
+  // PER-DEPT LAYOUTS — Card1=burnCard | Card2=dept-specific | Col3 (3 dashed)
   // ══════════════════════════════════════════════════════════
 
   if (id === 'reperages') return `
@@ -1673,8 +1673,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const hotelSigned = hotelLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
     const transSigned = transLines.filter(l=>['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);
 
-    // Card 1: Budget par catégorie
-    const vhrCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const vhrCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('Budget par catégorie')}
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
         ${[
@@ -1711,8 +1710,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${vhrCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${vhrCard}
       ${col3(
         comingSoonCard('Rooming list', 'Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.', 'blue', '', {clickable:"openVhrRoomingDrawer()"}),
         comingSoonCard('Planning transports', 'Données issues du LOG_STAFF (SUIVI TRANSPORT). Disponible via Festiflow Transport.', 'amber', '', {clickable:"openVhrTransportDrawer()"})
@@ -1740,7 +1739,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
         }).join('')}
       </div>` : `<div style="font-size:.72em;color:var(--green);padding:8px 0">✓ Tout est signé</div>`;
 
-    const prodCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const prodCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         ${cardLabel('À signer en priorité')}
         ${unsignedAmt > 0 ? `<span style="font-size:.62em;font-weight:700;color:var(--amber)">${fe2(unsignedAmt)} non signé</span>` : `<span style="font-size:.62em;color:var(--green)">✓ Tout signé</span>`}
@@ -1753,8 +1752,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${prodCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${prodCard}
       ${col3(
         comingSoonCard('Planning montage', 'Timeline de montage J-5 à J-1. Connecté au module Calendrier.', 'blue'),
         comingSoonCard('Prestataires clés', 'Suivi des contrats prestataires principaux. Connecté au module Contacts.', 'green')
@@ -1763,7 +1762,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   }
 
   if (id === 'catering') {
-    const cateringCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const cateringCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('Fournisseurs & engagement')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         ${dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0).map(s=>{
@@ -1783,8 +1782,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${cateringCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${cateringCard}
       ${col3(
         comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur.', 'amber', '', {clickable:"openCoutRepasDrawer()"}),
         comingSoonCard('Planning livraisons', 'Suivi des créneaux de livraison et confirmations traiteur.', 'green')
@@ -1797,7 +1796,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const barRev = recBar ? recBar.rows.reduce((a,r)=>a+r.ht,0) : 0;
     const roi = barRev>0&&tot.est>0 ? ((barRev-tot.est)/tot.est*100).toFixed(0) : null;
 
-    const barCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const barCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('ROI Bar estimé')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
@@ -1813,8 +1812,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${barCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${barCard}
       ${col3(
         comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie.', 'green'),
         comingSoonCard('Stock & commandes', 'Suivi des niveaux de stock alcool, soft, merch.', 'amber')
@@ -1823,7 +1822,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   }
 
   if (id === 'artistique') {
-    const artCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const artCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('Contrats & fees')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
@@ -1839,8 +1838,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${artCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${artCard}
       ${col3(
         comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple'),
         comingSoonCard('Planning sets', 'Running order et créneaux DJ/live par scène.', 'blue')
@@ -1849,7 +1848,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   }
 
   if (id === 'technique') {
-    const techCard1 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const techCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('Prestataires techniques')}
       ${dept.sections.map(s=>{
         const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
@@ -1866,8 +1865,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${techCard1}
-      ${engagementCard()}
+      ${burnCard()}
+      ${techCard}
       ${col3(
         comingSoonCard('Planning montage', 'Timeline de montage scène par scène, J-5 à J-1. Connecté au module Calendrier.', 'blue'),
         comingSoonCard('Fiches prestataires', 'Contacts et contrats des prestataires techniques.', 'green')
@@ -1885,7 +1884,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   `;
 
   if (id === 'partenariat') {
-    const partCard2 = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+    const partCard = `<div class="card" style="padding:20px;display:flex;flex-direction:column">
       ${cardLabel('Objectif revenus partenariats')}
       <div style="font-size:1.3em;font-weight:700;color:var(--text-dim);margin-bottom:6px">— €</div>
       <div style="font-size:.65em;color:var(--text-dim);margin-bottom:10px">Aucun objectif défini — ajouter une ligne recette Partenariat dans le P&L</div>
@@ -1895,8 +1894,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${engagementCard()}
-      ${partCard2}
+      ${burnCard()}
+      ${partCard}
       ${col3(
         comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple'),
         comingSoonCard('Contreparties', 'Suivi des contreparties dues aux partenaires confirmés.', 'amber')
