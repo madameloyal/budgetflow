@@ -3766,7 +3766,10 @@ function openVhrTransportDrawer() {
 
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
-      <div class="drawer-section-title">Vue d'ensemble transports</div>
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Vue d'ensemble transports
+        <span class="future-badge" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--amber)">✦ Bientôt</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
         ${[
           ['🚐 Navettes prévues','—','Gare → Site'],
@@ -3783,7 +3786,10 @@ function openVhrTransportDrawer() {
     </div>
 
     <div class="drawer-section">
-      <div class="drawer-section-title">Vue d'ensemble hébergement</div>
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Vue d'ensemble hébergement
+        <span class="future-badge">✦ Bientôt</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
         ${[
           ['🏨 Hôtels contractualisés','—','Confirmés'],
@@ -3798,16 +3804,6 @@ function openVhrTransportDrawer() {
             <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
             <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
           </div>`).join('')}
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Cartes avantage SNCF
-        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-      </div>
-      <div style="border:1px dashed rgba(52,211,153,.2);border-radius:10px;padding:14px;font-size:.65em;color:var(--text-dim);line-height:1.7;opacity:.75">
-        Les numéros de cartes avantage SNCF sont stockés dans les fiches contacts Festiflow (Base RH → Contacts). À la réservation, les numéros sont pré-remplis automatiquement depuis le profil de chaque intervenant.
       </div>
     </div>
   `;
