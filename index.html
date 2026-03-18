@@ -1662,6 +1662,80 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
   };
 
+  // ── Suivi budgétaire — factual est vs reel per section ─────
+  const suiviBudgetCard = () => {
+    const tE = tot.est, tR = tot.reel;
+    const consumed = tE > 0 ? Math.round(tR / tE * 100) : 0;
+    // Phase label based on data completeness
+    const phaseLabel = tR === 0 ? 'En attente de données Qonto'
+      : consumed < 30 ? 'Suivi partiel — transactions en cours'
+      : consumed < 80 ? 'Suivi en cours'
+      : 'Suivi avancé';
+    const phaseColor = tR === 0 ? 'var(--text-dim)' : consumed < 30 ? 'var(--amber)' : consumed < 80 ? 'var(--indigo)' : 'var(--green)';
+
+    // Per-section rows: only sections with budget
+    const secRows = dept.sections.map(s => {
+      const sE = s.lines.reduce((a,l) => a + (l.est||0), 0);
+      const sR = s.lines.reduce((a,l) => a + (l.reel||0), 0);
+      return { name: s.s, est: sE, reel: sR };
+    }).filter(s => s.est > 0 || s.reel > 0);
+
+    const overruns = secRows.filter(s => s.reel > s.est && s.est > 0);
+    const totalOverrun = overruns.reduce((a,s) => a + (s.reel - s.est), 0);
+
+    const rowsHtml = secRows.map(s => {
+      const diff = s.reel - s.est;
+      const isOver = diff > 0 && s.est > 0;
+      const pctUsed = s.est > 0 ? Math.round(s.reel / s.est * 100) : (s.reel > 0 ? 999 : 0);
+      const barW = s.est > 0 ? Math.min(pctUsed, 100) : 0;
+      const barCol = isOver ? 'var(--red)' : pctUsed >= 75 ? 'var(--amber)' : 'var(--indigo)';
+      let statusText, statusCol;
+      if (s.reel === 0) { statusText = '—'; statusCol = 'var(--text-dim)'; }
+      else if (isOver) { statusText = '+' + fe(diff); statusCol = 'var(--red)'; }
+      else { statusText = fe(s.est - s.reel) + ' restant'; statusCol = 'var(--text-dim)'; }
+      return `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span style="font-size:.65em;font-weight:600;color:var(--text-muted)">${s.name}</span>
+          <span style="font-size:.6em;color:${statusCol};font-weight:600">${statusText}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:4px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
+            <div style="width:${barW}%;height:100%;background:${barCol};opacity:.8;border-radius:2px;transition:width .6s"></div>
+          </div>
+          <span style="font-size:.58em;color:var(--text-dim);white-space:nowrap;min-width:32px;text-align:right">${s.reel > 0 ? pctUsed + '%' : ''}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    const alertHtml = overruns.length > 0 ? `
+      <div style="margin-top:8px;padding:7px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">
+        ⚠ ${overruns.length} section${overruns.length>1?'s':''} en dépassement · +${fe(totalOverrun)}
+      </div>` : tR > 0 ? `
+      <div style="margin-top:8px;padding:7px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px;font-size:.62em;color:var(--green);line-height:1.5">
+        ✓ Aucun dépassement · ${fe(Math.max(0, tE - tR))} restant
+      </div>` : '';
+
+    const infoTooltip = `Ce suivi compare le budget prévisionnel (estimation) aux dépenses réelles importées depuis Qonto. Les montants « réel » ne sont à jour que si un relevé Qonto a été importé récemment. Un écart ne signifie pas nécessairement un problème : des factures peuvent ne pas encore avoir été payées ou importées.`;
+
+    return `<div class="card" style="padding:20px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        ${cardLabel('Suivi budgétaire')}
+        <span title="${infoTooltip}" style="cursor:help;font-size:.65em;width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.12);display:inline-flex;align-items:center;justify-content:center;color:var(--text-dim);flex-shrink:0;margin-top:-4px">i</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+        <span style="font-size:1.1em;font-weight:700;color:#fff">${fe(tR)}</span>
+        <span style="font-size:.68em;color:var(--text-dim)">/ ${fe(tE)}</span>
+        ${consumed > 0 ? `<span style="font-size:.72em;font-weight:700;color:${consumed>=100?'var(--red)':consumed>=75?'var(--amber)':'var(--indigo)'}">${consumed}%</span>` : ''}
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:10px">
+        <div style="width:${Math.min(consumed,100)}%;height:100%;background:${consumed>=100?'var(--red)':consumed>=75?'var(--amber)':'var(--indigo)'};opacity:.8;border-radius:3px;transition:width .6s"></div>
+      </div>
+      <div style="font-size:.58em;color:${phaseColor};margin-bottom:12px;padding:3px 8px;background:rgba(255,255,255,.03);border-radius:4px;display:inline-block;align-self:flex-start">${phaseLabel}</div>
+      ${rowsHtml}
+      ${alertHtml}
+    </div>`;
+  };
+
   // ── Consommation par section — solid card ─────
   const burnCard = () => {
     const maxEst = Math.max(...dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)),1);
@@ -1699,7 +1773,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
   if (id === 'reperages') return `
     ${burnCard()}
-    ${engagementCard()}
+    ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
       comingSoonCard('Frais par intervenant', "Notes de frais individuelles par membre de l'équipe. Connecté au module Contacts & RH.", 'green', '',
@@ -1756,7 +1830,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${vhrCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Hébergement & transports', 'Vue d\'ensemble hébergement et transports. Données issues du LOG_STAFF.', 'amber', '', {clickable:"openVhrTransportDrawer()"})
@@ -1798,7 +1872,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${prodCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Prestataires clés', 'Suivi des contrats prestataires principaux. Connecté au module Contacts.', 'green')
@@ -1828,7 +1902,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${cateringCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Coût par repas', 'Budget total ÷ effectif ÷ jours. Indicateur de maîtrise des coûts traiteur.', 'amber', '', {clickable:"openCoutRepasDrawer()"})
@@ -1858,7 +1932,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${barCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Ventes temps réel', 'CA live via terminal cashless / TPE. Suivi par catégorie.', 'green')
@@ -1884,7 +1958,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${artCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Fiches artistes', 'Rider technique, rider catering, contacts management. Connecté au module Programmation.', 'purple')
@@ -1911,7 +1985,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${techCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('Fiches prestataires', 'Contacts et contrats des prestataires techniques.', 'green')
@@ -1921,7 +1995,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
   if (id === 'sceno') return `
     ${burnCard()}
-    ${engagementCard()}
+    ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
       comingSoonCard('Plans techniques', 'Implantations scénographiques et plans de montage.', 'blue')
@@ -1940,7 +2014,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
     return `
       ${burnCard()}
-      ${partCard}
+      ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
         comingSoonCard('CRM Partenaires', 'Suivi des prospects, statuts de négociation, dates de relance et contreparties dues.', 'purple')
@@ -1950,7 +2024,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
   if (id === 'communication') return `
     ${burnCard()}
-    ${engagementCard()}
+    ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
       comingSoonCard('Stats newsletters', "Taux d'ouverture, clics et conversions. Connecté à votre compte Brevo.", 'blue')
@@ -1960,7 +2034,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   // Fallback — generic
   return `
     ${burnCard()}
-    ${engagementCard()}
+    ${suiviBudgetCard()}
     ${col3(
       comingSoonCard('Module en développement', 'Fonctionnalités supplémentaires bientôt disponibles.', 'purple'),
       comingSoonCard('Historique', 'Comparaison avec les éditions précédentes.', 'blue')
