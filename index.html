@@ -3242,9 +3242,9 @@ function openUnmatchedDrawer(deptId) {
       </div>
     </div>`;
   }).join('') : `<div style="text-align:center;padding:30px 0">
-    <div style="font-size:1.5em;margin-bottom:8px">✅</div>
-    <div style="font-size:.82em;color:var(--green);font-weight:600">Toutes les transactions sont reliées</div>
-    <div style="font-size:.7em;color:var(--text-dim);margin-top:4px">Aucune transaction en attente pour ${deptName}</div>
+    <div style="font-size:1.5em;margin-bottom:8px">${_unmatchedRows.length ? '📭' : '📥'}</div>
+    <div style="font-size:.82em;color:var(--text-muted);font-weight:600">${_unmatchedRows.length ? 'Aucune transaction pour ce pôle' : 'Aucune donnée Qonto importée'}</div>
+    <div style="font-size:.7em;color:var(--text-dim);margin-top:4px">${_unmatchedRows.length ? `Pas de transaction non reliée pour ${deptName}` : 'Importez un relevé Qonto via le bouton « Import Qonto »'}</div>
   </div>`;
 
   document.getElementById('drawer-body').innerHTML = `
