@@ -1758,8 +1758,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${vhrCard}
       ${col3(
-        comingSoonCard('Rooming list', 'Données issues du LOG_STAFF (ROOMING LIST). Disponible via Festiflow Hébergement.', 'blue', '', {clickable:"openVhrRoomingDrawer()"}),
-        comingSoonCard('Planning transports', 'Données issues du LOG_STAFF (SUIVI TRANSPORT). Disponible via Festiflow Transport.', 'amber', '', {clickable:"openVhrTransportDrawer()"})
+        unmatchedCard(id),
+        comingSoonCard('Hébergement & transports', 'Vue d\'ensemble hébergement et transports. Données issues du LOG_STAFF.', 'amber', '', {clickable:"openVhrTransportDrawer()"})
       )}
     `;
   }
