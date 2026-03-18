@@ -1737,33 +1737,91 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   };
 
   // ── Consommation par section — solid card ─────
-  const burnCard = () => {
-    const maxEst = Math.max(...dept.sections.map(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)),1);
-    const rows = dept.sections.map(s=>{
-      const sE=s.lines.reduce((a,l)=>a+(l.est||0),0);
-      const sR=s.lines.reduce((a,l)=>a+(l.reel||0),0);
-      const sP=pct(sR,sE);
-      const col=sP>=100?'var(--red)':sP>=75?'var(--amber)':'var(--indigo)';
-      const burnW=sE>0?Math.min(Math.round(sR/sE*100),100):0;
-      const budgW=sE>0?Math.round(sE/maxEst*100):0;
-      const hasBudget=sE>0;
-      return `<div style="padding:4px 0${hasBudget?'':';opacity:.45'}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:.68em;font-weight:600;color:var(--text-muted)">${s.s}</span>
-          <span style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:.65em;color:var(--text-dim)">${hasBudget?fe(sE):'—'}</span>
-            ${sR>0?`<span style="font-size:.65em;font-weight:700;color:${col}">${sP}%</span>`:''}
-          </span>
-        </div>
-        <div style="position:relative;height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
-          ${hasBudget?`<div style="position:absolute;left:0;top:0;height:100%;width:${budgW}%;background:rgba(255,255,255,.07);border-radius:3px"></div>
-          <div style="position:absolute;left:0;top:0;height:100%;width:${burnW}%;background:${col};opacity:.8;border-radius:3px;transition:width .6s"></div>`:''}
-        </div>
-      </div>`;
-    }).join('');
+  const engagementsCard = () => {
+    const tE = tot.est, tR = tot.reel;
+    const STORDER2 = ['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ','PAYÉ'];
+    const STCOL2 = {'ESTIMATION':'rgba(255,255,255,.15)','EN COURS':'var(--amber)','DEVIS SIGNÉ':'#818cf8','VALIDÉ':'var(--green)','PAYÉ':'var(--green)'};
+    const stAmts2 = {};
+    STORDER2.forEach(s => { stAmts2[s] = allL.filter(l=>l.st===s).reduce((a,l)=>a+(l.est||0),0); });
+
+    const nonEngage = (stAmts2['ESTIMATION']||0) + (stAmts2['EN COURS']||0);
+    const confirme = (stAmts2['DEVIS SIGNÉ']||0) + (stAmts2['VALIDÉ']||0) + (stAmts2['PAYÉ']||0);
+    const nonEngagePct = tE > 0 ? Math.round(nonEngage / tE * 100) : 0;
+    const nonEngageColor = nonEngagePct >= 50 ? 'var(--red)' : nonEngagePct >= 25 ? 'var(--amber)' : 'var(--green)';
+
+    const lignesSansContrat = allL.filter(l => l.l && !l.l.startsWith('(ligne') && (l.est||0) > 0 && ['ESTIMATION','EN COURS'].includes(l.st)).length;
+    const payeSansDevis = allL.filter(l => (l.reel||0) > 0 && ['ESTIMATION','EN COURS'].includes(l.st)).reduce((a,l) => a + (l.reel||0), 0);
+
+    // Pipeline bar segments
+    const barSegments = STORDER2.filter(s => stAmts2[s] > 0).map(s =>
+      `<div style="flex:${stAmts2[s]};background:${STCOL2[s]};${s==='ESTIMATION'?'':'opacity:.75'}" title="${s}: ${fe(stAmts2[s])}"></div>`
+    ).join('');
+
+    // Legend
+    const legend = [
+      {label:'Estimation', col:'rgba(255,255,255,.15)'},
+      {label:'En cours', col:'var(--amber)'},
+      {label:'Signé', col:'#818cf8'},
+      {label:'Validé / Payé', col:'var(--green)'},
+    ].filter((_,i) => {
+      const keys = ['ESTIMATION','EN COURS','DEVIS SIGNÉ','VALIDÉ'];
+      return i < 3 ? stAmts2[keys[i]] > 0 : (stAmts2['VALIDÉ']||0) + (stAmts2['PAYÉ']||0) > 0;
+    }).map(l => `<span style="display:flex;align-items:center;gap:4px;font-size:.55em;color:var(--text-dim)">
+      <span style="width:7px;height:7px;border-radius:2px;background:${l.col};flex-shrink:0"></span>${l.label}
+    </span>`).join('');
+
+    // Alert
+    const alertHtml = payeSansDevis > 0 ? `
+      <div style="margin-top:12px;padding:8px 10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:7px;font-size:.62em;color:var(--red);line-height:1.5">
+        ⚠ ${fe(payeSansDevis)} dépensé avec statut non signé
+      </div>` : nonEngage === 0 && tE > 0 ? `
+      <div style="margin-top:12px;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:7px;font-size:.62em;color:var(--green);line-height:1.5">
+        ✓ Budget entièrement engagé
+      </div>` : '';
+
+    const infoTooltip = "Basé sur les statuts renseignés par l'équipe dans le tableau. Un statut non mis à jour peut fausser cette vue.";
+
     return `<div class="card" style="padding:20px;display:flex;flex-direction:column">
-      ${cardLabel('Consommation par section')}
-      ${rows}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        ${cardLabel('Engagements')}
+        <span title="${infoTooltip}" style="cursor:help;font-size:.65em;width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.12);display:inline-flex;align-items:center;justify-content:center;color:var(--text-dim);flex-shrink:0;margin-top:-4px">i</span>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px">
+          <span style="font-size:1.2em;font-weight:700;color:${nonEngageColor}">${fe(nonEngage)}</span>
+          <span style="font-size:.72em;font-weight:600;color:${nonEngageColor}">${nonEngagePct}%</span>
+          <span style="font-size:.62em;color:var(--text-dim)">non engagé</span>
+        </div>
+        <div style="font-size:.6em;color:var(--text-dim)">sur ${fe(tE)} au budget</div>
+      </div>
+
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px">
+        ${barSegments || '<div style="flex:1;background:rgba(255,255,255,.04)"></div>'}
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        ${legend}
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,.06);margin-bottom:12px"></div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.65em;color:var(--text-dim)">Lignes sans contrat</span>
+          <span style="font-size:.68em;font-weight:700;color:${lignesSansContrat > 0 ? 'var(--amber)' : 'var(--green)'}">${lignesSansContrat}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.65em;color:var(--text-dim)">Confirmé (signé+validé+payé)</span>
+          <span style="font-size:.68em;font-weight:700;color:var(--green)">${fe(confirme)}</span>
+        </div>
+        ${payeSansDevis > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.65em;color:var(--text-dim)">Payé sans devis signé</span>
+          <span style="font-size:.68em;font-weight:700;color:var(--red)">${fe(payeSansDevis)}</span>
+        </div>` : ''}
+      </div>
+
+      ${alertHtml}
     </div>`;
   };
 
@@ -1772,7 +1830,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   // ══════════════════════════════════════════════════════════
 
   if (id === 'reperages') return `
-    ${burnCard()}
+    ${engagementsCard()}
     ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
@@ -1829,7 +1887,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1871,7 +1929,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1901,7 +1959,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1931,7 +1989,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1957,7 +2015,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1984,7 +2042,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -1994,7 +2052,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   }
 
   if (id === 'sceno') return `
-    ${burnCard()}
+    ${engagementsCard()}
     ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
@@ -2013,7 +2071,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     </div>`;
 
     return `
-      ${burnCard()}
+      ${engagementsCard()}
       ${suiviBudgetCard()}
       ${col3(
         unmatchedCard(id),
@@ -2023,7 +2081,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   }
 
   if (id === 'communication') return `
-    ${burnCard()}
+    ${engagementsCard()}
     ${suiviBudgetCard()}
     ${col3(
       unmatchedCard(id),
@@ -2033,7 +2091,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 
   // Fallback — generic
   return `
-    ${burnCard()}
+    ${engagementsCard()}
     ${suiviBudgetCard()}
     ${col3(
       comingSoonCard('Module en développement', 'Fonctionnalités supplémentaires bientôt disponibles.', 'purple'),
