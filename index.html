@@ -1800,7 +1800,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       ${burnCard()}
       ${prodCard}
       ${col3(
-        comingSoonCard('Planning montage', 'Timeline de montage J-5 à J-1. Connecté au module Calendrier.', 'blue'),
+        unmatchedCard(id),
         comingSoonCard('Prestataires clés', 'Suivi des contrats prestataires principaux. Connecté au module Contacts.', 'green')
       )}
     `;
