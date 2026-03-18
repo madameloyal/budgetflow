@@ -2749,7 +2749,7 @@ function toggleTTC(btn) {
   _ttcVisible = !_ttcVisible;
   document.querySelectorAll('.show-ht').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
   document.querySelectorAll('.show-ttc').forEach(el => el.style.display = _ttcVisible ? '' : 'none');
-  document.querySelectorAll('.tva-col').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
+  document.querySelectorAll('.tva-col').forEach(el => el.style.display = '');
   btn.style.color       = _ttcVisible ? '#818cf8'              : 'var(--text-dim)';
   btn.style.borderColor = _ttcVisible ? 'rgba(99,102,241,.4)'  : 'var(--border)';
   btn.style.background  = _ttcVisible ? 'rgba(99,102,241,.1)'  : 'var(--surface-2)';
