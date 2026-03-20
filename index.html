@@ -1173,15 +1173,22 @@ function renderBilan(){
   const depBurnColor = depBurnPct>=100?'var(--red)':depBurnPct>=75?'var(--amber)':'var(--green)';
 
   let depRows = '';
+  let totalImprevus = 0;
+  let deptsWithImprevus = 0;
   DEPTS.forEach((d,i)=>{
     const t=dtot(d); const ec4=t.est-t.reel; const p3=pct(t.reel,t.est);
     const estTTC=Math.round(t.est*1.15); const reelTTC=Math.round(t.reel*1.15);
     const col = DEPT_COLORS[i] || 'var(--indigo)';
+    const impSec = d.sections.find(s => s.s === 'DÉPENSES IMPRÉVUES');
+    const impReel = impSec ? impSec.lines.reduce((a,l) => a + (l.reel||0), 0) : 0;
+    if (impReel > 0) { totalImprevus += impReel; deptsWithImprevus++; }
+    const impBadge = impReel > 0 ? `<span style="font-size:.6em;padding:1px 6px;border-radius:4px;background:rgba(248,113,113,.1);color:var(--red);font-weight:600;white-space:nowrap">${fe(impReel)} imprévus</span>` : '';
     depRows+=`<tr style="cursor:pointer" onclick="go('${d.id}',null)">
       <td>
-        <span style="display:inline-flex;align-items:center;gap:7px">
+        <span style="display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span style="width:7px;height:7px;border-radius:50%;background:${col};flex-shrink:0"></span>
           ${d.name}
+          ${impBadge}
         </span>
       </td>
       <td class="b-ht-col">${fe(t.est)}</td>
@@ -1208,6 +1215,16 @@ function renderBilan(){
     <td>${ecH(ge-gr,false,gr>0)}</td>
     <td></td>
   </tr>`;
+  if (totalImprevus > 0) {
+    depRows+=`<tr>
+      <td colspan="7" style="padding:6px 14px;font-size:.7em;color:var(--red);font-style:italic;border-top:1px solid rgba(255,255,255,.04)">
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:2px;background:rgba(248,113,113,.5);flex-shrink:0"></span>
+          dont ${fe(totalImprevus)} imprévus · ${deptsWithImprevus} pôle${deptsWithImprevus>1?'s':''}
+        </span>
+      </td>
+    </tr>`;
+  }
 
   if(el('b-dep-wrapper')) {
     el('b-dep-wrapper').innerHTML = `
