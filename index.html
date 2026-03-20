@@ -1540,6 +1540,17 @@ function renderDept(id){
             <div class="dept-hdr-val" style="color:${ec>=0?'var(--green)':'var(--red)'}">${ec>=0?'+':''}${fe(ec)}</div>
           </div>
           <div class="dept-hdr-kpi">
+            <div class="dept-hdr-lbl">Imprévus</div>
+            ${(() => {
+              const impSec = dept.sections.find(s => s.s === 'DÉPENSES IMPRÉVUES');
+              const impReel = impSec ? impSec.lines.reduce((a,l) => a + (l.reel||0), 0) : 0;
+              const impEst = impSec ? impSec.lines.reduce((a,l) => a + (l.est||0), 0) : 0;
+              if (impReel > 0) return `<div class="dept-hdr-val" style="color:var(--red)">${fe(impReel)}</div>`;
+              if (impEst > 0) return `<div class="dept-hdr-val" style="color:var(--amber)">${fe(impEst)}</div>`;
+              return `<div class="dept-hdr-val" style="color:rgba(255,255,255,.25)">—</div>`;
+            })()}
+          </div>
+          <div class="dept-hdr-kpi">
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
               <span class="dept-hdr-lbl">Consommé</span>
               <span style="font-size:14px;font-weight:700;color:${p>=100?'var(--red)':p>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'}">${p}%</span>
