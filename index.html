@@ -9,8 +9,6 @@
 <style>
 /* ═══ SHELL CSS ═══ */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-/* ═══ SHELL CSS (from Registre) ═══ */
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
 --accent:#d4522a;--green:#3ba55d;--amber:#f5a623;--red:#ed4245;--blue:#5865f2;--purple:#9b59b6;
 --frame:#2c2f47;--frame-card:#3a3d5e;--frame-input:#30324d;
@@ -99,22 +97,20 @@ html,body{height:100%;overflow:hidden;background:linear-gradient(180deg,#7758cf,
    purple #a855f7 (day-0) · indigo #6366f1 (day-1)
    NO other hue is introduced anywhere.
    ══════════════════════════════════════════════════ */
-:root {
+.content {
   --bg:#08080d; --surface:#101017; --surface-2:#16161f;
   --border:rgba(255,255,255,0.05); --border-h:rgba(255,255,255,0.08);
   --text:#f0f0f5; --text-muted:#a0a0b0; --text-dim:#5a5a6a;
   --green:#34d399; --red:#f87171; --amber:#fbbf24;
   --purple:#a855f7; --indigo:#6366f1;
 }
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-padding-top:56px}
-body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:19px;line-height:1.55;overflow-x:hidden}
-.wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
+body{font-family:'DM Sans',-apple-system,sans-serif;font-size:19px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:none;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
 
 /* ── NAV ─────────────────────────────── */
-.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;margin-bottom:0}
-.nav-i{max-width:1020px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-.nav-i::-webkit-scrollbar{display:none}
+.budget-nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;margin-bottom:0}
+.budget-nav-i{max-width:none;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.budget-nav-i::-webkit-scrollbar{display:none}
 .nbrand{font-family:'Space Grotesk',sans-serif;font-size:0.68em;font-weight:700;color:var(--text-muted);letter-spacing:1px;padding:10px 16px 10px 0;white-space:nowrap;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
 .nl{padding:10px 13px;font-size:0.68em;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .2s,border-color .2s}
 .nl:hover{color:var(--text-muted)}
@@ -571,15 +567,15 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
-<div id="loading-overlay" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+<div id="loading-overlay" style="position:fixed;inset:0;background:#08080d;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px">
   <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--indigo);border-radius:50%;animation:spin 0.8s linear infinite"></div>
   <div style="color:var(--text-muted);font-size:.9em">Chargement des données…</div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <!-- NAV -->
-<nav class="nav">
-  <div class="nav-i">
+<nav class="budget-nav">
+  <div class="budget-nav-i">
     <span class="nbrand">BudgetFlow</span>
     <button class="nl on"  onclick="go('bilan',this)">Bilan P&amp;L</button>
     <button class="nl"     onclick="go('reperages',this)">Repérages</button>
