@@ -1101,13 +1101,7 @@ function renderBilan(){
       const dataRows = cat.rows.map((r, ri) => {
         const reeH = r.reel||0;
         return `<tr>
-          <td style="display:flex;align-items:center;gap:6px;cursor:default">
-            <span class="ligne-label" style="flex:1;font-weight:500;color:#fff">${r.l}</span>
-            <button class="edit-ligne-btn" onclick="event.stopPropagation();openRecetteDrawer(${ci},${ri})" title="Éditer cette ligne">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Éditer
-            </button>
-          </td>
+          <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">${r.l}</td>
           <td class="clickable-cell" onclick="openRecetteDrawer(${ci},${ri})" title="Éditer estimé"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
           <td class="clickable-cell" onclick="openRecCatDrawer(${ci})" title="Voir transactions"><span class="cro">${reeH?fe(reeH):'—'}</span></td>
           <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
