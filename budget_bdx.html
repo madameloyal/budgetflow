@@ -926,6 +926,7 @@ const fe = n => {
   return s.replace(/\u202f/g,'\u00a0') + '\u00a0€';
 };
 const fmtAmt = (n, decimals=2) => {
+  if (n==null || isNaN(n)) return '—';
   const s = n.toLocaleString('fr-FR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
   return s.replace(/\u202f/g,'\u00a0');
 };
@@ -3400,64 +3401,27 @@ async function openReelDrawer(deptId, sectionIdx, lineIdx) {
     return;
   }
 
-  // 2. Fallback: session-matched tx
-  const txList = getMatchedTx(tabName, line.l);
-  if (txList && txList.length > 0) {
-    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>` + buildTransactionList(line, tabName);
-    return;
-  }
-
-  // 3. Fallback: dept-wide raw transactions
-  const allTx = getAllQontoTx() || [];
-  const deptCats = new Set();
-  deptCats.add(tabName);
-  Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) deptCats.add(qCat); });
-  const deptTx = allTx.filter(tx => {
-    const normCat = normStr(tx.cat||'');
-    return [...deptCats].some(c => normStr(c) === normCat) && (tx.ttc||0) < 0;
-  });
-
-  if (deptTx.length > 0) {
-    const total2 = deptTx.reduce((a, t) => a + Math.abs(t.ttc), 0);
-    const rows2 = deptTx.map(tx => {
-      const d = formatQontoDate(tx.date);
-      const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
-      return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em">
-        <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
-        <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
-        <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
-        <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
-      </div>`;
-    }).join('');
-
+  // No match-log entries — clean empty state
+  if (line.reel && line.reel > 0) {
     txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
       <div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
-          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${deptTx.length} transaction${deptTx.length > 1 ? 's' : ''} · ${tabName}</span>
-          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total2)} € TTC</span>
+          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
+          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
         </div>
-        <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
-          <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
-        </div>
-        ${rows2}
-        <div style="padding:8px 14px;font-size:.62em;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
-          Toutes les transactions ${tabName} · la ligne « ${line.l} » représente ${fe(line.reel)} HT
+        <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
+          Détail des transactions non disponible. Réimportez le relevé Qonto pour reconstruire l'historique.
         </div>
       </div>`;
-    return;
+  } else {
+    txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
+      <div class="drawer-empty">
+        <div class="drawer-empty-icon">💳</div>
+        Aucune transaction Qonto associée.<br>
+        <span style="font-size:.85em;color:var(--text-dim)">Importez un relevé pour alimenter cette ligne.</span>
+      </div>`;
   }
 
-  // 4. No data at all
-  txSection.innerHTML = `<div class="drawer-section-title">Transactions Qonto</div>
-    <div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
-        <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
-        <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
-      </div>
-      <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
-        Importez un relevé Qonto pour voir le détail des transactions.
-      </div>
-    </div>`;
 }
 
 function openDrawer(deptId, sectionIdx, lineIdx) {
