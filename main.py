@@ -150,7 +150,7 @@ COL = {
     "ecart": 10, "statut": 11
 }
 
-FIELD_TO_COL = {"est_ht": "F", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D", "rh": "H"}
+FIELD_TO_COL = {"est_ht": "F", "est_ttc": "G", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D", "rh": "H"}
 
 QC = {
     "cat": 0, "sous_cat": 1, "fourn": 2, "note": 3, "date": 4,
@@ -508,6 +508,12 @@ def add_ligne(payload: AddLigne):
         new_row[COL["typ"]]          = payload.typ
         new_row[COL["tva"]]          = payload.tva
         new_row[COL["est_ht"]]       = payload.est_ht if payload.est_ht else ""
+        # Auto-compute TTC from HT + TVA
+        try:
+            tva_num = float(str(payload.tva).replace(",", "."))
+            new_row[COL["est_ttc"]] = round(payload.est_ht * (1 + tva_num)) if payload.est_ht else ""
+        except (ValueError, TypeError):
+            new_row[COL["est_ttc"]] = payload.est_ht if payload.est_ht else ""
         new_row[COL["reel_ht"]]      = 0
         new_row[COL["reel_ttc"]]     = 0
         new_row[COL["statut"]]       = payload.statut
@@ -557,6 +563,41 @@ def add_ligne(payload: AddLigne):
         ).execute()
 
         return {"status": "ok", "inserted_row": sheet_row, "ligne": payload.ligne, "dept": tab}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DeleteLigne(BaseModel):
+    dept:    str
+    row:     int  # 1-based sheet row number
+    session: str = None
+
+@app.post("/api/budget/delete-ligne")
+def delete_ligne(payload: DeleteLigne):
+    sess = get_session(payload.session)
+    base_tab = payload.dept.upper()
+    valid_tabs = list(sess["dept_tabs"]) + [RECETTES_TAB]
+    if base_tab not in valid_tabs:
+        raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found")
+    tab = tab_name(sess, base_tab)
+    try:
+        svc = get_sheets_service()
+        sheet_id = get_sheet_id(svc, tab)
+        if sheet_id is None:
+            raise HTTPException(status_code=404, detail=f"Sheet '{tab}' not found")
+        # Delete the row (0-based index = row - 1)
+        svc.batchUpdate(
+            spreadsheetId=SHEET_ID,
+            body={"requests": [{"deleteDimension": {"range": {
+                "sheetId": sheet_id, "dimension": "ROWS",
+                "startIndex": payload.row - 1,
+                "endIndex": payload.row
+            }}}]}
+        ).execute()
+        invalidate_cache()
+        return {"status": "ok", "deleted_row": payload.row, "dept": tab}
     except HTTPException:
         raise
     except Exception as e:
