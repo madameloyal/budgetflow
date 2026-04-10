@@ -23,7 +23,7 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-padding-top:56px}
 body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:19px;line-height:1.55;overflow-x:hidden}
-.wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
+.wrap{max-width:1020px;margin:0 auto;padding:12px 20px 80px;overflow-x:hidden}
 
 /* ── NAV ─────────────────────────────── */
 .nav{position:sticky;top:0;z-index:100;background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:0;margin-bottom:0}
@@ -3785,9 +3785,19 @@ function checkPassword() {
   <span style="opacity:.3">·</span>
   <span>Version Standalone HTML</span>
   <span style="opacity:.3">·</span>
-  <span>Confidential</span>
-  <span style="opacity:.3">·</span>
-  <span>Madame Loyal</span>
+  <span id="footer-sync">—</span>
 </footer>
+<script>
+(function(){
+  const el=document.getElementById('footer-sync');
+  if(el) el.textContent='Chargé le '+new Date().toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const orig=window.refreshBudgetData;
+  if(orig) window.refreshBudgetData=async function(){
+    const r=await orig.apply(this,arguments);
+    if(el) el.textContent='Sync '+new Date().toLocaleString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    return r;
+  };
+})();
+</script>
 </body>
 </html>
