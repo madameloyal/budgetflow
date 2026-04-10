@@ -603,17 +603,41 @@ def get_recettes(session: str = None):
         if len(values) < 2:
             return {"status": "ok", "data": []}
 
-        rows = parse_dept_rows(values, "RECETTES")
-        # Enrich with qte and pu from the repurposed columns
-        for row in rows:
-            row["qte"] = safe_float(row.get("rh", 0))
-            row["pu"] = safe_float(row.get("observations", 0))
-            # Clean observations — if it was used for PU, don't show as text
+        # Custom parser for RECETTES — starts from row 1 (skip only header row 0)
+        rows = []
+        current_section = ""
+        for i, row in enumerate(values):
+            if i == 0:
+                continue  # skip header only
+            row = list(row) + [""] * (12 - len(row))
+            section_val = str(row[COL["section"]]).strip()
+            ligne_val   = str(row[COL["ligne"]]).strip()
+            if section_val and not ligne_val:
+                current_section = section_val
+                continue
+            if is_total_row(section_val, ligne_val):
+                continue
+            if not ligne_val and not any(str(c).strip() for c in row[5:10]):
+                continue
+            pu_raw = str(row[COL["observations"]]).strip()
             try:
-                float(str(row.get("observations", "")).replace(",", "."))
-                row["observations"] = ""
+                pu_val = float(str(pu_raw).replace(",", "."))
             except (ValueError, TypeError):
-                pass
+                pu_val = 0.0
+            rows.append({
+                "section":      current_section,
+                "ligne":        ligne_val or f"(ligne {i})",
+                "observations": "" if pu_val else pu_raw,
+                "typ":          str(row[COL["typ"]]).strip(),
+                "tva":          str(row[COL["tva"]]).strip(),
+                "est_ht":       safe_float(row[COL["est_ht"]]),
+                "rh":           str(row[COL["rh"]]).strip(),
+                "reel_ht":      safe_float(row[COL["reel_ht"]]),
+                "statut":       str(row[COL["statut"]]).strip(),
+                "_row":         i + 1,
+                "qte":          safe_float(row[COL["rh"]]),
+                "pu":           pu_val,
+            })
         return {"status": "ok", "data": rows}
     except HTTPException:
         raise
