@@ -1101,7 +1101,15 @@ function renderBilan(){
       const dataRows = cat.rows.map((r, ri) => {
         const reeH = r.reel||0;
         return `<tr>
-          <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">${r.l}</td>
+          <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span style="flex:1">${r.l}</span>
+              <button class="edit-ligne-btn" onclick="event.stopPropagation();openRecetteDrawer(${ci},${ri})" title="Éditer cette ligne">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Éditer
+              </button>
+            </span>
+          </td>
           <td class="clickable-cell" onclick="openRecetteDrawer(${ci},${ri})" title="Éditer estimé"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
           <td class="clickable-cell" onclick="openRecCatDrawer(${ci})" title="Voir transactions"><span class="cro">${reeH?fe(reeH):'—'}</span></td>
           <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
@@ -1695,52 +1703,62 @@ function openRecetteDrawer(ci, ri) {
   const r = cat ? cat.rows[ri] : null;
   if (!r) return;
 
-  const inputSt = 'width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:monospace;font-size:.9em;outline:none';
-
-  document.getElementById('drawer-title').textContent = r.l || 'Ligne recette';
-  document.getElementById('drawer-sub').textContent = `${cat.cat} \u00B7 Recettes`;
+  document.getElementById('drawer-title').innerHTML =
+    `<span style="color:#c4b5fd">\u270F</span> ${r.l || 'Ligne recette'}`;
+  document.getElementById('drawer-sub').innerHTML =
+    `<span class="df-badge edit">\u00C9dition</span>
+     <span style="margin-left:6px">${cat.cat} \u203A Recettes</span>`;
 
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
-      <div class="drawer-section-title">Ligne</div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Nom</label>
-        <input type="text" value="${(r.l||'').replace(/"/g,'&quot;')}" onchange="upRecName(${ci},${ri},this)" style="${inputSt};font-family:'DM Sans',sans-serif;font-weight:600">
+      <div class="df-group">
+        <label class="df-label">Nom de la ligne *</label>
+        <input id="rf-nom" class="df-input" type="text"
+          placeholder="ex: EARLY, BAR VIP\u2026"
+          value="${(r.l||'').replace(/"/g,'&quot;')}">
+      </div>
+
+      <div class="df-row">
+        <div class="df-group">
+          <label class="df-label">Quantit\u00E9</label>
+          <input id="rf-qte" class="df-input" type="number" min="0"
+            placeholder="0" value="${r.qte||''}">
+        </div>
+        <div class="df-group">
+          <label class="df-label">Prix unitaire (\u20AC)</label>
+          <input id="rf-pu" class="df-input" type="number" min="0" step="0.01"
+            placeholder="0" value="${r.pu||''}">
+        </div>
+      </div>
+
+      <div class="df-group">
+        <label class="df-label">Estim\u00E9 HT (\u20AC)</label>
+        <input id="rf-est" class="df-input" type="number" min="0" step="0.01"
+          placeholder="Auto si qt\u00E9 \u00D7 prix" value="${r.ht||''}">
+        <div style="font-size:11px;color:var(--text-dim);margin-top:5px;line-height:1.5">Si Qt\u00E9 et Prix unitaire sont renseign\u00E9s, ce champ se calcule automatiquement au save.</div>
+      </div>
+
+      <div class="df-row">
+        <div class="df-group">
+          <label class="df-label">TVA</label>
+          <select id="rf-tva" class="df-select">
+            ${tvaOpts(r.tva)}
+          </select>
+        </div>
+        <div class="df-group">
+          <label class="df-label">Statut</label>
+          <select id="rf-st" class="df-select">
+            <option value="ESTIMATION"  ${r.st==='ESTIMATION'?'selected':''}>ESTIMATION</option>
+            <option value="EN COURS"    ${r.st==='EN COURS'?'selected':''}>EN COURS</option>
+            <option value="DEVIS SIGN\u00C9" ${r.st==='DEVIS SIGN\u00C9'?'selected':''}>DEVIS SIGN\u00C9</option>
+            <option value="VALID\u00C9"      ${r.st==='VALID\u00C9'?'selected':''}>VALID\u00C9</option>
+            <option value="PAY\u00C9"        ${r.st==='PAY\u00C9'?'selected':''}>PAY\u00C9</option>
+          </select>
+        </div>
       </div>
     </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">Montants</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div>
-          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Quantit\u00E9</label>
-          <input type="text" value="${r.qte||''}" onchange="upRec(${ci},${ri},'qte',this)" style="${inputSt}">
-        </div>
-        <div>
-          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Prix unitaire</label>
-          <input type="text" value="${r.pu||''}" onchange="upRec(${ci},${ri},'pu',this)" style="${inputSt}">
-        </div>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Estim\u00E9 HT</label>
-        <input type="text" value="${r.ht||0}" onchange="upRec(${ci},${ri},'ht',this)" style="${inputSt}">
-        <div style="font-size:.6em;color:var(--text-dim);margin-top:4px">Si Qt\u00E9 et Prix unit. sont renseign\u00E9s, ce champ se calcule automatiquement.</div>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Statut</label>
-        <select onchange="upRecSt(${ci},${ri},this)" class="ss ${chipcls(r.st)}" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
-          <option value="ESTIMATION" ${r.st==='ESTIMATION'?'selected':''}>ESTIMATION</option>
-          <option value="EN COURS" ${r.st==='EN COURS'?'selected':''}>EN COURS</option>
-          <option value="DEVIS SIGN\u00C9" ${r.st==='DEVIS SIGN\u00C9'?'selected':''}>DEVIS SIGN\u00C9</option>
-          <option value="VALID\u00C9" ${r.st==='VALID\u00C9'?'selected':''}>VALID\u00C9</option>
-          <option value="PAY\u00C9" ${r.st==='PAY\u00C9'?'selected':''}>PAY\u00C9</option>
-        </select>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">TVA</label>
-        <div style="font-size:.85em;color:var(--text-muted)">${r.tva ? (r.tva * 100).toFixed(1) + '%' : '\u2014'}</div>
-      </div>
-    </div>
-    <div class="drawer-section" style="margin-top:16px">
+
+    <div class="drawer-section" style="margin-top:8px">
       <div class="drawer-section-title">R\u00E9sum\u00E9</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div style="background:var(--surface-2);border-radius:8px;padding:10px 14px">
@@ -1757,12 +1775,63 @@ function openRecetteDrawer(ci, ri) {
 
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
-    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
+    <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    <button class="drawer-btn" id="rf-save-btn" onclick="saveRecEdit(${ci},${ri})">Enregistrer</button>
   `;
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  
+  setTimeout(() => document.getElementById('rf-nom')?.focus(), 80);
+}
+
+async function saveRecEdit(ci, ri) {
+  const nom = document.getElementById('rf-nom')?.value.trim();
+  const qte = parseFloat(document.getElementById('rf-qte')?.value) || 0;
+  const pu  = parseFloat(document.getElementById('rf-pu')?.value) || 0;
+  let est   = parseFloat(document.getElementById('rf-est')?.value) || 0;
+  const tva = document.getElementById('rf-tva')?.value || '';
+  const st  = document.getElementById('rf-st')?.value || 'ESTIMATION';
+
+  if (!nom) {
+    document.getElementById('rf-nom').style.borderColor = 'rgba(248,113,113,.6)';
+    document.getElementById('rf-nom').focus();
+    return;
+  }
+
+  // Auto-calc est from qte × pu if not manually changed
+  if (!est && qte && pu) est = Math.round(qte * pu);
+
+  const btn = document.getElementById('rf-save-btn');
+  if (btn) { btn.textContent = 'Enregistrement\u2026'; btn.classList.add('saving'); }
+
+  const r = REC[ci]?.rows[ri];
+  if (!r?._row) { showToast('\u26A0 Erreur', 'Ligne introuvable', 'red'); return; }
+
+  try {
+    const updates = [
+      {field: 'ligne',        value: nom},
+      {field: 'observations', value: pu ? String(pu) : ''},
+      {field: 'rh',           value: qte ? String(qte) : ''},
+      {field: 'est_ht',       value: String(est)},
+      {field: 'tva',          value: tva},
+      {field: 'statut',       value: st},
+    ];
+    for (const u of updates) {
+      await fetch(`${API}/api/budget/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({session: SESSION, dept: 'RECETTES', row: r._row, field: u.field, value: u.value})
+      });
+    }
+
+    closeDrawer();
+    await refreshBudgetData();
+    renderBilan();
+    showToast('\u2705 Ligne mise \u00E0 jour', `"${nom}" enregistr\u00E9e`, 'green');
+  } catch (e) {
+    if (btn) { btn.textContent = 'Enregistrer'; btn.classList.remove('saving'); }
+    showToast('\u26A0 Erreur', e.message, 'red');
+  }
 }
 
 
