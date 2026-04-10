@@ -117,7 +117,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .chip-c{background:rgba(52,211,153,.07);color:var(--green);font-size:.56em;padding:1px 5px;border-radius:3px}
 
 /* Statut select ── compact pill */
-.ss{background:none;border:none;font-family:'DM Sans',-apple-system,sans-serif;font-size:.55em;font-weight:700;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:0 6px;height:20px;line-height:20px;-webkit-appearance:none;appearance:none;transition:all .15s;text-align:center}
+.ss{background:none;border:none;font-family:'DM Sans',-apple-system,sans-serif;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:0 6px;height:20px;line-height:20px;-webkit-appearance:none;appearance:none;transition:all .15s;text-align:center}
 .ss.est{background:rgba(255,255,255,.04);color:var(--text-muted)}
 .ss.ec{background:rgba(251,191,36,.1);color:var(--amber)}
 .ss.ds{background:rgba(99,102,241,.1);color:#818cf8}
@@ -131,17 +131,17 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 @keyframes ce-saved{0%{background:rgba(52,211,153,.25);border-color:rgba(52,211,153,.6)}100%{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.18)}}
 .ce.saved{animation:ce-saved .8s ease-out forwards}
 /* Read-only cells */
-.cro{font-size:.85em;color:#fff;text-align:right;display:block;padding:3px 6px}
-.cpos{color:var(--green);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
-.cneg{color:var(--red);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
-.cdim{color:var(--text-dim);font-size:.85em;text-align:right;display:block;padding:3px 6px}
+.cro{font-size:13px;color:#fff;text-align:right;display:block;padding:3px 6px}
+.cpos{color:var(--green);font-weight:600;font-size:13px;text-align:right;display:block;padding:3px 6px}
+.cneg{color:var(--red);font-weight:600;font-size:13px;text-align:right;display:block;padding:3px 6px}
+.cdim{color:var(--text-dim);font-size:13px;text-align:right;display:block;padding:3px 6px}
 
 /* ── TABLES ──────────────────────────── */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:.68em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 14px;text-align:right;border-bottom:1px solid var(--border)}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 14px;text-align:right;border-bottom:1px solid var(--border)}
 .tbl th:first-child,.tbl th.tl{text-align:left;padding-left:16px}
 .tbl th.ec-col{color:var(--text-dim)}
-.tbl td{padding:9px 14px;font-size:.78em;text-align:right;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;color:var(--text-muted)}
+.tbl td{padding:9px 14px;font-size:13px;text-align:right;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;color:var(--text-muted)}
 .tbl td:first-child{text-align:left;color:#fff;font-weight:500;padding-left:16px}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:rgba(255,255,255,.015)}
@@ -149,7 +149,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .shead{cursor:pointer}
 .shead td{background:var(--surface-2);padding:0;border-bottom:1px solid var(--border)!important}
 .shead:hover td{background:rgba(255,255,255,.035)}
-.obs{min-width:120px;max-width:200px;color:var(--text-dim)!important;font-size:.78em!important;font-weight:400!important}
+.obs{min-width:120px;max-width:200px;color:var(--text-dim)!important;font-size:12px!important;font-weight:400!important}
 .obs-inp{width:100%;min-width:140px;background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:var(--text-muted);font-size:.8em;font-family:inherit}
 .twrap{overflow-x:auto}
 
@@ -304,7 +304,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.03);
   color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;
-  font-size:.55em;font-weight:600;letter-spacing:.3px;
+  font-size:10px;font-weight:600;letter-spacing:.3px;
   cursor:pointer;transition:all .18s;white-space:nowrap;
   flex-shrink:0;
 }
@@ -324,7 +324,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.03);
   color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;
-  font-size:.55em;font-weight:600;
+  font-size:10px;font-weight:600;
   cursor:pointer;transition:all .2s;
 }
 .add-ligne-btn:hover{
@@ -1436,10 +1436,10 @@ function renderDept(id){
             <td colspan="6" style="padding:0">
               <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
                 <span id="arr-${sid}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:10px">▶</span>
-                <span style="font-weight:700;font-size:.78em;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
-                <span style="font-size:.68em;color:var(--text-dim);margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
+                <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
+                <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
                 <span style="flex:1"></span>
-                <span style="font-size:.78em;font-weight:700;color:var(--text-muted)">${fe(sE)}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(sE)}</span>
               </div>
             </td>
           </tr>
@@ -1576,25 +1576,25 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
     const rowsHtml = deptRows.length ? `
-      <div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:.68em;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:12px;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
         <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span><span></span>
       </div>
       <div style="max-height:260px;overflow-y:auto">
         ${deptRows.map(r => {
           const dateShort = (r.date||'').split(' ')[0] || '—';
           return `<div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.02)">
-          <span style="font-size:.78em;color:var(--text-dim);white-space:nowrap">${dateShort}</span>
-          <span style="font-size:.78em;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fourn||'—'}</span>
-          <span style="font-size:.78em;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
-          <span style="font-size:.78em;font-weight:600;color:#fff;white-space:nowrap;text-align:right">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
-          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:.55em;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
+          <span style="font-size:13px;color:var(--text-dim);white-space:nowrap">${dateShort}</span>
+          <span style="font-size:13px;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fourn||'—'}</span>
+          <span style="font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;text-align:right">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
+          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:10px;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
         </div>`}).join('')}
-      </div>` : `<div style="font-size:.78em;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
+      </div>` : `<div style="font-size:13px;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
     return `
     <div class="card" style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 14px">
-        <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff">À relier</div>
-        ${count > 0 ? `<span style="font-size:.62em;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:.62em;color:var(--green)">✓ 0</span>`}
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff">À relier</div>
+        ${count > 0 ? `<span style="font-size:11px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:11px;color:var(--green)">✓ 0</span>`}
       </div>
       ${rowsHtml}
     </div>`;
