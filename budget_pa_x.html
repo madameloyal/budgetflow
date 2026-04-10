@@ -2251,34 +2251,21 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
           value="${(line.l||'').replace(/^(\(ligne \d+\))$/, '')}">
       </div>
 
-      <div class="df-group">
-        <label class="df-label">Département</label>
-        <select id="ef-dept" class="df-select">
-          ${allDeptOptions}
-        </select>
-      </div>
-
-      <div class="df-group">
-        <label class="df-label">Section / Catégorie</label>
-        <input id="ef-section" class="df-input" type="text"
-          list="ef-section-list"
-          placeholder="ex: TRANSPORTS, ÉQUIPEMENT…"
-          value="${currentSection}">
-        <datalist id="ef-section-list">
-          ${sections.map(s => `<option value="${s}">`).join('')}
-        </datalist>
-        <div style="font-size:.62em;color:var(--text-dim);margin-top:5px">Choisir existante ou taper pour créer</div>
-      </div>
-
-      <div class="df-divider"></div>
-
       <div class="df-row">
+        <div class="df-group">
+          <label class="df-label">Montant HT (€)</label>
+          <input id="ef-est" class="df-input" type="number" min="0" step="0.01"
+            placeholder="0" value="${line.est||''}">
+        </div>
         <div class="df-group">
           <label class="df-label">TVA / Régime</label>
           <select id="ef-tva" class="df-select">
             ${tvaOpts(line.tva)}
           </select>
         </div>
+      </div>
+
+      <div class="df-row">
         <div class="df-group">
           <label class="df-label">Type</label>
           <select id="ef-typ" class="df-select">
@@ -2286,14 +2273,6 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
             <option value="S" ${line.typ==='S'?'selected':''}>S — Staff / Salaire</option>
             <option value="G" ${line.typ==='G'?'selected':''}>G — Prestataire</option>
           </select>
-        </div>
-      </div>
-
-      <div class="df-row">
-        <div class="df-group">
-          <label class="df-label">Estimé HT (€)</label>
-          <input id="ef-est" class="df-input" type="number" min="0" step="0.01"
-            placeholder="0" value="${line.est||''}">
         </div>
         <div class="df-group">
           <label class="df-label">Statut</label>
@@ -2308,27 +2287,16 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
       </div>
 
       <div class="df-group">
-        <label class="df-label">Observations</label>
-        <input id="ef-obs" class="df-input" type="text"
-          placeholder="Notes, références, détails…"
-          value="${line.obs||''}">
-      </div>
-
-      <div class="df-divider"></div>
-
-      <div class="df-group">
-        <label class="df-label" style="display:flex;align-items:center;gap:6px">
-          Référence Qonto
-          <span style="font-size:.7em;font-weight:400;color:var(--indigo);background:rgba(99,102,241,.1);padding:1px 7px;border-radius:4px;letter-spacing:0;text-transform:none">🔗 Matching auto</span>
-        </label>
-        <input id="ef-qonto-ref" class="df-input" type="text"
-          placeholder="ex: ML.13MARS.REGIEBAR"
-          value="${line.qonto_ref||''}">
-        <div style="font-size:.62em;color:var(--text-dim);margin-top:5px;line-height:1.5">
-          Le mot-clé exact utilisé dans la colonne <strong style="color:var(--text-muted)">Note</strong> des exports Qonto. Permet l'association automatique lors du prochain import.
-        </div>
+        <label class="df-label">Notes</label>
+        <textarea id="ef-obs" class="df-input" rows="4"
+          style="resize:vertical;min-height:80px;line-height:1.5"
+          placeholder="Notes, références, détails…">${line.obs||''}</textarea>
       </div>
     </div>
+
+    <input type="hidden" id="ef-dept" value="${tabName}">
+    <input type="hidden" id="ef-section" value="${currentSection}">
+    <input type="hidden" id="ef-qonto-ref" value="${line.qonto_ref||''}">
   `;
 
   document.getElementById('drawer-footer').style.display = 'flex';
