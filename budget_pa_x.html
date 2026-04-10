@@ -59,7 +59,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 /* carousel cards inside g2 must fill their cell height */
 .g2>.card{display:flex;flex-direction:column}
 .g2>.card[style*="padding:0"]{padding:0!important}
-.card:hover{border-color:rgba(168,85,247,.25);box-shadow:0 0 16px rgba(168,85,247,.1)}
+.card:hover{border-color:rgba(255,255,255,.08)}
 .clabel{font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:#fff}
 .chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;align-items:start}
@@ -1576,24 +1576,24 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
     const rowsHtml = deptRows.length ? `
-      <div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:.68em;padding:8px 8px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:.68em;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
         <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span><span></span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto">
+      <div style="max-height:260px;overflow-y:auto">
         ${deptRows.map(r => {
           const dateShort = (r.date||'').split(' ')[0] || '—';
-          return `<div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.02)">
+          return `<div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.02)">
           <span style="font-size:.78em;color:var(--text-dim);white-space:nowrap">${dateShort}</span>
           <span style="font-size:.78em;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fourn||'—'}</span>
           <span style="font-size:.78em;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
           <span style="font-size:.78em;font-weight:600;color:#fff;white-space:nowrap;text-align:right">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
           <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:.55em;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
         </div>`}).join('')}
-      </div>` : `<div style="font-size:.78em;color:var(--green);padding:8px 0">Toutes les transactions sont assignées</div>`;
+      </div>` : `<div style="font-size:.78em;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
     return `
     <div class="card" style="padding:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff">Transactions non reliées</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 14px">
+        <div style="font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff">À relier</div>
         ${count > 0 ? `<span style="font-size:.62em;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:.62em;color:var(--green)">✓ 0</span>`}
       </div>
       ${rowsHtml}
