@@ -2454,6 +2454,8 @@ async function initApp(){
   }
   // Load QONTO_RAW and rebuild match map on init
   loadAndMatchQontoRaw();
+  // Pre-load transactions tab data in background
+  renderReleve();
 }
 
 async function loadAndMatchQontoRaw() {
@@ -4409,6 +4411,15 @@ function populateAssignLines(tabName) {
   const sel = document.getElementById('assign-ligne');
   if (!tabName) { wrap.style.display = 'none'; return; }
 
+  // RECETTES: use recette lines from REC array
+  if (tabName === 'RECETTES') {
+    const recLines = REC.flatMap(cat => cat.rows).filter(r => r.l);
+    sel.innerHTML = '<option value="">Sans ligne (dept uniquement)</option>' +
+      recLines.map(r => `<option value="${r.l}">${r.l}</option>`).join('');
+    wrap.style.display = '';
+    return;
+  }
+
   const meta = DEPT_META[tabName];
   const dept = DEPTS.find(d => d.id === meta?.id);
   if (!dept) { wrap.style.display = 'none'; return; }
@@ -4425,14 +4436,19 @@ function populateAssignLines(tabName) {
 let _orphanData = null;
 function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
   _orphanData = { fourn, note, ht, ttc, cat, date };
+  const isRevenue = ttc > 0;
 
   const deptOptions = Object.keys(DEPT_META).map(k =>
     `<option value="${k}" ${k === POLE_MAP_CLIENT[cat?.toUpperCase()] ? 'selected' : ''}>${DEPT_META[k].name}</option>`
-  ).join('');
-  const preselect = POLE_MAP_CLIENT[cat?.toUpperCase()] || '';
+  ).join('') + (isRevenue ? `<option value="RECETTES" selected>RECETTES</option>` : '');
+  const preselect = isRevenue ? 'RECETTES' : (POLE_MAP_CLIENT[cat?.toUpperCase()] || '');
+
+  const subtitle = isRevenue
+    ? `<span style="color:#818cf8">Recette</span> \u2014 +${fmtAmt(Math.abs(ttc))} \u20AC`
+    : `<span style="color:var(--amber)">Orpheline</span> \u2014 pas dans la liste non reli\u00E9es`;
 
   document.getElementById('drawer-title').textContent = 'Assigner la transaction';
-  document.getElementById('drawer-sub').innerHTML = `<span style="color:var(--amber)">Orpheline</span> \u2014 pas dans la liste non reli\u00E9es`;
+  document.getElementById('drawer-sub').innerHTML = subtitle;
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
       <div class="drawer-section-title">Transaction</div>
@@ -4673,6 +4689,11 @@ function _txKey(fourn, ttc, date) {
 }
 
 async function renderReleve() {
+  // Save current filter state before re-rendering
+  const savedSearch = document.getElementById('releve-search')?.value || '';
+  const savedCat = document.getElementById('releve-filter-cat')?.value || '';
+  const savedMatch = document.getElementById('releve-filter-match')?.value || '';
+
   const empty = document.getElementById('releve-empty');
   const stats = document.getElementById('releve-stats');
   const wrap  = document.getElementById('releve-table-wrap');
@@ -4785,6 +4806,14 @@ async function renderReleve() {
       : `${allTx.length} transactions charg\u00E9es`;
   }
 
+  // Restore saved filter state
+  const searchEl = document.getElementById('releve-search');
+  const catEl = document.getElementById('releve-filter-cat');
+  const matchEl = document.getElementById('releve-filter-match');
+  if (searchEl && savedSearch) searchEl.value = savedSearch;
+  if (catEl && savedCat) catEl.value = savedCat;
+  if (matchEl && savedMatch) matchEl.value = savedMatch;
+
   filterReleve();
 }
 
@@ -4861,8 +4890,23 @@ function filterReleve() {
 
     // Action column
     let actionHtml = '';
-    if (isRec) {
-      actionHtml = `<span style="font-size:.55em;color:var(--text-dim);white-space:nowrap" title="Bient\u00F4t : assigner comme recette ou marquer comme remboursement">bient\u00F4t</span>`;
+    if (isRec && isMatched) {
+      // Revenue already matched — show réattribuer
+      const safeF = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const safeN = (tx.note||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      actionHtml = `<button onclick="reattribuerTx('${matchInfo.dept}','${matchInfo.ligne?.replace(/'/g,"\\'")}','${safeF}','${safeN}',${Math.abs(tx.ht||0)},${Math.abs(tx.ttc||0)})"
+        style="font-size:.65em;padding:4px 10px;border-radius:5px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.06);color:var(--amber);cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap"
+        onmouseover="this.style.background='rgba(251,191,36,.15)'" onmouseout="this.style.background='rgba(251,191,36,.06)'"
+        >R\u00E9attribuer</button>`;
+    } else if (isRec && !isMatched) {
+      // Unmatched revenue — assign to RECETTES or a dept
+      const safeF = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const safeN = (tx.note||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const safeCat = (tx.cat||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      actionHtml = `<button onclick="openOrphanAssign('${safeF}','${safeN}',${Math.abs(tx.ht||0)},${tx.ttc||0},'${safeCat}','${tx.date||''}')"
+        style="font-size:.65em;padding:4px 10px;border-radius:5px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);color:#818cf8;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap"
+        onmouseover="this.style.background='rgba(99,102,241,.18)'" onmouseout="this.style.background='rgba(99,102,241,.08)'"
+        >Assigner \u2192</button>`;
     } else if (!isZero) {
       if (isMatched) {
         const safeF = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
