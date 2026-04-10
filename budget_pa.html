@@ -794,32 +794,40 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 const API = 'https://web-production-4565a.up.railway.app';
 const SESSION = 'pa';
 
-// ── Static recettes data (not in Sheet yet) ────────────────────────────
-const REC = [
-  { cat:'TICKETS', rows:[
-    {l:'EARLY',       qte:2500,  pu:50,  ht:118483,  tva:0.055, reel:0,    st:'ESTIMATION'},
-    {l:'REGULAR',     qte:14000, pu:55,  ht:729858,  tva:0.055, reel:0,    st:'ESTIMATION'},
-    {l:'LAST',        qte:17000, pu:60,  ht:966825,  tva:0.055, reel:0,    st:'ESTIMATION'},
-    {l:'VERY LAST',   qte:6500,  pu:65,  ht:400474,  tva:0.055, reel:0,    st:'ESTIMATION'},
-    {l:'VERY LAST 2', qte:0,     pu:70,  ht:0,       tva:0.055, reel:null, st:'ESTIMATION'},
-    {l:'KICK BACK (inclus prix prod)', qte:null,pu:null,ht:0,tva:0.055,reel:null,st:'ESTIMATION'},
-  ]},
-  { cat:'BAR', rows:[
-    {l:'BAR 1',              qte:null,pu:28.1,ht:468333,  tva:0.2,  reel:0,    st:'ESTIMATION'},
-    {l:'REDEVANCE 8% BAR 1', qte:null,pu:null,ht:37467,   tva:0.2,  reel:0,    st:'ESTIMATION'},
-    {l:'BAR 2',              qte:null,pu:28.1,ht:468333,  tva:0.2,  reel:null, st:'ESTIMATION'},
-    {l:'RÉSIDUEL CASHLESS',  qte:null,pu:null,ht:25000,   tva:null, reel:null, st:'ESTIMATION'},
-  ]},
-  { cat:'DIVERS', rows:[
-    {l:'FOODTRUCK',     qte:null,pu:null,ht:7500,  tva:0.2, reel:0,    st:'ESTIMATION'},
-    {l:'MERCHANDISING', qte:null,pu:null,ht:20000, tva:0.2, reel:null, st:'ESTIMATION'},
-    {l:'BOT CUP',       qte:null,pu:null,ht:0,     tva:0.2, reel:null, st:'ESTIMATION'},
-  ]},
-  { cat:'AUTRE', rows:[
-    {l:'LOCKERS',      qte:null,pu:null,ht:57785, tva:0.2, reel:0,    st:'ESTIMATION'},
-    {l:'ELEC FORAINS', qte:null,pu:null,ht:8000,  tva:0.2, reel:null, st:'ESTIMATION'},
-  ]},
-];
+// ── Recettes data (loaded from RECETTES sheet tab via API) ──────────────
+let REC = [];
+
+async function loadRecettes() {
+  try {
+    const resp = await fetch(`${API}/api/recettes?session=${SESSION}`, { headers: {'Accept':'application/json'} });
+    if (!resp.ok) return;
+    const json = await resp.json();
+    const rows = json.data || [];
+    if (!rows.length) { REC = []; return; }
+
+    // Group by section into REC format: [{cat, rows:[{l,qte,pu,ht,tva,reel,st}]}]
+    const catMap = {};
+    const catOrder = [];
+    rows.forEach(r => {
+      const cat = r.section || 'AUTRE';
+      if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+      catMap[cat].push({
+        l:    r.ligne,
+        qte:  r.qte || null,
+        pu:   r.pu || null,
+        ht:   r.est_ht || 0,
+        tva:  r.tva ? (parseFloat(r.tva) > 1 ? parseFloat(r.tva)/100 : parseFloat(r.tva)) : null,
+        reel: r.reel_ht || 0,
+        st:   r.statut || 'ESTIMATION',
+        _row: r._row,
+      });
+    });
+    REC = catOrder.map(cat => ({ cat, rows: catMap[cat] }));
+  } catch(e) {
+    console.warn('Could not load recettes:', e);
+    REC = [];
+  }
+}
 
 // ── DEPTS will be populated from API ──────────────────────────────────
 let DEPTS = [];
@@ -2212,16 +2220,42 @@ function upCell(inp){
 function upRec(ci,ri,field,inp){
   const val=parseFloat(inp.value.replace(/[\s\u202f\u2009€,]/g,'').replace(',','.'))||0;
   REC[ci].rows[ri][field]=val;
-  // If qty or pu changes and both exist, recalculate ht
   const r=REC[ci].rows[ri];
   if((field==='qte'||field==='pu') && r.qte!=null && r.pu!=null){
     REC[ci].rows[ri].ht = Math.round(r.qte * r.pu);
+  }
+  // Write to API — map fields to sheet columns
+  if(r._row) {
+    const fieldMap = {qte:'rh', pu:'observations', ht:'est_ht'};
+    const apiField = fieldMap[field] || field;
+    const writeVal = field === 'ht' ? REC[ci].rows[ri].ht : val;
+    fetch(`${API}/api/budget/update`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:apiField, value:String(writeVal)})
+    }).catch(e=>console.warn('Recettes API write failed:', e));
+    // If ht was recalculated, also write it
+    if(field==='qte'||field==='pu') {
+      fetch(`${API}/api/budget/update`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'est_ht', value:String(REC[ci].rows[ri].ht)})
+      }).catch(e=>console.warn('Recettes API write ht failed:', e));
+    }
   }
   renderBilan();
 }
 function upRecSt(ci,ri,sel){
   REC[ci].rows[ri].st=sel.value;
   sel.className='ss '+chipcls(sel.value);
+  const r=REC[ci].rows[ri];
+  if(r._row) {
+    fetch(`${API}/api/budget/update`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'statut', value:sel.value})
+    }).catch(e=>console.warn('Recettes API write status failed:', e));
+  }
   renderBilan();
 }
 function togglePencilMode(sid, btn){
@@ -2332,7 +2366,8 @@ function go(id,tabEl){
 }
 
 /* ═══ INIT ═══ */
-function initApp(){
+async function initApp(){
+  await loadRecettes();
   renderBilan();
   // Render whichever dept tab is active
   const activeNav = document.querySelector('.nav-item.on');
