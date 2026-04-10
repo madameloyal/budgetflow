@@ -253,7 +253,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 #import-toast .t-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.9em;padding:2px 6px}
 
 /* ── DRAWER ──────────────────────────────────────── */
-#drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px)}
+#drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.15);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s}
 #drawer-overlay.open{opacity:1;pointer-events:auto}
 
 #drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--border);z-index:401;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
@@ -1745,7 +1745,7 @@ function openRecetteDrawer(ci, ri) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function togglePencilMode(sid, btn){
@@ -2347,7 +2347,7 @@ function openEditLigne(deptId, sectionIdx, lineIdx) {
   buildEditDrawer(deptId, sectionIdx, lineIdx, false);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
   setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
@@ -2356,7 +2356,7 @@ function openAddLigne(deptId, sectionIdx) {
   buildEditDrawer(deptId, sectionIdx, -1, true);
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
   setTimeout(() => { _editLigneActive = false; }, 300);
 }
 
@@ -2598,7 +2598,7 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 // ════════════════════════════════════════════════════
@@ -2708,7 +2708,7 @@ async function openReelDrawer(deptId, sectionIdx, lineIdx) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 
   // Now fetch match-log async and update the transactions section
   const txSection = document.getElementById('reel-tx-section');
@@ -3006,7 +3006,7 @@ function openCoutRepasDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 async function openImprevuesDrawer(deptId) {
@@ -3063,7 +3063,7 @@ async function openImprevuesDrawer(deptId) {
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 
   // Fetch match-log for each line with réel
   for (const l of lines) {
@@ -3179,7 +3179,7 @@ function openUnmatchedDrawer(deptId) {
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openDeptComparisonDrawer(deptId) {
@@ -3279,7 +3279,7 @@ function openDeptComparisonDrawer(deptId) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openCashlessDrawer() {
@@ -3350,7 +3350,7 @@ function openCashlessDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openProductionPanel(type) {
@@ -3420,7 +3420,7 @@ function openProductionPanel(type) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openRepéragesPanel(type) {
@@ -3520,7 +3520,7 @@ function openRepéragesPanel(type) {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openBilanBudgetsDrawer() {
@@ -3583,7 +3583,7 @@ function openBilanBudgetsDrawer() {
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 // ════════════════════════════════════════════════════
@@ -3666,7 +3666,7 @@ function openVhrRoomingDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function openVhrTransportDrawer() {
@@ -3721,15 +3721,12 @@ function openVhrTransportDrawer() {
   document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
-  document.body.style.overflow = '';
-  document.body.style.top = '';
-  window.scrollTo(0, _drawerScrollY || 0);
   _drawerCurrentLine = null;
 }
 let _drawerScrollY = 0;
@@ -3803,7 +3800,7 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 function populateAssignLines(tabName) {
@@ -3888,7 +3885,7 @@ function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+  
 }
 
 async function confirmOrphanAssign() {
