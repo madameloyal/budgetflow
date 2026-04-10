@@ -74,6 +74,7 @@ DEPT_TABS = SESSIONS[DEFAULT_SESSION]["dept_tabs"]
 RAW_TAB       = "QONTO_RAW"
 UNMATCHED_TAB = "QONTO_UNMATCHED"
 MATCH_LOG_TAB = "MATCH_LOG"
+RECETTES_TAB  = "RECETTES"
 
 MATCH_LOG_HEADERS = [
     "Dept", "Section", "Ligne", "Fournisseur", "Note", "Date",
@@ -86,7 +87,7 @@ COL = {
     "ecart": 10, "statut": 11
 }
 
-FIELD_TO_COL = {"est_ht": "F", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D"}
+FIELD_TO_COL = {"est_ht": "F", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D", "rh": "H"}
 
 QC = {
     "cat": 0, "sous_cat": 1, "fourn": 2, "note": 3, "date": 4,
@@ -343,7 +344,7 @@ def get_budget(session: str = None):
 def get_dept(dept: str, session: str = None):
     sess = get_session(session)
     base_tab = dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    if base_tab not in list(sess["dept_tabs"]) + [RECETTES_TAB]:
         raise HTTPException(status_code=404, detail=f"Dept '{dept}' not found in session '{session or DEFAULT_SESSION}'")
     try:
         svc = get_sheets_service()
@@ -370,7 +371,8 @@ class UpdateCell(BaseModel):
 def update_cell(payload: UpdateCell):
     sess = get_session(payload.session)
     base_tab = payload.dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    valid_tabs = list(sess["dept_tabs"]) + [RECETTES_TAB]
+    if base_tab not in valid_tabs:
         raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found in session")
     full_tab = tab_name(sess, base_tab)
     col = FIELD_TO_COL.get(payload.field)
@@ -412,7 +414,7 @@ class AddLigne(BaseModel):
 def add_ligne(payload: AddLigne):
     sess = get_session(payload.session)
     base_tab = payload.dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    if base_tab not in list(sess["dept_tabs"]) + [RECETTES_TAB]:
         raise HTTPException(status_code=404, detail=f"Dept \'{base_tab}\' not found in session")
     tab = tab_name(sess, base_tab)
     try:
@@ -574,6 +576,50 @@ def get_qonto_raw(session: str = None):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ── RECETTES ─────────────────────────────────────────────────────────────
+
+@app.get("/api/recettes")
+def get_recettes(session: str = None):
+    """Return recettes data from the RECETTES tab.
+
+    Uses same column structure as dept tabs (A:L):
+    Section=cat (TICKETS/BAR/DIVERS/AUTRE), Ligne, Observations, Type, TVA,
+    Est HT, Est TTC, RH (=QTE), Réel HT, Réel TTC, Écart, Statut.
+
+    Note: column H (RH) is repurposed as QTE for recettes, and
+    Observations (C) stores Prix Unitaire as a number.
+    """
+    sess = get_session(session)
+    rec_tab = tab_name(sess, RECETTES_TAB)
+    try:
+        svc = get_sheets_service()
+        resp = svc.values().get(
+            spreadsheetId=SHEET_ID,
+            range=f"{rec_tab}!A:L",
+            valueRenderOption="UNFORMATTED_VALUE"
+        ).execute()
+        values = resp.get("values", [])
+        if len(values) < 2:
+            return {"status": "ok", "data": []}
+
+        rows = parse_dept_rows(values, "RECETTES")
+        # Enrich with qte and pu from the repurposed columns
+        for row in rows:
+            row["qte"] = safe_float(row.get("rh", 0))
+            row["pu"] = safe_float(row.get("observations", 0))
+            # Clean observations — if it was used for PU, don't show as text
+            try:
+                float(str(row.get("observations", "")).replace(",", "."))
+                row["observations"] = ""
+            except (ValueError, TypeError):
+                pass
+        return {"status": "ok", "data": rows}
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Tab might not exist yet — return empty
+        return {"status": "ok", "data": []}
 
 # ── MATCH LOG ─────────────────────────────────────────────────────────────
 
