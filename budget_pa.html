@@ -443,12 +443,12 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <nav class="nav">
   <div class="nav-i">
     <span class="nbrand">Festiflow: Budget v2</span>
-    <select class="session-sw" onchange="if(this.value)window.location.href=this.value" style="font-family:'DM Sans',sans-serif;font-size:0.62em;font-weight:600;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;margin-right:6px;outline:none;-webkit-appearance:none;appearance:none">
+    <select class="session-sw" onchange="if(this.value && !this.options[this.selectedIndex].dataset.soon){window.location.href=this.value}else{this.selectedIndex=[...this.options].findIndex(o=>o.selected&&!o.dataset.soon)||0}" style="font-family:'DM Sans',sans-serif;font-size:0.62em;font-weight:600;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;margin-right:6px;outline:none;-webkit-appearance:none;appearance:none">
       <option value="" disabled>Changer session</option>
       <option value="budget_pa.html" selected>ML 130326 — Paris XXL</option>
       <option value="budget_bdx.html">ML 120626 — Bordeaux</option>
-      <option value="budget_epk.html">EPK 050926 — Paris</option>
-      <option value="budget_general.html">Général — Frais de structure</option>
+      <option value="" disabled data-soon="1" style="color:gray">EPK 050926 — Paris (à venir)</option>
+      <option value="" disabled data-soon="1" style="color:gray">Général — Frais de structure (à venir)</option>
     </select>
     <button class="nl on"  onclick="go('bilan',this)">Bilan P&amp;L</button>
     <button class="nl"     onclick="go('reperages',this)">Repérages</button>
@@ -3683,7 +3683,7 @@ function openUnmatchedDrawer(deptId) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
-    <button class="drawer-btn" onclick="closeDrawer();go('transactions',null)" style="color:#818cf8;border-color:rgba(99,102,241,.3)">Voir toutes les transactions →</button>
+    <button class="drawer-btn" onclick="closeDrawer();setTimeout(()=>go('releve',null),100)" style="color:#818cf8;border-color:rgba(99,102,241,.3)">Voir toutes les transactions →</button>
   `;
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
