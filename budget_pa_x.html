@@ -526,7 +526,19 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
   </div>
 
-  <!-- ── ROW 4: Dépenses par département ── -->
+  <!-- P&L Recettes — one card per category -->
+  <div class="sdiv" style="align-items:center">
+    <div class="sdl"></div>
+    <div class="sdt" style="white-space:nowrap">P&amp;L — Recettes</div>
+    <div class="sdl"></div>
+    <button id="rec-ttc-btn" onclick="toggleBilanTTC('rec')"
+      style="margin-left:12px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap">
+      TTC ⇄
+    </button>
+  </div>
+  <div id="b-rec-cards" style="display:flex;flex-direction:column;gap:12px" class="mb"></div>
+
+  <!-- ── Dépenses par département ── -->
   <div class="sdiv" style="align-items:center">
     <div class="sdl"></div>
     <div class="sdt" style="white-space:nowrap">P&amp;L — Dépenses par département</div>
@@ -549,18 +561,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
     <div id="b-imp-bars" style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"></div>
   </div>
-
-  <!-- P&L Recettes — one card per category -->
-  <div class="sdiv" style="align-items:center">
-    <div class="sdl"></div>
-    <div class="sdt" style="white-space:nowrap">P&amp;L — Recettes détaillées</div>
-    <div class="sdl"></div>
-    <button id="rec-ttc-btn" onclick="toggleBilanTTC('rec')"
-      style="margin-left:12px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap">
-      TTC ⇄
-    </button>
-  </div>
-  <div id="b-rec-cards" style="display:flex;flex-direction:column;gap:12px"></div>
 
 </div><!-- /bilan -->
 
