@@ -442,7 +442,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <!-- NAV -->
 <nav class="nav">
   <div class="nav-i">
-    <span class="nbrand">BudgetFlow</span>
+    <span class="nbrand">Festiflow: Budget v2</span>
     <select class="session-sw" onchange="if(this.value)window.location.href=this.value" style="font-family:'Space Grotesk',sans-serif;font-size:0.62em;font-weight:700;letter-spacing:.5px;padding:6px 10px;border-radius:6px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.08);color:#818cf8;cursor:pointer;margin-right:6px;outline:none;-webkit-appearance:none;appearance:none">
       <option value="" disabled>Changer session</option>
       <option value="budget_pa.html" selected>Paris XXL</option>
@@ -474,12 +474,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <div class="hbrand">Madame Loyal · Paris Nord Villepinte · 13–14 mars 2026</div>
   </div>
   <div class="hrr">
-    <span class="badge blive">Live</span>
-    <span class="badge bed">Budget v2</span>
-    <button class="import-btn" id="import-btn" onclick="triggerImport()" title="Importer un relevé Qonto">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Import Qonto
-    </button>
     <input type="file" id="qonto-file-input" accept=".xls,.xlsx,.csv,.tsv" style="display:none" onchange="handleQontoFile(event)">
     <div class="infobtn" onclick="var p=document.getElementById('hp');p.classList.toggle('open');this.textContent=p.classList.contains('open')?'Fermer ▴':'Info ▾'">Info ▾</div>
   </div>
@@ -722,6 +716,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <span style="font-size:.9em;margin-top:6px;display:block;color:var(--text-dim)">Les transactions sans catégorie Qonto sont détectées automatiquement si la note contient le département.</span>
         <div style="margin-top:10px;padding:8px 12px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.12);border-radius:6px">
           <span style="color:var(--amber);font-weight:600">⚠ Aménagement</span><span style="color:var(--text-dim)"> — Les transactions Qonto catégorisées « Aménagement » sont routées vers <strong style="color:var(--text-muted)">SCÉNO</strong> par défaut. Si la dépense concerne TECHNIQUE, utilisez le bouton « Réattribuer » ou précisez TECHNIQUE dans la note.</span>
+        </div>
+        <div style="margin-top:8px;padding:8px 12px;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1);border-radius:6px">
+          <span style="color:#818cf8;font-weight:600">🔜 Recettes & remboursements</span><span style="color:var(--text-dim)"> — Bientôt : assigner les recettes à une ligne budgétaire, et marquer les crédits (retours Amazon, avoirs fournisseur) comme <strong style="color:var(--text-muted)">remboursement</strong> pour qu'ils réduisent la dépense au lieu de gonfler les recettes.</span>
         </div>
       </div>
     </div>
@@ -2315,11 +2312,11 @@ function toggleAllSections(deptId, btn){
   const chevron=btn.querySelector('.chevron');
   const label=btn.querySelector('span:last-child');
   if(anyCollapsed){
-    btn.classList.add('open');
+    if(btn) btn.classList.add('open');
     if(chevron) chevron.style.transform='rotate(90deg)';
     if(label) label.textContent='TOUT REPLIER';
   } else {
-    btn.classList.remove('open');
+    if(btn) btn.classList.remove('open');
     if(chevron) chevron.style.transform='';
     if(label) label.textContent='TOUT DÉPLIER';
   }
@@ -2543,9 +2540,9 @@ async function handleQontoFile(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  const btn = document.getElementById('import-btn');
-  btn.classList.add('loading');
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Import en cours…`;
+  const btn = document.getElementById('import-btn'); // may be null if button removed from header
+  if(btn) btn.classList.add('loading');
+  if(btn) btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Import en cours…`;
 
   try {
     let csvData = '';
@@ -2582,9 +2579,9 @@ async function handleQontoFile(event) {
     // Refresh transactions tab immediately
     renderReleve();
 
-    btn.classList.remove('loading');
-    btn.classList.add('import-success');
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> Importé ✓`;
+    if(btn) btn.classList.remove('loading');
+    if(btn) btn.classList.add('import-success');
+    if(btn) btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> Importé ✓`;
 
     const allTx = getAllQontoTx() || [];
     showToast('✅ Import Qonto terminé',
@@ -2592,19 +2589,19 @@ async function handleQontoFile(event) {
       'green');
 
     setTimeout(() => {
-      btn.classList.remove('import-success');
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Qonto`;
+      if(btn) btn.classList.remove('import-success');
+      if(btn) btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Qonto`;
     }, 5000);
 
   } catch (e) {
-    btn.classList.remove('loading');
-    btn.classList.add('import-error');
-    btn.innerHTML = `⚠ Erreur`;
+    if(btn) btn.classList.remove('loading');
+    if(btn) btn.classList.add('import-error');
+    if(btn) btn.innerHTML = `⚠ Erreur`;
     showToast("⚠ Erreur d'import", e.message, 'red');
     console.error('Import error:', e);
     setTimeout(() => {
-      btn.classList.remove('import-error');
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Qonto`;
+      if(btn) btn.classList.remove('import-error');
+      if(btn) btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Qonto`;
     }, 4000);
   }
 
@@ -4680,7 +4677,10 @@ function filterReleve() {
 
     // Action column
     let actionHtml = '';
-    if (!isRec && !isZero) {
+    if (isRec) {
+      // Recettes: coming soon — will support assign as revenue or tag as refund
+      actionHtml = `<span style="font-size:.55em;color:var(--text-dim);white-space:nowrap" title="Bient\u00F4t : assigner comme recette ou marquer comme remboursement">bient\u00F4t</span>`;
+    } else if (!isZero) {
       if (isMatched) {
         const safeF = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const safeN = (tx.note||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
