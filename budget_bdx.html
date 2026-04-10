@@ -458,7 +458,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="nl"     onclick="go('bar',this)">Bar / Commis</button>
     <button class="nl"     onclick="go('artistique',this)">Artistique</button>
     <button class="nl"     onclick="go('technique',this)">Technique</button>
-    <button class="nl"     onclick="go('sceno',this)">Scéno</button>
+    <button class="nl"     onclick="go('sceno',this)">Aménagement</button>
     <button class="nl"     onclick="go('partenariat',this)">Partenariat</button>
     <button class="nl"     onclick="go('communication',this)">Communication</button>
     <button class="nl" onclick="go('releve',this)" style="margin-left:auto;color:var(--indigo)">💳 Transactions</button>
@@ -709,7 +709,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <span style="color:var(--text-dim)">Ex: TECHNIQUE - ML130326 - ACOMPTE SON SCÈNE PRINCIPALE</span><br>
         <span style="font-size:.9em;margin-top:6px;display:block;color:var(--text-dim)">Les transactions sans catégorie Qonto sont détectées automatiquement si la note contient le département.</span>
         <div style="margin-top:10px;padding:8px 12px;background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.1);border-radius:6px">
-          <span style="color:var(--amber);font-weight:600">⚠ Aménagement</span><span style="color:var(--text-dim)"> — Les transactions Qonto catégorisées « Aménagement » sont routées vers <strong style="color:var(--text-muted)">SCÉNO</strong> par défaut. Si la dépense concerne TECHNIQUE, utilisez le bouton « Réattribuer » ou précisez TECHNIQUE dans la note.</span>
+          <span style="color:var(--amber);font-weight:600">⚠ Aménagement</span><span style="color:var(--text-dim)"> — Les transactions Qonto catégorisées « Aménagement » sont routées vers <strong style="color:var(--text-muted)">AMÉNAGEMENT</strong> par défaut. Si la dépense concerne TECHNIQUE, utilisez le bouton « Réattribuer » ou précisez TECHNIQUE dans la note.</span>
         </div>
         <div style="margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
           <span style="color:var(--text-muted);font-weight:600">🔜 Recettes & remboursements</span><span style="color:var(--text-dim)"> — Bientôt : assigner les recettes à une ligne budgétaire, et marquer les crédits (retours Amazon, avoirs fournisseur) comme <strong style="color:var(--text-muted)">remboursement</strong> pour qu'ils réduisent la dépense au lieu de gonfler les recettes.</span>
@@ -842,7 +842,7 @@ const DEPT_META = {
   'BAR':          {id:'bar',          name:'BAR'},
   'ARTISTIQUE':   {id:'artistique',   name:'ARTISTIQUE'},
   'TECHNIQUE':    {id:'technique',    name:'TECHNIQUE'},
-  'SCENO':        {id:'sceno',        name:'SCÉNO'},
+  'SCENO':        {id:'sceno',        name:'AMÉNAGEMENT'},
   'PARTENARIAT':  {id:'partenariat',  name:'PARTENARIAT'},
   'COMMUNICATION':{id:'communication',name:'COMMUNICATION'},
 };
@@ -4365,9 +4365,9 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
         </select>
       </div>
       <div id="assign-ligne-wrap" style="margin-bottom:14px;display:none">
-        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budgétaire</label>
+        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budgétaire <span style="font-weight:400;opacity:.5">(facultatif)</span></label>
         <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
-          <option value="">Choisir une ligne…</option>
+          <option value="">Sans ligne (dept uniquement)</option>
         </select>
       </div>
       <div style="margin-top:18px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
@@ -4412,7 +4412,7 @@ function populateAssignLines(tabName) {
   const lines = dept.sections.flatMap(s => s.lines)
     .filter(l => l.l && !l.l.startsWith('(ligne'));
 
-  sel.innerHTML = '<option value="">Choisir une ligne…</option>' +
+  sel.innerHTML = '<option value="">Sans ligne (dept uniquement)</option>' +
     lines.map(l => `<option value="${l.l}">${l.l}</option>`).join('');
   wrap.style.display = '';
 }
@@ -4421,8 +4421,8 @@ async function confirmAssign(unmatchedIdx) {
   const dept = document.getElementById('assign-dept')?.value;
   const ligne = document.getElementById('assign-ligne')?.value;
 
-  if (!dept || !ligne) {
-    showToast('⚠ Champ manquant', 'Sélectionne un département et une ligne budgétaire.', 'amber');
+  if (!dept) {
+    showToast('⚠ Champ manquant', 'Sélectionne au moins un département.', 'amber');
     return;
   }
 
@@ -4454,7 +4454,7 @@ async function confirmAssign(unmatchedIdx) {
 
 
     showToast('✅ Transaction assignée',
-      `−${fmtAmt(result.ttc_added)} € ajoutés à "${ligne}" dans ${dept}.\nRéel TTC mis à jour : ${fmtAmt(result.new_reel_ttc)} €`, 'green');
+      ligne ? `−${fmtAmt(result.ttc_added)} € ajoutés à "${ligne}" dans ${dept}.` : `−${fmtAmt(result.ttc_added)} € assignés au département ${dept}.`, 'green');
 
   } catch (e) {
     if (btn) { btn.textContent = 'Confirmer →'; btn.disabled = false; }
@@ -4749,7 +4749,7 @@ function filterReleve() {
     } else if (tx.cat) {
       deptHtml = `<span style="font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text-muted)">${tx.cat}</span>`;
       if (isAmenagement) {
-        deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:3px">\u2192 SCÉNO par d\u00E9faut</div>`;
+        deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:3px">\u2192 AMÉNAGEMENT par d\u00E9faut</div>`;
       }
     } else {
       deptHtml = `<span style="font-size:.68em;color:var(--text-dim)">\u2014</span>`;

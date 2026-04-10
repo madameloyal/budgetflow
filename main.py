@@ -5,37 +5,34 @@ import os
 import re
 import io
 import json
-import time
+
 import unicodedata
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-# ── Simple read cache (30s TTL) to avoid Google Sheets rate limits ─────
+# ── Read cache — invalidated only on our writes, not by time ───────────
 _cache = {}
-_CACHE_TTL = 30  # seconds
 
 def cached_get(svc, range_str):
-    """Read from cache if fresh, otherwise fetch from Sheets API."""
-    now = time.time()
-    if range_str in _cache and (now - _cache[range_str]["t"]) < _CACHE_TTL:
-        return _cache[range_str]["data"]
+    """Read from cache if available, otherwise fetch from Sheets API."""
+    if range_str in _cache:
+        return _cache[range_str]
     resp = svc.values().get(
         spreadsheetId=SHEET_ID,
         range=range_str,
         valueRenderOption="UNFORMATTED_VALUE"
     ).execute()
     values = resp.get("values", [])
-    _cache[range_str] = {"t": now, "data": values}
+    _cache[range_str] = values
     return values
 
 def cached_batch_get(svc, ranges):
     """Batch read with cache — only fetch uncached ranges."""
-    now = time.time()
     result = {}
     uncached = []
     for r in ranges:
-        if r in _cache and (now - _cache[r]["t"]) < _CACHE_TTL:
-            result[r] = _cache[r]["data"]
+        if r in _cache:
+            result[r] = _cache[r]
         else:
             uncached.append(r)
     if uncached:
@@ -46,17 +43,16 @@ def cached_batch_get(svc, ranges):
         ).execute()
         for vr in resp.get("valueRanges", []):
             rng = vr.get("range", "")
-            # Normalize range key — Sheets API may return with sheet title quotes
             for orig in uncached:
                 if orig.split("!")[0].replace("'","") in rng.replace("'",""):
                     values = vr.get("values", [])
-                    _cache[orig] = {"t": now, "data": values}
+                    _cache[orig] = values
                     result[orig] = values
                     break
     return [result.get(r, []) for r in ranges]
 
 def invalidate_cache(prefix=""):
-    """Clear cache entries matching prefix (or all if empty)."""
+    """Clear cache after a write operation."""
     if not prefix:
         _cache.clear()
     else:
@@ -842,7 +838,7 @@ def get_match_log(dept: str = "", ligne: str = "", session: str = None):
 class AssignPayload(BaseModel):
     unmatched_idx: int
     dept:          str
-    ligne:         str
+    ligne:         str = ""
     session:       str = None
 
 @app.post("/api/assign")
@@ -854,6 +850,7 @@ def assign_transaction(payload: AssignPayload):
     tab = tab_name(sess, base_tab)
     unmatched_tab = tab_name(sess, UNMATCHED_TAB)
     ml_tab = tab_name(sess, MATCH_LOG_TAB)
+    ligne_val = payload.ligne.strip() if payload.ligne else "(non affecté)"
     try:
         svc = get_sheets_service()
         unmatched_rows = cached_get(svc, f"{unmatched_tab}!A:N")
@@ -863,16 +860,17 @@ def assign_transaction(payload: AssignPayload):
         ht_val  = safe_float(tx_row[UNMATCHED_COLS["ht"]])
         ttc_val = safe_float(tx_row[UNMATCHED_COLS["ttc"]])
 
-        # Verify budget line exists
-        dept_values = cached_get(svc, f"{tab}!A:L")
-        line_exists = False
-        for i, row in enumerate(dept_values):
-            row = list(row) + [""] * 12
-            if str(row[COL["ligne"]]).strip() == payload.ligne.strip():
-                line_exists = True
-                break
-        if not line_exists:
-            raise HTTPException(status_code=404, detail=f"Ligne '{payload.ligne}' not found in {tab}")
+        # Verify budget line exists (skip if no ligne specified)
+        if ligne_val != "(non affecté)":
+            dept_values = cached_get(svc, f"{tab}!A:L")
+            line_exists = False
+            for i, row in enumerate(dept_values):
+                row = list(row) + [""] * 12
+                if str(row[COL["ligne"]]).strip() == ligne_val:
+                    line_exists = True
+                    break
+            if not line_exists:
+                raise HTTPException(status_code=404, detail=f"Ligne '{ligne_val}' not found in {tab}")
 
         # 1. Remove from QONTO_UNMATCHED
         unmatched_sheet_id = get_sheet_id(svc, unmatched_tab)
@@ -891,13 +889,13 @@ def assign_transaction(payload: AssignPayload):
         tx_note  = str(tx_row[UNMATCHED_COLS["note"]]).strip()
         tx_date  = str(tx_row[UNMATCHED_COLS["date"]]).strip()
         tx_section = str(tx_row[UNMATCHED_COLS["sous_cat"]]).strip()
-        append_match_log(svc, tab, tx_section, payload.ligne, tx_fourn, tx_note, tx_date, abs(ht_val), abs(ttc_val), "manual", ml_tab)
+        append_match_log(svc, tab, tx_section, ligne_val, tx_fourn, tx_note, tx_date, abs(ht_val), abs(ttc_val), "manual", ml_tab)
 
         # 3. Recalculate ALL réel from MATCH_LOG
         recalc_reel_from_match_log(svc, sess)
         invalidate_cache()
 
-        return {"status": "ok", "assigned": payload.ligne, "dept": tab,
+        return {"status": "ok", "assigned": ligne_val, "dept": tab,
                 "ht_added": abs(ht_val), "ttc_added": abs(ttc_val)}
     except HTTPException:
         raise
