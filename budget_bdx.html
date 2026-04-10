@@ -1275,18 +1275,18 @@ function renderBilan(){
   // ── Recettes — one card per category ────────────────────────────
   if(el('b-rec-cards')) {
     let totalRec = 0;
-    const cards = REC.map(cat => {
+    const cards = REC.map((cat, ci) => {
       const catTotal = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
       const catReel  = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
       totalRec += catTotal;
-      const rows = cat.rows.map(r => {
+      const rows = cat.rows.map((r, ri) => {
         const ttc   = typeof r.tva==='number' ? r.ht*(1+r.tva) : r.ht;
         const reeH  = r.reel||0;
         const rttc  = typeof r.tva==='number' ? reeH*(1+r.tva) : reeH;
         const ec3   = r.ht - reeH;
         const qteCell = r.qte!=null ? `<span class="cro">${r.qte.toLocaleString('fr-FR')}</span>` : '—';
         const puCell  = r.pu!=null  ? `<span class="cro">${r.pu}\u00a0€</span>` : '—';
-        return `<tr>
+        return `<tr style="cursor:pointer;transition:background .15s" onclick="openRecetteDrawer(${ci},${ri})" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
           <td style="font-weight:500;color:#fff">${r.l}</td>
           <td>${qteCell}</td>
           <td>${puCell}</td>
@@ -2258,6 +2258,75 @@ function upRecSt(ci,ri,sel){
   }
   renderBilan();
 }
+
+function openRecetteDrawer(ci, ri) {
+  const cat = REC[ci];
+  const r = cat ? cat.rows[ri] : null;
+  if (!r) return;
+
+  const inputSt = 'width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:monospace;font-size:.9em;outline:none';
+
+  document.getElementById('drawer-title').textContent = r.l || 'Ligne recette';
+  document.getElementById('drawer-sub').textContent = `${cat.cat} \u00B7 Recettes`;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Montants</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Quantit\u00E9</label>
+          <input type="text" value="${r.qte||''}" onchange="upRec(${ci},${ri},'qte',this)" style="${inputSt}">
+        </div>
+        <div>
+          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Prix unitaire</label>
+          <input type="text" value="${r.pu||''}" onchange="upRec(${ci},${ri},'pu',this)" style="${inputSt}">
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Estim\u00E9 HT</label>
+        <input type="text" value="${r.ht||0}" onchange="upRec(${ci},${ri},'ht',this)" style="${inputSt}">
+        <div style="font-size:.6em;color:var(--text-dim);margin-top:4px">Si Qt\u00E9 et Prix unit. sont renseign\u00E9s, ce champ se calcule automatiquement.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Statut</label>
+        <select onchange="upRecSt(${ci},${ri},this)" class="ss ${chipcls(r.st)}" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
+          <option value="ESTIMATION" ${r.st==='ESTIMATION'?'selected':''}>ESTIMATION</option>
+          <option value="EN COURS" ${r.st==='EN COURS'?'selected':''}>EN COURS</option>
+          <option value="DEVIS SIGN\u00C9" ${r.st==='DEVIS SIGN\u00C9'?'selected':''}>DEVIS SIGN\u00C9</option>
+          <option value="VALID\u00C9" ${r.st==='VALID\u00C9'?'selected':''}>VALID\u00C9</option>
+          <option value="PAY\u00C9" ${r.st==='PAY\u00C9'?'selected':''}>PAY\u00C9</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">TVA</label>
+        <div style="font-size:.85em;color:var(--text-muted)">${r.tva ? (r.tva * 100).toFixed(1) + '%' : '\u2014'}</div>
+      </div>
+    </div>
+    <div class="drawer-section" style="margin-top:16px">
+      <div class="drawer-section-title">R\u00E9sum\u00E9</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 14px">
+          <div style="font-size:.6em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Au budget HT</div>
+          <div style="font-size:.9em;font-weight:700;color:#fff">${r.ht ? fe(r.ht) : '\u2014'}</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:10px 14px">
+          <div style="font-size:.6em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">R\u00E9el HT</div>
+          <div style="font-size:.9em;font-weight:700;color:${r.reel > 0 ? 'var(--green)' : 'var(--text-dim)'}">${r.reel ? fe(r.reel) : '\u2014'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
+  `;
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+}
+
 function togglePencilMode(sid, btn){
   const tbody = document.getElementById(sid);
   if(!tbody) return;
