@@ -45,6 +45,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .dg.on{background:rgba(255,255,255,.06);color:#fff;font-weight:600}
 .dept-toggle{max-width:1020px;margin:0 auto;padding:3px 20px 6px;text-align:center;cursor:pointer;font-size:10px;color:#333;transition:color .15s;font-family:inherit;border:none;background:none;display:block;width:100%}
 .dept-toggle:hover{color:var(--text-dim)}
+.dept-tabs{max-width:1020px;margin:0 auto;padding:0 20px;display:flex;overflow-x:auto;scrollbar-width:none}
+.dept-tabs::-webkit-scrollbar{display:none}
+.dt{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .15s}
+.dt:hover{color:var(--text-muted)}
+.dt.on{color:#fff;font-weight:600;border-bottom-color:#fff}
 
 /* ── HEADER ──────────────────────────── */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px;padding:14px 22px;margin:12px 0 0;border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--purple),var(--indigo)) border-box}
@@ -477,7 +482,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </button>
     <button class="nm" onclick="go('releve',this)">Transactions</button>
   </div>
-  <div id="dept-grid-wrap" class="dept-grid-wrap">
+  <div id="dept-grid-wrap" class="dept-grid-wrap" style="display:none">
     <div class="dept-grid">
       <button class="dg" onclick="goDept('reperages',this)">Repérages</button>
       <button class="dg" onclick="goDept('vhr',this)">VHR</button>
@@ -491,7 +496,19 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       <button class="dg" onclick="goDept('communication',this)">Communication</button>
     </div>
   </div>
-  <button class="dept-toggle" id="dept-toggle" onclick="toggleDeptGrid()">replier les départements</button>
+  <button class="dept-toggle" id="dept-toggle" onclick="toggleDeptGrid()" style="display:none">replier les départements</button>
+  <div id="dept-tabs" class="dept-tabs">
+    <button class="dt" onclick="goDeptTab('reperages',this)">Repérages</button>
+    <button class="dt" onclick="goDeptTab('vhr',this)">VHR</button>
+    <button class="dt" onclick="goDeptTab('production',this)">Production</button>
+    <button class="dt" onclick="goDeptTab('catering',this)">Catering</button>
+    <button class="dt" onclick="goDeptTab('bar',this)">Bar / Commis</button>
+    <button class="dt" onclick="goDeptTab('artistique',this)">Artistique</button>
+    <button class="dt" onclick="goDeptTab('technique',this)">Technique</button>
+    <button class="dt" onclick="goDeptTab('sceno',this)">Aménagement</button>
+    <button class="dt" onclick="goDeptTab('partenariat',this)">Partenariat</button>
+    <button class="dt" onclick="goDeptTab('communication',this)">Communication</button>
+  </div>
 </nav>
 
 <div class="wrap">
@@ -1892,23 +1909,45 @@ function goDept(id, chipEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
   document.querySelectorAll('.dg').forEach(d=>d.classList.remove('on'));
+  document.querySelectorAll('.dt').forEach(d=>d.classList.remove('on'));
   if(chipEl) chipEl.classList.add('on');
+  // Also highlight matching tab strip button
+  const dtMatch = [...document.querySelectorAll('.dt')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));
+  if(dtMatch) dtMatch.classList.add('on');
   const page=document.getElementById('page-'+id);
   if(!page) return;
   page.classList.add('on');
   renderDept(id);
-  // Update trigger label for collapsed state
   const label = chipEl ? chipEl.textContent.trim() : id;
   document.getElementById('dept-trigger-label').textContent = label;
   document.getElementById('dept-trigger').classList.add('visible');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-let _deptGridOpen = true;
+function goDeptTab(id, tabEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
+  document.querySelectorAll('.dt').forEach(d=>d.classList.remove('on'));
+  document.querySelectorAll('.dg').forEach(d=>d.classList.remove('on'));
+  if(tabEl) tabEl.classList.add('on');
+  // Also highlight matching grid button
+  const dgMatch = [...document.querySelectorAll('.dg')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));
+  if(dgMatch) dgMatch.classList.add('on');
+  const page=document.getElementById('page-'+id);
+  if(!page) return;
+  page.classList.add('on');
+  renderDept(id);
+  document.getElementById('dept-trigger-label').textContent = tabEl ? tabEl.textContent.trim() : id;
+  document.getElementById('dept-trigger').classList.add('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+let _deptGridOpen = false;
 function toggleDeptGrid(){
   _deptGridOpen = !_deptGridOpen;
   document.getElementById('dept-grid-wrap').style.display = _deptGridOpen ? '' : 'none';
   document.getElementById('dept-toggle').style.display = _deptGridOpen ? '' : 'none';
+  document.getElementById('dept-tabs').style.display = _deptGridOpen ? 'none' : '';
   const trigger = document.getElementById('dept-trigger');
   if(_deptGridOpen){
     trigger.classList.remove('visible');
