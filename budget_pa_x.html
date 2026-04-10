@@ -1234,7 +1234,7 @@ function renderBilan(){
   </tr>`;
   if (totalImprevus > 0) {
     depRows+=`<tr>
-      <td colspan="7" style="padding:6px 14px;font-size:.7em;color:var(--red);font-style:italic;border-top:1px solid rgba(255,255,255,.04)">
+      <td colspan="6" style="padding:6px 14px;font-size:.7em;color:var(--red);font-style:italic;border-top:1px solid rgba(255,255,255,.04)">
         <span style="display:inline-flex;align-items:center;gap:6px">
           <span style="width:8px;height:8px;border-radius:2px;background:rgba(248,113,113,.5);flex-shrink:0"></span>
           dont ${fe(totalImprevus)} imprévus · ${deptsWithImprevus} pôle${deptsWithImprevus>1?'s':''}
@@ -1370,15 +1370,11 @@ function renderDept(id){
     const sid=`s${id}${si}`;
     const sE=sec.lines.reduce((a,l)=>a+(l.est||0),0);
     const sR=sec.lines.reduce((a,l)=>a+(l.reel||0),0);
-    const sE_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.est,l.tva)||0),0);
-    const sR_ttc=sec.lines.reduce((a,l)=>a+(fttc(l.reel,l.tva)||0),0);
     const sEc=sE-sR;
 
     const rows=sec.lines.map((line,li)=>{
       const isPlaceholder = !line.l || line.l.startsWith('(ligne');
       if (isPlaceholder) return '';
-      const ttcE=fttc(line.est,line.tva);
-      const ttcR=fttc(line.reel,line.tva);
       const e=(line.est||0)-(line.reel||0);
       const untracked=(line.reel||0)>0 && !['DEVIS SIGNÉ','VALIDÉ','PAYÉ'].includes(line.st);
       const obsVal=line.obs||'';
@@ -1395,14 +1391,11 @@ function renderDept(id){
             Éditer
           </button>
         </td>
-        <td class="tva-col" style="text-align:center;color:var(--text-dim)">${ftva(line.tva)}</td>
         <td class="clickable-cell" onclick="openEstDrawer('${id}',${si},${li})" title="Voir source d'estimation">
-          <span class="show-ht cro">${line.est?fe(line.est):'<span style="color:var(--text-dim)">—</span>'}</span>
-          <span class="show-ttc cro" style="display:none">${ttcE?fe(ttcE):'<span style="color:var(--text-dim)">—</span>'}</span>
+          <span class="cro">${line.est?fe(line.est):'<span style="color:var(--text-dim)">—</span>'}</span>
         </td>
         <td class="clickable-cell" onclick="openReelDrawer('${id}',${si},${li})" title="Voir transactions Qonto">
-          <span class="show-ht cro">${line.reel?fe(line.reel):'<span style="color:var(--text-dim)">—</span>'}</span>
-          <span class="show-ttc cro" style="display:none">${ttcR?fe(ttcR):'<span style="color:var(--text-dim)">—</span>'}</span>
+          <span class="cro">${line.reel?fe(line.reel):'<span style="color:var(--text-dim)">—</span>'}</span>
         </td>
         <td>
           <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
@@ -1441,7 +1434,7 @@ function renderDept(id){
       <table class="tbl">
         <thead>
           <tr class="shead" onclick="tog('${sid}')">
-            <td colspan="7" style="padding:0">
+            <td colspan="6" style="padding:0">
               <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
                 <span id="arr-${sid}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:12px">▶</span>
                 <span style="font-weight:700;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
@@ -1452,23 +1445,19 @@ function renderDept(id){
                 ${nReel>0 ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
                 <span style="flex:1"></span>
                 <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-                  <span class="show-ht" style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
-                  <span class="show-ttc" style="display:none;font-size:15px;font-weight:700;color:#fff">${fe(Math.round(sE_ttc))}</span>
+                  <span style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
                 </span>
               </div>
             </td>
           </tr>
           <tr id="hdr-${sid}" style="display:none">
             <th class="tl" style="min-width:180px">Ligne budgétaire</th>
-            <th class="tva-col">TVA</th>
             <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir la source">
-              <span class="show-ht">${id==='technique'?'SIGNE HT':'Au budget HT'}</span>
-              <span class="show-ttc" style="display:none">${id==='technique'?'SIGNE TTC':'Au budget TTC'}</span>
+              ${id==='technique'?'SIGNÉ HT':'Au budget HT'}
               <span style="font-size:.7em;opacity:.35">↗</span>
             </th>
             <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir les transactions">
-              <span class="show-ht">${id==='technique'?'PAYÉ HT':'Dépensé HT'}</span>
-              <span class="show-ttc" style="display:none">${id==='technique'?'PAYÉ TTC':'Dépensé TTC'}</span>
+              ${id==='technique'?'PAYÉ HT':'Dépensé HT'}
               <span style="font-size:.7em;opacity:.35">↗</span>
             </th>
             <th>Écart HT</th>
@@ -1478,7 +1467,7 @@ function renderDept(id){
         </thead>
         <tbody id="${sid}" style="display:none">${rows}
           <tr class="add-ligne-row">
-            <td colspan="7" style="padding:4px 10px">
+            <td colspan="6" style="padding:4px 10px">
               <button class="add-ligne-btn" onclick="openAddLigne('${id}',${si})">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Ajouter une ligne budgétaire
@@ -1487,14 +1476,11 @@ function renderDept(id){
           </tr>
           <tr class="trow">
             <td>TOTAL ${sec.s}</td>
-            <td></td>
             <td>
-              <span class="show-ht cro" style="font-weight:700;color:#fff">${fe(sE)}</span>
-              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${fe(Math.round(sE_ttc))}</span>
+              <span class="cro" style="font-weight:700;color:#fff">${fe(sE)}</span>
             </td>
             <td>
-              <span class="show-ht cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span>
-              <span class="show-ttc cro" style="display:none;font-weight:700;color:#fff">${sR?fe(Math.round(sR_ttc)):'—'}</span>
+              <span class="cro" style="font-weight:700;color:#fff">${sR?fe(sR):'—'}</span>
             </td>
             <td>${ecH(sEc)}</td>
             <td></td>
@@ -1554,7 +1540,6 @@ function renderDept(id){
         <div class="dept-hdr-top">
           <span class="dept-hdr-name">${dept.name}</span>
           <span style="margin-left:auto;display:flex;gap:6px">
-            <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
             <button id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;margin:0;width:auto;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px"><span>TOUT DÉPLIER</span></button>
           </span>
         </div>
@@ -2494,18 +2479,6 @@ function toggleBilanTTC(table) {
 // ════════════════════════════════════════════════════
 // TTC TOGGLE
 // ════════════════════════════════════════════════════
-let _ttcVisible = false; // false=HT (default), true=TTC
-function toggleTTC(btn) {
-  _ttcVisible = !_ttcVisible;
-  document.querySelectorAll('.show-ht').forEach(el => el.style.display = _ttcVisible ? 'none' : '');
-  document.querySelectorAll('.show-ttc').forEach(el => el.style.display = _ttcVisible ? '' : 'none');
-  document.querySelectorAll('.tva-col').forEach(el => el.style.display = '');
-  btn.style.color       = _ttcVisible ? '#818cf8'              : 'var(--text-dim)';
-  btn.style.borderColor = _ttcVisible ? 'rgba(99,102,241,.4)'  : 'var(--border)';
-  btn.style.background  = _ttcVisible ? 'rgba(99,102,241,.1)'  : 'var(--surface-2)';
-  btn.textContent       = _ttcVisible ? 'HT ⇄' : 'TTC ⇄';
-}
-
 // ════════════════════════════════════════════════════
 // PANEL 2 — AU BUDGET (Estimation source) — VISION
 // ════════════════════════════════════════════════════
