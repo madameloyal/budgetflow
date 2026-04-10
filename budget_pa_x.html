@@ -34,10 +34,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .nm{font-size:12px;font-weight:500;padding:8px 12px;color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:color .15s;border:none;background:none;font-family:inherit}
 .nm:hover{color:var(--text-muted)}
 .nm.on{color:#fff;font-weight:600}
+.nm.on svg{opacity:1}
 .nm.pl{color:#333;cursor:default;font-style:normal}
 .nm.pl:hover{color:#333}
 .dt.on{background:rgba(255,255,255,.06);color:#fff;font-weight:600}
-.dept-tabs{max-width:1020px;margin:0 auto;padding:0 20px;display:flex;overflow-x:auto;scrollbar-width:none}
+.dept-tabs{max-width:1020px;margin:0 auto;padding:2px 20px;display:flex;overflow-x:auto;scrollbar-width:none;background:rgba(0,0,0,.15);border-top:1px solid rgba(255,255,255,.03)}
 .dept-tabs::-webkit-scrollbar{display:none}
 .dt{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .15s}
 .dt:hover{color:var(--text-muted)}
@@ -392,11 +393,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <option value="" disabled data-soon="1">Général (à venir)</option>
       </select>
     </div>
-    <button class="nm on" onclick="go('bilan',this)">Bilan P&L</button>
-    <button class="nm pl">Fiche événement</button>
-    <button class="nm pl">Documents</button>
+    <button class="nm on" onclick="go('bilan',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bilan P&L</button>
+    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
+    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
     <span style="flex:1"></span>
-    <button class="nm" onclick="go('releve',this)">Transactions</button>
+    <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
   </div>
   <div id="dept-tabs" class="dept-tabs">
     <button class="dt" onclick="goDeptTab('reperages',this)">Repérages</button>
