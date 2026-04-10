@@ -1071,10 +1071,10 @@ function renderBilan(){
             ${REC.map((cat,ci) => {
               const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
               const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
-              return `<tr>
-                <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecCatDrawer(${ci})">${cat.cat}</td>
-                <td class="clickable-cell" onclick="toggleRecDetail()" title="Ouvrir détails pour éditer"><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
-                <td class="clickable-cell" onclick="openRecCatDrawer(${ci})" title="Voir transactions"><span class="cro">${catReel?fe(catReel):'—'}</span></td>
+              return `<tr style="cursor:pointer" onclick="openRecCatDrawer(${ci})">
+                <td style="font-weight:500;color:#fff">${cat.cat}</td>
+                <td><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
+                <td><span class="cro">${catReel?fe(catReel):'—'}</span></td>
                 <td>${ecH(catEst-catReel,false,catReel>0)}</td>
               </tr>`;
             }).join('')}
@@ -1103,7 +1103,7 @@ function renderBilan(){
         return `<tr>
           <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">${r.l}</td>
           <td class="clickable-cell" onclick="openRecetteDrawer(${ci},${ri})" title="Éditer estimé"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
-          <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
+          <td class="clickable-cell" onclick="openRecCatDrawer(${ci})" title="Voir transactions"><span class="cro">${reeH?fe(reeH):'—'}</span></td>
           <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
         </tr>`;
       }).join('');
@@ -1113,7 +1113,7 @@ function renderBilan(){
             <td colspan="4" style="padding:0">
               <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
                 <span id="bra${ci}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(90deg);flex-shrink:0;margin-right:10px">▶</span>
-                <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${cat.cat}</span>
+                <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0;cursor:pointer" onclick="event.stopPropagation();openRecCatDrawer(${ci})" title="Voir transactions">${cat.cat}</span>
                 <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
                 <span style="flex:1"></span>
                 <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(catEst)}</span>
@@ -1507,6 +1507,23 @@ function upCell(inp){
     }
   }
 }
+function upRecName(ci,ri,inp){
+  if (!REC[ci] || !REC[ci].rows[ri]) return;
+  const val = inp.value.trim();
+  if (!val) return;
+  REC[ci].rows[ri].l = val;
+  const r = REC[ci].rows[ri];
+  if(r._row) {
+    fetch(`${API}/api/budget/update`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'ligne', value:val})
+    }).catch(e=>console.warn('Recettes API write name failed:', e));
+  }
+  // Update drawer title
+  document.getElementById('drawer-title').textContent = val;
+  renderBilan();
+}
 function upRec(ci,ri,field,inp){
   if (!REC[ci] || !REC[ci].rows[ri]) return;
   const val=parseFloat(inp.value.replace(/[\s\u202f\u2009€,]/g,'').replace(',','.'))||0;
@@ -1684,6 +1701,13 @@ function openRecetteDrawer(ci, ri) {
   document.getElementById('drawer-sub').textContent = `${cat.cat} \u00B7 Recettes`;
 
   document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Ligne</div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Nom</label>
+        <input type="text" value="${(r.l||'').replace(/"/g,'&quot;')}" onchange="upRecName(${ci},${ri},this)" style="${inputSt};font-family:'DM Sans',sans-serif;font-weight:600">
+      </div>
+    </div>
     <div class="drawer-section">
       <div class="drawer-section-title">Montants</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
@@ -3113,16 +3137,16 @@ function openRecCatDrawer(ci) {
   // Unmatched positive tx
   const unmatched = posTx.filter(t => !matchedTxIds.has(t.ref||t.fourn+t.ttc));
 
-  // Line breakdown — compact 2-col for side panel
+  // Line breakdown — compact 2-col for side panel (tx focus: show Encaissé)
   const linesHtml = lineMatches.map(({row: r, ri, matches}) => {
     const reeH = r.reel||0;
     const matchBadge = matches.length > 0
       ? `<span style="font-size:10px;color:var(--green);background:rgba(52,211,153,.08);padding:1px 5px;border-radius:3px;margin-left:6px">${matches.length} tx</span>`
       : '';
-    const reelNote = reeH > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:1px">${fe(reeH)} encaissé</div>` : '';
+    const estNote = r.ht ? `<div style="font-size:10px;color:var(--text-dim);margin-top:1px">${fe(r.ht)} estimé</div>` : '';
     return `<tr style="cursor:pointer" onclick="closeDrawer();openRecetteDrawer(${ci},${ri})">
-      <td><div style="font-weight:500;color:#fff">${r.l}${matchBadge}</div>${reelNote}</td>
-      <td style="text-align:right;white-space:nowrap"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
+      <td><div style="font-weight:500;color:#fff">${r.l}${matchBadge}</div>${estNote}</td>
+      <td style="text-align:right;white-space:nowrap"><span class="cro" style="color:${reeH?'var(--green)':'var(--text-dim)'};font-weight:600">${reeH?fe(reeH):'—'}</span></td>
     </tr>`;
   }).join('');
 
@@ -3195,12 +3219,12 @@ function openRecCatDrawer(ci) {
         <table class="tbl">
           <thead><tr>
             <th class="tl">Poste</th>
-            <th style="text-align:right">Estimé HT</th>
+            <th style="text-align:right">Encaissé HT</th>
           </tr></thead>
           <tbody>${linesHtml}</tbody>
           <tr class="trow">
-            <td>TOTAL HT</td>
-            <td style="text-align:right"><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
+            <td>TOTAL ENCAISSÉ</td>
+            <td style="text-align:right"><span class="cro" style="font-weight:700;color:${catReel?'var(--green)':'var(--text-dim)'}">${catReel?fe(catReel):'—'}</span></td>
           </tr>
         </table>
       </div>
