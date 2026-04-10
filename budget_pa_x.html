@@ -1071,10 +1071,10 @@ function renderBilan(){
             ${REC.map((cat,ci) => {
               const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
               const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
-              return `<tr style="cursor:pointer" onclick="openRecCatDrawer(${ci})">
-                <td style="font-weight:500;color:#fff">${cat.cat}</td>
-                <td><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
-                <td><span class="cro">${catReel?fe(catReel):'—'}</span></td>
+              return `<tr>
+                <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecCatDrawer(${ci})">${cat.cat}</td>
+                <td class="clickable-cell" onclick="toggleRecDetail()" title="Ouvrir détails pour éditer"><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
+                <td class="clickable-cell" onclick="openRecCatDrawer(${ci})" title="Voir transactions"><span class="cro">${catReel?fe(catReel):'—'}</span></td>
                 <td>${ecH(catEst-catReel,false,catReel>0)}</td>
               </tr>`;
             }).join('')}
@@ -1100,9 +1100,9 @@ function renderBilan(){
       const nLines = cat.rows.length;
       const dataRows = cat.rows.map((r, ri) => {
         const reeH = r.reel||0;
-        return `<tr style="cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">
-          <td style="font-weight:500;color:#fff">${r.l}</td>
-          <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
+        return `<tr>
+          <td style="font-weight:500;color:#fff;cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">${r.l}</td>
+          <td class="clickable-cell" onclick="openRecetteDrawer(${ci},${ri})" title="Éditer estimé"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
           <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
           <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
         </tr>`;
