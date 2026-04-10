@@ -2976,17 +2976,16 @@ function openRecCatDrawer(ci) {
   // Unmatched positive tx
   const unmatched = posTx.filter(t => !matchedTxIds.has(t.ref||t.fourn+t.ttc));
 
-  // Line breakdown — show match count per line
+  // Line breakdown — compact 2-col for side panel
   const linesHtml = lineMatches.map(({row: r, ri, matches}) => {
     const reeH = r.reel||0;
     const matchBadge = matches.length > 0
       ? `<span style="font-size:10px;color:var(--green);background:rgba(52,211,153,.08);padding:1px 5px;border-radius:3px;margin-left:6px">${matches.length} tx</span>`
       : '';
+    const reelNote = reeH > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:1px">${fe(reeH)} encaissé</div>` : '';
     return `<tr style="cursor:pointer" onclick="closeDrawer();openRecetteDrawer(${ci},${ri})">
-      <td style="font-weight:500;color:#fff">${r.l}${matchBadge}</td>
-      <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
-      <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
-      <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
+      <td><div style="font-weight:500;color:#fff">${r.l}${matchBadge}</div>${reelNote}</td>
+      <td style="text-align:right;white-space:nowrap"><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
     </tr>`;
   }).join('');
 
@@ -2998,30 +2997,49 @@ function openRecCatDrawer(ci) {
     const idx = txIdx(t);
     const esc = (s) => (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const linkBtn = linkLigne
-      ? `<button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}];linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,'${esc(linkLigne)}',${ci})" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0">Relier →</button>`
+      ? `<button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}];linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,'${esc(linkLigne)}',${ci})" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;font-weight:600">Relier →</button>`
       : '';
-    return `<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.02);gap:10px">
-      <span style="font-size:12px;color:var(--text-dim);width:75px;flex-shrink:0">${(t.date||'').split(' ')[0]||'—'}</span>
-      <span style="font-size:13px;color:#fff;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.fourn||'—'}</span>
-      ${showLine?`<span style="font-size:10px;color:var(--text-dim);background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;flex-shrink:0">${showLine}</span>`:''}
-      <span style="font-size:13px;font-weight:600;color:var(--green);white-space:nowrap;flex-shrink:0">+${fmtAmt(t.ttc)} €</span>
-      ${linkBtn}
+    return `<div style="background:var(--surface);border-radius:8px;padding:10px 14px;border:1px solid rgba(255,255,255,.04);margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <span style="font-size:13px;font-weight:600;color:#fff">${t.fourn||'—'}</span>
+            ${showLine?`<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--text-dim)">${showLine}</span>`:''}
+          </div>
+          ${t.note?`<div style="font-size:11px;color:var(--text-muted);line-height:1.4;word-break:break-word;margin-bottom:2px">${t.note}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:10px">
+          <div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--green)">+${fmtAmt(t.ttc)} €</div>
+          ${t.ht && t.ht !== t.ttc ? `<div style="font-size:10px;color:var(--text-dim)">+${fmtAmt(t.ht)} HT</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--text-dim)">${(t.date||'').split(' ')[0]||'—'}${t.cat?' · '+t.cat:''}</span>
+        ${linkBtn}
+      </div>
     </div>`;
   };
 
-  // Unmatched tx row — with line picker
+  // Unmatched tx row — card with line picker
   const allCatLines = cat.rows.filter(r => r.l && !r.l.startsWith('(ligne')).map(r => r.l);
   const txRowPicker = (t) => {
     const idx = txIdx(t);
     const opts = allCatLines.map(l => `<option value="${l.replace(/"/g,'&quot;')}">${l}</option>`).join('');
-    return `<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.02);gap:8px;flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--text-dim);width:75px;flex-shrink:0">${(t.date||'').split(' ')[0]||'—'}</span>
-      <span style="font-size:13px;color:#fff;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">${t.fourn||'—'}</span>
-      <span style="font-size:13px;font-weight:600;color:var(--green);white-space:nowrap;flex-shrink:0">+${fmtAmt(t.ttc)} €</span>
-      <select id="rec-pick-${idx}" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border);color:#fff;max-width:120px;flex-shrink:0">
-        <option value="">Ligne…</option>${opts}
-      </select>
-      <button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}],sel=document.getElementById('rec-pick-${idx}');if(!sel.value){showToast('⚠','Choisis une ligne','amber');return;}linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,sel.value,${ci})" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0">Relier →</button>
+    return `<div style="background:var(--surface);border-radius:8px;padding:10px 14px;border:1px dashed rgba(255,255,255,.06);margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">${t.fourn||'—'}</div>
+          ${t.note?`<div style="font-size:11px;color:var(--text-muted);line-height:1.4;word-break:break-word;margin-bottom:2px">${t.note}</div>`:''}
+        </div>
+        <div style="font-family:monospace;font-size:13px;font-weight:700;color:var(--green);flex-shrink:0;margin-left:10px">+${fmtAmt(t.ttc)} €</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--text-dim);flex-shrink:0">${(t.date||'').split(' ')[0]||'—'}</span>
+        <select id="rec-pick-${idx}" style="font-size:11px;padding:4px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);color:#fff;flex:1;min-width:0">
+          <option value="">Ligne…</option>${opts}
+        </select>
+        <button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}],sel=document.getElementById('rec-pick-${idx}');if(!sel.value){showToast('⚠','Choisis une ligne','amber');return;}linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,sel.value,${ci})" style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;font-weight:600">Relier →</button>
+      </div>
     </div>`;
   };
 
@@ -3034,40 +3052,43 @@ function openRecCatDrawer(ci) {
   if (!txHtml) txHtml = `<div style="font-size:12px;color:var(--text-dim);padding:12px 14px">Aucune transaction détectée</div>`;
 
   document.getElementById('drawer-body').innerHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
-      <table class="tbl">
-        <thead><tr>
-          <th class="tl" style="min-width:140px">Poste</th>
-          <th>Estimé HT</th>
-          <th>Encaissé HT</th>
-          <th>Écart</th>
-        </tr></thead>
-        <tbody>${linesHtml}</tbody>
-        <tr class="trow">
-          <td>TOTAL HT</td>
-          <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
-          <td><span class="cro" style="font-weight:700;color:#fff">${catReel?fe(catReel):'—'}</span></td>
-          <td>${ecH(catEst-catReel,false,catReel>0)}</td>
-        </tr>
-      </table>
+    <div class="drawer-section">
+      <div class="drawer-section-title">Lignes de recettes</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <table class="tbl">
+          <thead><tr>
+            <th class="tl">Poste</th>
+            <th style="text-align:right">Estimé HT</th>
+          </tr></thead>
+          <tbody>${linesHtml}</tbody>
+          <tr class="trow">
+            <td>TOTAL HT</td>
+            <td style="text-align:right"><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
+          </tr>
+        </table>
+      </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
-      <span style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Transactions détectées</span>
-      ${allMatched.length ? `<span style="font-size:12px;font-weight:600;color:var(--green)">+${fmtAmt(matchedTotal)} €</span>` : ''}
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;max-height:240px;overflow-y:auto">
-      ${txHtml}
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Transactions détectées
+        ${allMatched.length ? `<span style="font-size:.6em;padding:2px 7px;border-radius:4px;background:rgba(52,211,153,.1);color:var(--green);font-weight:700">${allMatched.length} tx · +${fmtAmt(matchedTotal)} €</span>` : ''}
+      </div>
+      <div style="max-height:300px;overflow-y:auto">
+        ${txHtml}
+      </div>
     </div>
 
     ${unmatched.length > 0 ? `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
-      <span style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Autres recettes non reliées</span>
-      <span style="font-size:11px;color:var(--text-dim)">${unmatched.length} transaction${unmatched.length>1?'s':''}</span>
-    </div>
-    <div style="background:var(--surface);border:1px dashed rgba(255,255,255,.06);border-radius:10px;overflow:hidden;max-height:220px;overflow-y:auto">
-      ${unmatched.slice(0,8).map(t => txRowPicker(t)).join('')}
-      ${unmatched.length > 8 ? `<div style="font-size:11px;color:var(--text-dim);padding:8px 14px;text-align:center">+ ${unmatched.length-8} autres · voir Transactions</div>` : ''}
+    <div class="drawer-section">
+      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
+        Autres recettes non reliées
+        <span style="font-size:.6em;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--text-dim);font-weight:700">${unmatched.length} tx</span>
+      </div>
+      <div style="max-height:260px;overflow-y:auto">
+        ${unmatched.slice(0,8).map(t => txRowPicker(t)).join('')}
+        ${unmatched.length > 8 ? `<div style="font-size:11px;color:var(--text-dim);padding:8px 14px;text-align:center">+ ${unmatched.length-8} autres · voir Transactions</div>` : ''}
+      </div>
     </div>` : ''}`;
 
   document.getElementById('drawer-footer').style.display = 'flex';
