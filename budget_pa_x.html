@@ -1577,23 +1577,23 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
     const rowsHtml = deptRows.length ? `
-      <div style="display:grid;grid-template-columns:72px 1.2fr 1fr auto 64px;gap:0 10px;font-size:12px;margin-bottom:6px;padding:0 4px;color:#555;font-weight:500">
+      <div style="display:grid;grid-template-columns:80px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:.68em;margin-bottom:6px;padding:0 8px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.5px">
         <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span><span></span>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto">
-        ${deptRows.map(r => `<div style="display:grid;grid-template-columns:72px 1.2fr 1fr auto 64px;gap:0 10px;align-items:center;padding:7px 4px;background:rgba(255,255,255,.02);border-radius:6px">
-          <span style="font-size:12px;color:#555;white-space:nowrap">${r.date||'—'}</span>
-          <span style="font-size:12px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fourn||'—'}</span>
-          <span style="font-size:12px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
-          <span style="font-size:12px;font-weight:500;color:#ededed;white-space:nowrap;text-align:right;font-family:ui-monospace,monospace">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
-          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:10px;padding:2px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#888;font-family:inherit;font-weight:500;cursor:pointer;white-space:nowrap">Assigner</button>
+        ${deptRows.map(r => `<div style="display:grid;grid-template-columns:80px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:7px 8px;background:rgba(255,255,255,.02);border-radius:6px">
+          <span style="font-size:.68em;color:var(--text-dim);white-space:nowrap">${r.date||'—'}</span>
+          <span style="font-size:.72em;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fourn||'—'}</span>
+          <span style="font-size:.68em;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
+          <span style="font-size:.72em;font-weight:600;color:#fff;white-space:nowrap;text-align:right;font-family:ui-monospace,monospace">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
+          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:.55em;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-dim);font-family:inherit;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
         </div>`).join('')}
-      </div>` : `<div style="font-size:13px;color:#50e3c2;padding:8px 0">Toutes les transactions sont assignées</div>`;
+      </div>` : `<div style="font-size:.72em;color:var(--green);padding:8px 0">Toutes les transactions sont assignées</div>`;
     return `
     <div class="card" style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:14px;font-weight:600;color:#ededed">Transactions non reliées</div>
-        ${count > 0 ? `<span style="font-size:11px;font-weight:600;color:#888;background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:11px;color:#50e3c2">0</span>`}
+        <div style="font-size:.72em;font-weight:600;color:var(--text-muted)">Transactions non reliées</div>
+        ${count > 0 ? `<span style="font-size:.62em;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:.62em;color:var(--green)">✓ 0</span>`}
       </div>
       ${rowsHtml}
     </div>`;
