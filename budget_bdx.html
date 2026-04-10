@@ -417,7 +417,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   <div class="db-modal">
     <img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" class="db-modal-logo">
     <div class="db-modal-title">BudgetFlow — Bordeaux</div>
-    <div class="db-modal-sub">Bordeaux ML × Sonora 2026 · Madame Loyal</div>
+    <div class="db-modal-sub">Paris XXL 2026 · Madame Loyal</div>
     <div class="db-pw-field" id="db-pw-field">
       <input type="password" id="pw-input" style="position:absolute;opacity:0;width:1px;height:1px;" onkeydown="if(event.key==='Enter')checkPassword()" oninput="dbUpdateDots(this.value)">
       <span class="db-pw-placeholder" id="db-pw-display">Mot de passe</span>
@@ -447,7 +447,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       <option value="" disabled>Changer session</option>
       <option value="budget_pa.html">ML 130326 — Paris XXL</option>
       <option value="budget_bdx.html" selected>ML 120626 — Bordeaux</option>
-      <option value="budget_epk.html">EPK 050926 — Impressioniste</option>
+      <option value="budget_epk.html">EPK 050926 — Paris</option>
       <option value="budget_general.html">Général — Frais de structure</option>
     </select>
     <button class="nl on"  onclick="go('bilan',this)">Bilan P&amp;L</button>
@@ -474,8 +474,10 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <div id="page-bilan" class="page on">
 
   <!-- ── Bilan title ── -->
-  <div style="padding:24px 0 0">
-    <h2 style="margin:0 0 16px;font-size:1.1em;color:var(--text)">Bilan P&amp;L</h2>
+  <div class="sdiv" style="align-items:center;margin:14px 0 16px">
+    <div class="sdl"></div>
+    <div class="sdt" style="white-space:nowrap">Bilan P&amp;L</div>
+    <div class="sdl"></div>
   </div>
 
   <!-- ── ROW 1: 4 stat chips ── -->
