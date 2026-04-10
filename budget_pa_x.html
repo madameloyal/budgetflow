@@ -1475,99 +1475,6 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
 }
 
 
-function upCell(inp){
-  if(!inp.dataset.id) return;
-  const {id,si,li,f}=inp.dataset;
-  const dept=DEPTS.find(d=>d.id===id);
-  if(!dept) return;
-  const line=dept.sections[si].lines[li];
-  const isText=(f==='st'||f==='obs'||f==='l'||f==='tva');
-  const val=isText?inp.value.trim():(parseFloat(inp.value.replace(/[\s\u202f€,]/g,'').replace(',','.'))||0);
-  line[f]=val;
-  // Update sibling label if in pencil mode
-  const label=inp.parentElement.querySelector('.ligne-label,.tva-label,.est-label,.obs-label');
-  if(label){
-    if(f==='est') label.textContent=val?Math.round(val).toLocaleString('fr-FR').replace(/ /g,' ')+' €':'';
-    else if(f==='tva') label.textContent=val?(parseFloat(val)*100).toFixed(1).replace('.0','')+'%':'';
-    else label.textContent=val;
-  }
-  // POST to API
-  if(line._row){
-    const tabName=Object.entries(DEPT_META).find(([,m])=>m.id===id)?.[0];
-    if(tabName){
-      const fieldMap={est:'est_ht',reel:'reel_ht',st:'statut',obs:'observations',l:'ligne',tva:'tva'};
-      const apiField=fieldMap[f];
-      if(apiField){
-        fetch(`${API}/api/budget/update`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({session:SESSION,dept:tabName,row:line._row,field:apiField,value:String(val)})
-        }).catch(e=>console.warn('API write failed:',e));
-      }
-    }
-  }
-}
-function upRecName(ci,ri,inp){
-  if (!REC[ci] || !REC[ci].rows[ri]) return;
-  const val = inp.value.trim();
-  if (!val) return;
-  REC[ci].rows[ri].l = val;
-  const r = REC[ci].rows[ri];
-  if(r._row) {
-    fetch(`${API}/api/budget/update`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'ligne', value:val})
-    }).catch(e=>console.warn('Recettes API write name failed:', e));
-  }
-  // Update drawer title
-  document.getElementById('drawer-title').textContent = val;
-  renderBilan();
-}
-function upRec(ci,ri,field,inp){
-  if (!REC[ci] || !REC[ci].rows[ri]) return;
-  const val=parseFloat(inp.value.replace(/[\s\u202f\u2009€,]/g,'').replace(',','.'))||0;
-  REC[ci].rows[ri][field]=val;
-  const r=REC[ci].rows[ri];
-  if((field==='qte'||field==='pu') && r.qte!=null && r.pu!=null){
-    REC[ci].rows[ri].ht = Math.round(r.qte * r.pu);
-  }
-  // Write to API — map fields to sheet columns
-  if(r._row) {
-    const fieldMap = {qte:'rh', pu:'observations', ht:'est_ht'};
-    const apiField = fieldMap[field] || field;
-    const writeVal = field === 'ht' ? REC[ci].rows[ri].ht : val;
-    fetch(`${API}/api/budget/update`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:apiField, value:String(writeVal)})
-    }).catch(e=>console.warn('Recettes API write failed:', e));
-    // If ht was recalculated, also write it
-    if(field==='qte'||field==='pu') {
-      fetch(`${API}/api/budget/update`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'est_ht', value:String(REC[ci].rows[ri].ht)})
-      }).catch(e=>console.warn('Recettes API write ht failed:', e));
-    }
-  }
-  renderBilan();
-}
-function upRecSt(ci,ri,sel){
-  if (!REC[ci] || !REC[ci].rows[ri]) return;
-  REC[ci].rows[ri].st=sel.value;
-  sel.className='ss '+chipcls(sel.value);
-  const r=REC[ci].rows[ri];
-  if(r._row) {
-    fetch(`${API}/api/budget/update`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({session:SESSION, dept:'RECETTES', row:r._row, field:'statut', value:sel.value})
-    }).catch(e=>console.warn('Recettes API write status failed:', e));
-  }
-  renderBilan();
-}
-
 function openAddRecLigne(preSection) {
   const existingCats = REC.map(c => c.cat);
   const catOpts = existingCats.map(c => `<option value="${c}">`).join('');
@@ -1963,11 +1870,7 @@ async function loadAndMatchQontoRaw() {
       }
     });
 
-    try {
-      sessionStorage.setItem(QONTO_TX_KEY, JSON.stringify(all));
-      sessionStorage.setItem(QONTO_MATCH_KEY, JSON.stringify(byLine));
-      console.log(`✅ Qonto RAW loaded: ${all.length} tx, ${Object.keys(byLine).length} lignes matched`);
-    } catch(e) {}
+    console.log(`✅ Qonto RAW loaded: ${all.length} tx, ${Object.keys(byLine).length} lignes matched`);
   } catch(e) {
     console.warn('loadAndMatchQontoRaw failed:', e);
   }
@@ -1981,9 +1884,6 @@ async function loadAndMatchQontoRaw() {
 function triggerImport() {
   document.getElementById('qonto-file-input').click();
 }
-
-const QONTO_TX_KEY = 'bf_qonto_tx';
-const QONTO_MATCH_KEY = 'bf_qonto_match';
 
 function parseFrNum(s) {
   if (!s) return 0;
@@ -2068,11 +1968,7 @@ function storeQontoTransactions(csvData) {
     }
   });
 
-  try {
-    sessionStorage.setItem(QONTO_TX_KEY, JSON.stringify(all));
-    sessionStorage.setItem(QONTO_MATCH_KEY, JSON.stringify(byLine));
-    console.log(`✅ Qonto: ${all.length} tx stored, ${Object.keys(byLine).length} lignes matched`);
-  } catch(e) { console.warn('sessionStorage full'); }
+  console.log(`✅ Qonto: ${all.length} tx parsed, ${Object.keys(byLine).length} lignes matched`);
 }
 
 const POLE_MAP_CLIENT = {
@@ -2101,21 +1997,6 @@ function fuzzyMatchClient(a, b) {
   return m / wb.length >= 0.6;
 }
 
-function getMatchedTx(tabName, ligneName) {
-  try {
-    const raw = sessionStorage.getItem(QONTO_MATCH_KEY);
-    if (!raw) return null;
-    const map = JSON.parse(raw);
-    return map[`${tabName}|${ligneName}`] || null;
-  } catch(e) { return null; }
-}
-
-function getAllQontoTx() {
-  try {
-    const raw = sessionStorage.getItem(QONTO_TX_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
-}
 
 async function handleQontoFile(event) {
   const file = event.target.files[0];
@@ -2164,7 +2045,6 @@ async function handleQontoFile(event) {
     if(btn) btn.classList.add('import-success');
     if(btn) btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> Importé ✓`;
 
-    const allTx = getAllQontoTx() || [];
     showToast('✅ Import Qonto terminé',
       `${importResult.transactions} transactions · ${importResult.matched} associées · ${importResult.unmatched} non associées\nConsulte "💳 Transactions" pour les détails.`,
       'green');
@@ -2850,183 +2730,6 @@ async function openReelDrawer(deptId, sectionIdx, lineIdx) {
 
 }
 
-function openDrawer(deptId, sectionIdx, lineIdx) {
-  // Legacy — redirect to reel drawer
-  openReelDrawer(deptId, sectionIdx, lineIdx);
-}
-function buildTransactionList(line, tabName) {
-  if (!line.reel || line.reel === 0) {
-    return `<div class="drawer-empty">
-      <div class="drawer-empty-icon">💳</div>
-      Aucune transaction Qonto associée.<br>
-      <span style="font-size:.85em;color:var(--text-dim)">Importez un relevé pour alimenter cette ligne.</span>
-    </div>`;
-  }
-
-  const txList = getMatchedTx(tabName, line.l);
-
-  if (!txList || txList.length === 0) {
-    // No fuzzy match found — search all raw Qonto tx for this dept
-    const allTx = getAllQontoTx() || [];
-    // Find Qonto categories that map to this dept tab
-    const deptCats = new Set();
-    deptCats.add(tabName);
-    Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) deptCats.add(qCat); });
-    const deptTx = allTx.filter(tx => {
-      const normCat = normStr(tx.cat||'');
-      return [...deptCats].some(c => normStr(c) === normCat) && (tx.ttc||0) < 0;
-    });
-
-    if (deptTx.length > 0) {
-      const total2 = deptTx.reduce((a, t) => a + Math.abs(t.ttc), 0);
-      const rows2 = deptTx.map(tx => {
-        const d = formatQontoDate(tx.date);
-        const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
-        return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
-          <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
-          <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
-          <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
-          <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
-        </div>`;
-      }).join('');
-
-      return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
-          <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${deptTx.length} transaction${deptTx.length > 1 ? 's' : ''} · ${tabName}</span>
-          <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total2)} € TTC</span>
-        </div>
-        <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
-          <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
-        </div>
-        ${rows2}
-        <div style="padding:8px 14px;font-size:.62em;color:var(--text-dim);text-align:center;border-top:1px solid var(--border)">
-          Toutes les transactions ${tabName} · la ligne « ${line.l} » représente ${fe(line.reel)} HT
-        </div>
-      </div>`;
-    }
-
-    // No raw data at all
-    return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
-        <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">Réel cumulé Qonto</span>
-        <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fe(line.reel)}</span>
-      </div>
-      <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.75em">
-        Importez un relevé Qonto pour voir le détail des transactions.
-      </div>
-    </div>`;
-  }
-
-  const total = txList.reduce((a, t) => a + Math.abs(t.ttc), 0);
-  const count = txList.length;
-
-  const rows = txList.map(tx => {
-    const d = formatQontoDate(tx.date);
-    const amt = tx.ttc ? `−${fmtAmt(Math.abs(tx.ttc))}` : '—';
-    return `<div style="display:grid;grid-template-columns:72px 1fr 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:.78em;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
-      <span style="font-family:monospace;font-size:.85em;color:var(--text-dim);white-space:nowrap">${d}</span>
-      <span style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.fourn || '—'}</span>
-      <span style="color:var(--text-muted);font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.note || ''}</span>
-      <span style="font-family:monospace;color:var(--red);text-align:right;white-space:nowrap;font-weight:600">${amt}</span>
-    </div>`;
-  }).join('');
-
-  const refs = txList.filter(t => t.ref).map(t =>
-    `<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text-dim);font-size:.75em">${t.ref}</span>`
-  ).join('');
-
-  const inits = [...new Set(txList.filter(t => t.init).map(t => t.init))].map(i =>
-    `<span style="color:var(--text-dim);font-size:.75em">par ${i}</span>`
-  ).join(' · ');
-
-  return `<div style="background:var(--surface-2);border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)">
-      <span style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8">${count} transaction${count > 1 ? 's' : ''} associée${count > 1 ? 's' : ''}</span>
-      <span style="font-family:monospace;font-size:.78em;font-weight:600;color:#fff">−${fmtAmt(total)} € TTC</span>
-    </div>
-    <div style="font-size:.72em;color:var(--text-dim);padding:4px 14px;display:grid;grid-template-columns:72px 1fr 1fr auto;gap:8px;border-bottom:1px solid var(--border)">
-      <span>Date</span><span>Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span>
-    </div>
-    ${rows}
-    ${refs || inits ? `<div style="padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-top:1px solid var(--border)">
-      ${refs}${inits ? `<span style="margin-left:auto">${inits}</span>` : ''}
-    </div>` : ''}
-  </div>`;
-}
-
-// ════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════
-// DRAWER PANELS — Catering, Comparison, Cashless, etc.
-// ════════════════════════════════════════════════════
-function openCoutRepasDrawer() {
-  const dept = DEPTS.find(d => d.id === 'catering');
-  const totalBudget = dept ? dept.sections.flatMap(s=>s.lines).reduce((a,l)=>a+(l.est||0),0) : 0;
-  // Paris XXL: 213 staff, 2 jours, 3 repas/jour
-  const nbPersonnes = 213;
-  const nbJours = 2;
-  const nbRepas = 3;
-  const totalRepas = nbPersonnes * nbJours * nbRepas;
-  const coutParRepas = totalRepas > 0 ? Math.round(totalBudget / totalRepas) : 0;
-
-  document.getElementById('drawer-title').innerHTML = `🍽 Coût par repas`;
-  document.getElementById('drawer-sub').innerHTML = `Catering · Paris XXL 2026`;
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title">Calcul estimé</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-        ${[
-          {label:'Budget total catering', val: totalBudget>0 ? (new Intl.NumberFormat('fr-FR').format(totalBudget).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'#fff'},
-          {label:'Coût / repas estimé', val: coutParRepas>0 ? (new Intl.NumberFormat('fr-FR').format(coutParRepas).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'var(--amber)'},
-          {label:'Effectif total', val: nbPersonnes+' pers.', color:'var(--text-muted)'},
-          {label:'Total repas servis', val: (totalRepas||0).toLocaleString('fr-FR'), color:'var(--text-muted)'},
-        ].map(k=>`<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-          <div style="font-size:.55em;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:4px">${k.label}</div>
-          <div style="font-size:.9em;font-weight:700;color:${k.color}">${k.val}</div>
-        </div>`).join('')}
-      </div>
-      <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:10px 12px;margin-bottom:4px">
-        <div style="font-size:.62em;color:var(--amber);font-weight:600;margin-bottom:4px">📐 Formule</div>
-        <div style="font-size:.65em;color:var(--text-dim);line-height:1.8;font-family:'JetBrains Mono',monospace">
-          ${totalBudget>0?new Intl.NumberFormat('fr-FR').format(totalBudget).replace(/\u202f/g,'\u00a0'):'—'} € ÷ (${nbPersonnes} pers. × ${nbJours} jours × ${nbRepas} repas)<br>
-          = <span style="color:var(--amber);font-weight:600">${coutParRepas>0?coutParRepas:'—'} € / repas</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Benchmarks secteur
-        <span class="future-badge">✦ Bientôt</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;opacity:.7">
-        ${[
-          {label:'Petit-déjeuner · festival', ref:'4–8 €', color:'var(--green)'},
-          {label:'Déjeuner / dîner · festival', ref:'12–18 €', color:'var(--amber)'},
-          {label:'Repas complet · événement pro', ref:'18–30 €', color:'var(--red)'},
-        ].map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--surface-2);border-radius:7px">
-          <span style="font-size:.68em;color:var(--text-muted)">${b.label}</span>
-          <span style="font-size:.68em;font-weight:700;color:${b.color}">${b.ref}</span>
-        </div>`).join('')}
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Affiner le calcul
-        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-      </div>
-      <div style="font-size:.68em;color:var(--text-dim);line-height:1.6;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px">
-        L'effectif réel (${nbPersonnes} pers.) et la grille PDJ/Midi/Soir seront calculés automatiquement depuis le module Présence Festiflow, une fois les équipes confirmées.
-      </div>
-    </div>
-  `;
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
-
 async function openImprevuesDrawer(deptId) {
   const dept = DEPTS.find(d => d.id === deptId);
   if (!dept) return;
@@ -3328,12 +3031,6 @@ function closeDrawer() {
   _drawerCurrentLine = null;
 }
 let _drawerScrollY = 0;
-
-function dissociateTransaction() {
-  // Placeholder — would call Apps Script assignUnmatchedTransaction in reverse
-  showToast('ℹ️ Dissociation', "Cette fonctionnalité sera disponible dans la prochaine version. Pour l'instant, relancez un import Qonto pour recalculer les associations.", 'amber');
-  closeDrawer();
-}
 
 function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
   const deptOptions = Object.entries(DEPT_META).map(([tab, m]) => `<option value="${tab}">${m.name}</option>`).join('');
