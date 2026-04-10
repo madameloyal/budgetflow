@@ -66,8 +66,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
 .mb{margin-bottom:14px}
 /* unified section blocks */
-.sec-block{margin-bottom:0}
-.sec-block+.sec-block .shead td{border-top:1px solid rgba(255,255,255,.06)}
+.sec-block{margin-bottom:8px}
+.sec-block+.sec-block .shead td{border-top:none}
 
 /* ── TYPOGRAPHY ──────────────────────── */
 .hero{font-size:2em;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.5px}
@@ -1452,7 +1452,7 @@ function renderDept(id){
             </th>
             <th>Écart</th>
             <th style="text-align:center">Statut</th>
-            <th class="tl obs">Notes</th>
+            <th class="tl obs">Observations</th>
           </tr>
         </thead>
         <tbody id="${sid}" style="display:none">${rows}
@@ -1512,6 +1512,11 @@ function renderDept(id){
     </div>
 
     <!-- ── ROW: Transactions non reliées ── -->
+    <div class="sdiv" style="align-items:center">
+      <div class="sdl"></div>
+      <div class="sdt" style="white-space:nowrap">À relier</div>
+      <div class="sdl"></div>
+    </div>
     <div class="mb">
       ${buildDeptG3Cards(id, dept, tot, allL, p)}
     </div>
@@ -1596,10 +1601,6 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
       </div>` : `<div style="font-size:13px;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
     return `
     <div class="card" style="padding:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 14px">
-        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff">À relier</div>
-        ${count > 0 ? `<span style="font-size:11px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,.04);padding:2px 8px;border-radius:10px">${count}</span>` : `<span style="font-size:11px;color:var(--green)">✓ 0</span>`}
-      </div>
       ${rowsHtml}
     </div>`;
   };
