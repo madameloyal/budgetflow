@@ -1553,8 +1553,6 @@ function renderDept(id){
       <div class="dept-hdr-body">
         <div class="dept-hdr-top">
           <span class="dept-hdr-name">${dept.name}</span>
-          <span class="dept-hdr-pill">${dept.sections.length} sections · ${allL.filter(l=>l.est>0).length} lignes</span>
-          ${(()=>{const u=allL.filter(l=>['ESTIMATION','EN COURS'].includes(l.st)).reduce((a,l)=>a+(l.est||0),0);return u>0?`<span style="font-size:11px;color:var(--amber);background:rgba(251,191,36,.08);padding:2px 9px;border-radius:4px">⚠ ${fe(u)} non signé</span>`:`<span style="font-size:11px;color:var(--green);background:rgba(52,211,153,.08);padding:2px 9px;border-radius:4px">✓ Tout signé</span>`;})()}
           <span style="margin-left:auto;display:flex;gap:6px">
             <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
             <button id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;margin:0;width:auto;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px"><span>TOUT DÉPLIER</span></button>
