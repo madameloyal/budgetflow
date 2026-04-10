@@ -26,13 +26,25 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
 
 /* ── NAV ─────────────────────────────── */
-.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;margin-bottom:0}
-.nav-i{max-width:1020px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-.nav-i::-webkit-scrollbar{display:none}
-.nbrand{font-family:'Space Grotesk',sans-serif;font-size:0.68em;font-weight:700;color:var(--text-muted);letter-spacing:1px;padding:10px 16px 10px 0;white-space:nowrap;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
-.nl{padding:10px 13px;font-size:0.68em;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .2s,border-color .2s}
-.nl:hover{color:var(--text-muted)}
-.nl.on{color:#fff;border-bottom-color:var(--amber)}
+.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0;margin-bottom:0}
+.nav-top{max-width:1020px;margin:0 auto;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.03)}
+.nav-sw{display:flex;align-items:center;gap:8px;padding:8px 14px 8px 0;margin-right:8px;border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;cursor:pointer;transition:opacity .15s}
+.nav-sw:hover{opacity:.8}
+.nav-sw-av{width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px}
+.nm{font-size:12px;font-weight:500;padding:8px 12px;color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:color .15s;border:none;background:none;font-family:inherit}
+.nm:hover{color:var(--text-muted)}
+.nm.on{color:#fff;font-weight:600}
+.nm.pl{color:#333;cursor:default;font-style:normal}
+.nm.pl:hover{color:#333}
+.dept-trigger{display:none;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.03);cursor:pointer;border:none;font-family:inherit;font-size:12px;font-weight:600;color:#fff;margin-right:8px}
+.dept-trigger.visible{display:flex}
+.dept-grid-wrap{max-width:1020px;margin:0 auto;padding:6px 20px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+.dept-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.dg{font-size:11px;padding:6px 8px;border-radius:6px;color:var(--text-dim);cursor:pointer;text-align:center;transition:all .12s;border:none;background:none;font-family:inherit}
+.dg:hover{background:rgba(255,255,255,.03);color:var(--text-muted)}
+.dg.on{background:rgba(255,255,255,.06);color:#fff;font-weight:600}
+.dept-toggle{max-width:1020px;margin:0 auto;padding:4px 20px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);font-size:10px;color:#333;transition:color .15s;font-family:inherit;border:none;background:none;display:block;width:100%}
+.dept-toggle:hover{color:var(--text-dim)}
 
 /* ── HEADER ──────────────────────────── */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px;padding:14px 22px;margin:12px 0 0;border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--purple),var(--indigo)) border-box}
@@ -436,27 +448,50 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-i">
-    <select class="session-sw" onchange="if(this.value && !this.options[this.selectedIndex].dataset.soon){window.location.href=this.value}else{this.selectedIndex=[...this.options].findIndex(o=>o.selected&&!o.dataset.soon)||0}" style="font-family:'DM Sans',sans-serif;font-size:0.62em;font-weight:600;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;margin-right:6px;outline:none;-webkit-appearance:none;appearance:none">
+  <div class="nav-top">
+    <div class="nav-sw" onclick="document.querySelector('.session-sw').click()">
+      <div class="nav-sw-av">PA</div>
+      <div style="line-height:1.2">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px;font-weight:600;color:#fff">Paris XXL</span>
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim)">ML 130326 · 13-14 mars</div>
+      </div>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2.5" style="margin-left:2px"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <select class="session-sw" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0" onchange="if(this.value && !this.options[this.selectedIndex].dataset.soon){window.location.href=this.value}">
       <option value="" disabled>Changer session</option>
       <option value="budget_pa.html" selected>ML 130326 — Paris XXL</option>
       <option value="budget_bdx.html">ML 120626 — Bordeaux</option>
       <option value="budget_epk.html">EPK 050926 — Paris</option>
-      <option value="" disabled data-soon="1" style="color:gray">Général — Frais de structure (à venir)</option>
+      <option value="" disabled data-soon="1">Général (à venir)</option>
     </select>
-    <button class="nl on"  onclick="go('bilan',this)">Bilan P&amp;L</button>
-    <button class="nl"     onclick="go('reperages',this)">Repérages</button>
-    <button class="nl"     onclick="go('vhr',this)">VHR</button>
-    <button class="nl"     onclick="go('production',this)">Production</button>
-    <button class="nl"     onclick="go('catering',this)">Catering</button>
-    <button class="nl"     onclick="go('bar',this)">Bar / Commis</button>
-    <button class="nl"     onclick="go('artistique',this)">Artistique</button>
-    <button class="nl"     onclick="go('technique',this)">Technique</button>
-    <button class="nl"     onclick="go('sceno',this)">Aménagement</button>
-    <button class="nl"     onclick="go('partenariat',this)">Partenariat</button>
-    <button class="nl"     onclick="go('communication',this)">Communication</button>
-    <button class="nl" onclick="go('releve',this)" style="margin-left:auto;color:var(--indigo)">💳 Transactions</button>
+    <button class="nm on" onclick="go('bilan',this)">Bilan P&L</button>
+    <button class="nm pl">Identité événement</button>
+    <button class="nm pl">Documents</button>
+    <span style="flex:1"></span>
+    <button class="dept-trigger" id="dept-trigger" onclick="toggleDeptGrid()">
+      <span id="dept-trigger-label">Production</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <button class="nm" onclick="go('releve',this)">Transactions</button>
   </div>
+  <div id="dept-grid-wrap" class="dept-grid-wrap">
+    <div class="dept-grid">
+      <button class="dg" onclick="goDept('reperages',this)">Repérages</button>
+      <button class="dg" onclick="goDept('vhr',this)">VHR</button>
+      <button class="dg" onclick="goDept('production',this)">Production</button>
+      <button class="dg" onclick="goDept('catering',this)">Catering</button>
+      <button class="dg" onclick="goDept('bar',this)">Bar / Commis</button>
+      <button class="dg" onclick="goDept('artistique',this)">Artistique</button>
+      <button class="dg" onclick="goDept('technique',this)">Technique</button>
+      <button class="dg" onclick="goDept('sceno',this)">Aménagement</button>
+      <button class="dg" onclick="goDept('partenariat',this)">Partenariat</button>
+      <button class="dg" onclick="goDept('communication',this)">Communication</button>
+    </div>
+  </div>
+  <button class="dept-toggle" id="dept-toggle" onclick="toggleDeptGrid()">replier les départements</button>
 </nav>
 
 <div class="wrap">
@@ -1844,20 +1879,51 @@ function toggleAllSections(deptId, btn){
 }
 function go(id,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
-  if(tabEl){tabEl.classList.add('on');}
-  else{
-    const f=[...document.querySelectorAll('.nl')].find(l=>(l.getAttribute('onclick')||'').includes(`'${id}'`));
-    if(f) f.classList.add('on');
-  }
+  // Clear module tab highlights
+  document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
+  // Clear dept grid highlights
+  document.querySelectorAll('.dg').forEach(d=>d.classList.remove('on'));
+  if(tabEl) tabEl.classList.add('on');
   const page=document.getElementById('page-'+id);
   if(!page) return;
   const isTabChange = !page.classList.contains('on');
   page.classList.add('on');
+  // Update dept trigger label
+  document.getElementById('dept-trigger-label').textContent = '';
+  document.getElementById('dept-trigger').classList.remove('visible');
   if(id==='bilan') renderBilan();
   else if(id==='releve') { renderReleve(); }
   else renderDept(id);
   if(isTabChange) window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goDept(id, chipEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
+  document.querySelectorAll('.dg').forEach(d=>d.classList.remove('on'));
+  if(chipEl) chipEl.classList.add('on');
+  const page=document.getElementById('page-'+id);
+  if(!page) return;
+  page.classList.add('on');
+  renderDept(id);
+  // Update trigger label for collapsed state
+  const label = chipEl ? chipEl.textContent.trim() : id;
+  document.getElementById('dept-trigger-label').textContent = label;
+  document.getElementById('dept-trigger').classList.add('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+let _deptGridOpen = true;
+function toggleDeptGrid(){
+  _deptGridOpen = !_deptGridOpen;
+  document.getElementById('dept-grid-wrap').style.display = _deptGridOpen ? '' : 'none';
+  document.getElementById('dept-toggle').style.display = _deptGridOpen ? '' : 'none';
+  const trigger = document.getElementById('dept-trigger');
+  if(_deptGridOpen){
+    trigger.classList.remove('visible');
+  } else if(document.getElementById('dept-trigger-label').textContent){
+    trigger.classList.add('visible');
+  }
 }
 
 /* ═══ INIT ═══ */
@@ -1871,7 +1937,7 @@ async function initApp(){
 
   renderBilan();
   // Render whichever dept tab is active
-  const activeNav = document.querySelector('.nav-item.on');
+  const activeNav = document.querySelector('.dg.on');
   if(activeNav && activeNav.dataset.page && activeNav.dataset.page !== 'bilan'){
     renderDept(activeNav.dataset.page);
   }
@@ -2176,7 +2242,7 @@ async function refreshBudgetData() {
     DEPTS = Object.entries(json.data).map(([tab, rows]) => apiRowsToDept(tab, rows));
     renderBilan();
     // Re-render active dept page if one is open
-    const activeNl = document.querySelector('.nl.on');
+    const activeNl = document.querySelector('.nm.on,.dg.on');
     if (activeNl) {
       const onclick = activeNl.getAttribute('onclick') || '';
       const match = onclick.match(/'([^']+)'/);
@@ -3893,7 +3959,7 @@ async function confirmOrphanAssign() {
     }
     closeDrawer();
     await refreshBudgetData();
-    const activeTab = document.querySelector(".nl.on");
+    const activeTab = document.querySelector(".nm.on,.dg.on");
     if (activeTab && activeTab.textContent.includes("Transactions")) renderReleve();
     showToast('\u2713 Transaction assign\u00E9e',
       ligne ? `\u2212${fmtAmt(Math.abs(_orphanData.ttc))} \u20AC ajout\u00E9s \u00E0 "${ligne}" dans ${dept}.` : `\u2212${fmtAmt(Math.abs(_orphanData.ttc))} \u20AC assign\u00E9s au d\u00E9partement ${dept}.`, 'green');
@@ -3934,7 +4000,7 @@ async function confirmAssign(unmatchedIdx) {
     // Reload budget data and refresh transactions tab
     await refreshBudgetData();
     // If we are on the transactions tab, refresh it
-    const activeTab = document.querySelector(".nl.on");
+    const activeTab = document.querySelector(".nm.on,.dg.on");
     if (activeTab && activeTab.textContent.includes("Transactions")) renderReleve();
 
 
