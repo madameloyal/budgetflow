@@ -92,11 +92,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .dept-hdr-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.2px}
 .dept-hdr-pill{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:2px 9px;border-radius:4px;font-weight:500}
-.dept-hdr-kpis{display:flex;align-items:flex-end;gap:0}
-.dept-hdr-kpi{flex-shrink:0;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.07)}
-.dept-hdr-kpi:last-child{border-right:none;padding-right:0;margin-right:0;flex:1}
-.dept-hdr-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);margin-bottom:3px}
-.dept-hdr-val{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1}
+
 
 /* ── PROGRESS ────────────────────────── */
 .pt{height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:8px 0 4px;display:flex;gap:1px}
@@ -1563,40 +1559,6 @@ function renderDept(id){
             <button onclick="toggleTTC(this)" id="ttc-toggle-${id}" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;transition:all .2s">TTC ⇄</button>
             <button id="expbtn-${id}" onclick="toggleAllSections('${id}',this)" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.65em;font-weight:600;cursor:pointer;margin:0;width:auto;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px"><span>TOUT DÉPLIER</span></button>
           </span>
-        </div>
-        <div class="dept-hdr-kpis">
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Au budget HT</div>
-            <div class="dept-hdr-val" style="color:#fff">${fe(tot.est)}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Dépensé HT</div>
-            <div class="dept-hdr-val" style="color:${tot.reel>0?'#fff':'rgba(255,255,255,.25)'}">${tot.reel?fe(tot.reel):'—'}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Écart</div>
-            <div class="dept-hdr-val" style="color:${ec>=0?'var(--green)':'var(--red)'}">${ec>=0?'+':''}${fe(ec)}</div>
-          </div>
-          <div class="dept-hdr-kpi">
-            <div class="dept-hdr-lbl">Imprévus</div>
-            ${(() => {
-              const impSec = dept.sections.find(s => s.s === 'DÉPENSES IMPRÉVUES');
-              const impReel = impSec ? impSec.lines.reduce((a,l) => a + (l.reel||0), 0) : 0;
-              const impEst = impSec ? impSec.lines.reduce((a,l) => a + (l.est||0), 0) : 0;
-              if (impReel > 0) return `<div class="dept-hdr-val" style="color:var(--red)">${fe(impReel)}</div>`;
-              if (impEst > 0) return `<div class="dept-hdr-val" style="color:var(--amber)">${fe(impEst)}</div>`;
-              return `<div class="dept-hdr-val" style="color:rgba(255,255,255,.25)">—</div>`;
-            })()}
-          </div>
-          <div class="dept-hdr-kpi">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-              <span class="dept-hdr-lbl">Consommé</span>
-              <span style="font-size:14px;font-weight:700;color:${p>=100?'var(--red)':p>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'}">${p}%</span>
-            </div>
-            <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${Math.min(p,100)}%;background:${p>=100?'var(--red)':p>=75?'var(--amber)':DEPT_COLORS[DEPTS.findIndex(d=>d.id===id)]||'var(--indigo)'};border-radius:3px;transition:width .6s"></div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
