@@ -1861,7 +1861,13 @@ function go(id,tabEl){
 
 /* ═══ INIT ═══ */
 async function initApp(){
-  await loadRecettes();
+  // Fetch unmatched + recettes in parallel BEFORE rendering any tabs
+  const [, unmJson] = await Promise.all([
+    loadRecettes(),
+    fetch(`${API}/api/unmatched?session=${SESSION}`, {headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null)
+  ]);
+  if (unmJson?.data) _unmatchedRows = unmJson.data;
+
   renderBilan();
   // Render whichever dept tab is active
   const activeNav = document.querySelector('.nav-item.on');
@@ -2302,9 +2308,9 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
-    <button class="df-save-btn" style="flex:2" id="ef-save-btn"
+    <button class="drawer-btn" id="ef-save-btn"
       onclick="saveLigne('${deptId}',${sectionIdx},${lineIdx},${isNew})">
-      ${isNew ? '+ Créer la ligne' : 'Enregistrer'}
+      ${isNew ? '+ Créer' : 'Enregistrer'}
     </button>
   `;
 
@@ -2505,56 +2511,49 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
 
     <!-- Current value -->
     <div class="drawer-section">
-      <div class="drawer-section-title">Estimation actuelle</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="drawer-section-title" style="margin-bottom:0">Estimation actuelle</div>
+        <button onclick="closeDrawer();openEditLigne('${deptId}',${sectionIdx},${lineIdx})" style="font-size:10px;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Modifier
+        </button>
+      </div>
       <div class="drawer-kpi-row">
         <div class="drawer-kpi">
           <div class="drawer-kpi-label">Au budget HT</div>
           <div class="drawer-kpi-val" style="color:#818cf8">${fe(line.est)}</div>
         </div>
         <div class="drawer-kpi">
-          <div class="drawer-kpi-label">Au budget TTC</div>
-          <div class="drawer-kpi-val" style="color:var(--text-muted)">${fe(ttcEst)}</div>
+          <div class="drawer-kpi-label">TVA</div>
+          <div class="drawer-kpi-val" style="color:var(--text-muted)">${line.tva ? (line.tva * 100).toFixed(1) + '%' : '—'}</div>
         </div>
       </div>
       ${line.obs ? `<div style="font-size:.72em;color:var(--text-dim);padding:8px 10px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3)">${line.obs}</div>` : ''}
-      ${line.qonto_ref ? `<div style="font-size:.65em;color:var(--indigo);margin-top:6px;padding:5px 8px;background:rgba(99,102,241,.08);border-radius:5px">🔗 Réf. Qonto: ${line.qonto_ref}</div>` : ''}
     </div>
 
     ${vhrContextHtml}
 
-    <!-- VISION: Staffing data -->
+    <!-- Comparaison éditions -->
     <div class="drawer-section">
       <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Source & décomposition
-        <span class="future-badge">✦ Fonctionnalité future</span>
+        Comparaison
+        <span class="future-badge">✦ Bientôt</span>
       </div>
 
-      <!-- Mock breakdown card -->
-      <div style="background:var(--surface-2);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid rgba(168,85,247,.15);opacity:.7;position:relative;overflow:hidden">
-        <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(168,85,247,.03) 8px,rgba(168,85,247,.03) 16px)"></div>
-        <div style="position:relative">
-          <div style="font-size:.65em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#818cf8;margin-bottom:10px">Décomposition estimée</div>
-          ${[
-            {label:'Édition précédente (Paris XXL 2025)', val: Math.round((line.est||0)*0.85), note:'Base référence'},
-            {label:'Ajustement inflation +8%', val: Math.round((line.est||0)*0.08), note:'Automatique'},
-            {label:'Ajout pôle — révision terrain', val: Math.round((line.est||0)*0.07), note:'Soumis par le pôle'},
-          ].map(r => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-              <div>
-                <div style="font-size:.72em;color:var(--text-muted)">${r.label}</div>
-                <div style="font-size:.6em;color:var(--text-dim)">${r.note}</div>
-              </div>
-              <span style="font-size:.75em;font-weight:600;color:#fff;white-space:nowrap">${fe(r.val)}</span>
-            </div>`).join('')}
+      <div style="border:1px dashed rgba(255,255,255,.1);border-radius:10px;padding:14px">
+        ${[
+          {event:'Paris XXL 2025', val: Math.round((line.est||0)*0.92)},
+          {event:'Bordeaux 2025', val: Math.round((line.est||0)*0.78)},
+          {event:'EPK 2025', val: Math.round((line.est||0)*0.65)},
+        ].map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+            <span style="font-size:13px;color:var(--text-muted)">${r.event}</span>
+            <span style="font-size:13px;font-weight:600;color:#fff">${fe(r.val)}</span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:2px">
+          <span style="font-size:13px;font-weight:600;color:var(--text-dim)">2026 (actuel)</span>
+          <span style="font-size:13px;font-weight:700;color:#818cf8">${fe(line.est)}</span>
         </div>
-      </div>
-
-      <!-- CTA -->
-      <div style="border:1px dashed rgba(168,85,247,.3);border-radius:10px;padding:16px;text-align:center">
-        <div style="font-size:1.4em;margin-bottom:8px">🔗</div>
-        <div style="font-size:.78em;font-weight:600;color:#c4b5fd;margin-bottom:4px">Connecter les données staffing</div>
-        <div style="font-size:.68em;color:var(--text-dim);line-height:1.5">Les chefs de pôle soumettront leurs estimations directement depuis leur interface. Les données remonteront ici en temps réel.</div>
-        <div style="margin-top:10px;font-size:.65em;padding:5px 12px;border-radius:6px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:#c4b5fd;display:inline-block">Disponible prochainement</div>
       </div>
     </div>
   `;
@@ -2562,10 +2561,6 @@ function openEstDrawer(deptId, sectionIdx, lineIdx) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
-    <button class="edit-ligne-btn" style="flex:1;padding:9px;border-radius:7px;justify-content:center;font-size:.75em" onclick="closeDrawer();openEditLigne('${deptId}',${sectionIdx},${lineIdx})">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Modifier l'estimation
-    </button>
   `;
 
   document.getElementById('drawer-overlay').classList.add('open');
