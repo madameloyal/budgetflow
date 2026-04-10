@@ -688,7 +688,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:.78em;outline:none">
         <option value="">Toutes</option>
         <option value="matched">✓ Reliées</option>
-        <option value="unmatched">⚠ Non reliées</option>
+        <option value="unmatched">⚠ Non reliées (toutes)</option>
+        <option value="unmatched-nodept">⚠ Non reliées — sans département</option>
+        <option value="unmatched-noligne">⚠ Non reliées — dept identifié, sans ligne</option>
         <option value="revenue">Recettes</option>
       </select>
     </div>
@@ -4723,6 +4725,8 @@ function filterReleve() {
     if (catFilter && txDept.toUpperCase() !== catFilter.toUpperCase()) return false;
     if (matchFilter === 'matched' && !isMatched) return false;
     if (matchFilter === 'unmatched' && (isMatched || isRec)) return false;
+    if (matchFilter === 'unmatched-nodept' && (isMatched || isRec || txDept)) return false;
+    if (matchFilter === 'unmatched-noligne' && (isMatched || isRec || !txDept)) return false;
     if (matchFilter === 'revenue' && !isRec) return false;
     if (search) {
       const hay = `${tx.fourn} ${tx.note} ${tx.cat} ${tx.ref} ${txDept}`.toLowerCase();
