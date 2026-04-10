@@ -507,14 +507,15 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
   </div>
 
-  <!-- P&L Recettes — clickable summary row -->
+  <!-- P&L Recettes — summary + expandable detail -->
   <div class="sdiv" style="align-items:center">
     <div class="sdl"></div>
     <div class="sdt" style="white-space:nowrap">Recettes</div>
     <div class="sdl"></div>
     <span style="font-size:10px;color:var(--text-dim);margin-left:8px;letter-spacing:.5px;flex-shrink:0">HT</span>
   </div>
-  <div id="b-rec-summary" class="mb" style="cursor:pointer" onclick="openRecettesDrawer()"></div>
+  <div id="b-rec-summary" class="mb"></div>
+  <div id="b-rec-expanded" class="mb" style="display:none"></div>
 
   <!-- ── Dépenses par département ── -->
   <div class="sdiv" style="align-items:center">
@@ -1055,10 +1056,8 @@ function renderBilan(){
     totalRecReel += cat.rows.reduce((a,r)=>a+(r.reel||0),0);
   });
 
-  // Summary row on Bilan — clickable to open drawer
+  // Summary row on Bilan — category rows clickable for drawer, toggle for expand
   if(el('b-rec-summary')) {
-    const nCats = REC.length;
-    const nLines = REC.reduce((a,c)=>a+c.rows.length,0);
     el('b-rec-summary').innerHTML = `
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <table class="tbl">
@@ -1072,7 +1071,7 @@ function renderBilan(){
             ${REC.map((cat,ci) => {
               const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
               const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
-              return `<tr>
+              return `<tr style="cursor:pointer" onclick="openRecCatDrawer(${ci})">
                 <td style="font-weight:500;color:#fff">${cat.cat}</td>
                 <td><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
                 <td><span class="cro">${catReel?fe(catReel):'—'}</span></td>
@@ -1088,7 +1087,75 @@ function renderBilan(){
           </tr>
         </table>
       </div>
-      <div style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-dim);cursor:pointer">Cliquer pour détails et édition →</div>`;
+      <div onclick="toggleRecDetail()" style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-dim);cursor:pointer;transition:color .15s" onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-dim)'">
+        <span id="rec-toggle-label">Détails et édition →</span>
+      </div>`;
+  }
+
+  // Expanded detail view — full recettes table with collapsible sections
+  if(el('b-rec-expanded')) {
+    const sections = REC.map((cat, ci) => {
+      const catEst  = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
+      const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
+      const nLines = cat.rows.length;
+      const dataRows = cat.rows.map((r, ri) => {
+        const reeH = r.reel||0;
+        return `<tr style="cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">
+          <td style="font-weight:500;color:#fff">${r.l}</td>
+          <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
+          <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
+          <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="sec-block">
+        <table class="tbl">
+          <tr class="shead" onclick="const t=document.getElementById('brs${ci}'),h=document.getElementById('brh${ci}'),a=document.getElementById('bra${ci}');if(t.style.display==='none'){t.style.display='';h.style.display='';a.style.transform='rotate(90deg)'}else{t.style.display='none';h.style.display='none';a.style.transform='rotate(0deg)'}">
+            <td colspan="4" style="padding:0">
+              <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
+                <span id="bra${ci}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(90deg);flex-shrink:0;margin-right:10px">▶</span>
+                <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${cat.cat}</span>
+                <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
+                <span style="flex:1"></span>
+                <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(catEst)}</span>
+              </div>
+            </td>
+          </tr>
+          <tr id="brh${ci}">
+            <th class="tl" style="min-width:180px">Poste</th>
+            <th>Estimé HT</th>
+            <th>Encaissé HT</th>
+            <th>Écart</th>
+          </tr>
+          <tbody id="brs${ci}">${dataRows}</tbody>
+          <tr class="trow">
+            <td>TOTAL HT</td>
+            <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
+            <td><span class="cro" style="font-weight:700;color:#fff">${catReel?fe(catReel):'—'}</span></td>
+            <td>${ecH(catEst-catReel,false,catReel>0)}</td>
+          </tr>
+        </table>
+      </div>`;
+    });
+    const grandTotalHtml = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:8px">
+      <table class="tbl"><tr class="trow" style="border-top:none!important">
+        <td style="font-size:14px;font-weight:700;color:var(--green)">TOTAL RECETTES</td>
+        <td><span class="cro" style="font-weight:700;color:var(--green)">${fe(totalRecEst)}</span></td>
+        <td><span class="cro" style="font-weight:700;color:var(--green)">${totalRecReel?fe(totalRecReel):'—'}</span></td>
+        <td>${ecH(totalRecEst-totalRecReel,false,totalRecReel>0)}</td>
+      </tr></table>
+    </div>`;
+    el('b-rec-expanded').innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">${sections.join('')}</div>
+      ${grandTotalHtml}
+      <div onclick="toggleRecDetail()" style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-dim);cursor:pointer;transition:color .15s" onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-dim)'">
+        ← Replier
+      </div>`;
+  }
+
+  // Sync expanded/collapsed display state after re-render
+  if(el('b-rec-summary') && el('b-rec-expanded')) {
+    el('b-rec-summary').style.display = _recDetailOpen ? 'none' : '';
+    el('b-rec-expanded').style.display = _recDetailOpen ? '' : 'none';
   }
 
   // ── Résultat net — P&L bottom line ────────────────────────────
@@ -2846,44 +2913,136 @@ async function openImprevuesDrawer(deptId) {
 // ════════════════════════════════════════════════════
 // RECETTES DRAWER — full detail + edit
 // ════════════════════════════════════════════════════
-function openRecettesDrawer() {
-  document.getElementById('drawer-title').innerHTML = `<span style="color:var(--green)">📊</span> Recettes`;
-  document.getElementById('drawer-sub').innerHTML = `Détail par catégorie · ${REC.reduce((a,c)=>a+c.rows.length,0)} lignes`;
+// ════════════════════════════════════════════════════
+// RECETTES — toggle detail + category drawer
+// ════════════════════════════════════════════════════
+let _recDetailOpen = false;
+function toggleRecDetail() {
+  _recDetailOpen = !_recDetailOpen;
+  const summary = document.getElementById('b-rec-summary');
+  const expanded = document.getElementById('b-rec-expanded');
+  if (_recDetailOpen) {
+    summary.style.display = 'none';
+    expanded.style.display = '';
+  } else {
+    summary.style.display = '';
+    expanded.style.display = 'none';
+  }
+}
 
-  let totalEst = 0, totalReel = 0;
-  const catHtml = REC.map((cat, ci) => {
-    const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
-    const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
-    totalEst += catEst; totalReel += catReel;
-    const rows = cat.rows.map((r, ri) => {
-      const reeH = r.reel||0;
-      return `<tr style="cursor:pointer" onclick="closeDrawer();openRecetteDrawer(${ci},${ri})">
-        <td style="font-weight:500;color:#fff">${r.l}</td>
-        <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
-        <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
-        <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
-      </tr>`;
-    }).join('');
-    return `<div class="sec-block">
+function openRecCatDrawer(ci) {
+  const cat = REC[ci];
+  if (!cat) return;
+  const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
+  const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
+
+  document.getElementById('drawer-title').innerHTML = `<span style="color:var(--green)">📊</span> ${cat.cat}`;
+  document.getElementById('drawer-sub').innerHTML = `${cat.rows.length} ligne${cat.rows.length>1?'s':''} · Estimé ${fe(catEst)}`;
+
+  // All positive transactions
+  const posTx = (_releveAllTx||[]).filter(t => (t.ttc||0) > 0);
+
+  // Smart match: for each line, find tx where fournisseur fuzzy-matches the line name
+  const matchedTxIds = new Set();
+  const lineMatches = cat.rows.map((r, ri) => {
+    const lineName = normStr(r.l||'');
+    const matches = posTx.filter(t => {
+      if (matchedTxIds.has(t.ref||t.fourn+t.ttc)) return false;
+      const fourn = normStr(t.fourn||'');
+      const note = normStr(t.note||'');
+      return (lineName && fourn && fuzzyMatchClient(lineName, fourn))
+        || (lineName && note && note.includes(lineName))
+        || (fourn && lineName && fourn.includes(lineName));
+    });
+    matches.forEach(t => matchedTxIds.add(t.ref||t.fourn+t.ttc));
+    return { row: r, ri, matches };
+  });
+
+  // Also match by category name for tx not yet matched to a specific line
+  const catNorm = normStr(cat.cat);
+  const catMatched = posTx.filter(t => {
+    if (matchedTxIds.has(t.ref||t.fourn+t.ttc)) return false;
+    const fourn = normStr(t.fourn||'');
+    const note = normStr(t.note||'');
+    const txCat = normStr(t.cat||'');
+    return txCat === catNorm || (catNorm && fourn && fourn.includes(catNorm))
+      || (catNorm && note && note.includes(catNorm));
+  });
+  catMatched.forEach(t => matchedTxIds.add(t.ref||t.fourn+t.ttc));
+
+  const allMatched = [...lineMatches.flatMap(lm => lm.matches), ...catMatched];
+  const matchedTotal = allMatched.reduce((a,t) => a + (t.ttc||0), 0);
+
+  // Unmatched positive tx
+  const unmatched = posTx.filter(t => !matchedTxIds.has(t.ref||t.fourn+t.ttc));
+
+  // Line breakdown — show match count per line
+  const linesHtml = lineMatches.map(({row: r, ri, matches}) => {
+    const reeH = r.reel||0;
+    const matchBadge = matches.length > 0
+      ? `<span style="font-size:10px;color:var(--green);background:rgba(52,211,153,.08);padding:1px 5px;border-radius:3px;margin-left:6px">${matches.length} tx</span>`
+      : '';
+    return `<tr style="cursor:pointer" onclick="closeDrawer();openRecetteDrawer(${ci},${ri})">
+      <td style="font-weight:500;color:#fff">${r.l}${matchBadge}</td>
+      <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
+      <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
+      <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
+    </tr>`;
+  }).join('');
+
+  // Matched transactions display — store tx data globally for onclick access
+  window._recDrawerTx = [];
+  const txIdx = (t) => { window._recDrawerTx.push(t); return window._recDrawerTx.length - 1; };
+
+  const txRow = (t, showLine, linkLigne) => {
+    const idx = txIdx(t);
+    const esc = (s) => (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const linkBtn = linkLigne
+      ? `<button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}];linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,'${esc(linkLigne)}',${ci})" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0">Relier →</button>`
+      : '';
+    return `<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.02);gap:10px">
+      <span style="font-size:12px;color:var(--text-dim);width:75px;flex-shrink:0">${(t.date||'').split(' ')[0]||'—'}</span>
+      <span style="font-size:13px;color:#fff;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.fourn||'—'}</span>
+      ${showLine?`<span style="font-size:10px;color:var(--text-dim);background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;flex-shrink:0">${showLine}</span>`:''}
+      <span style="font-size:13px;font-weight:600;color:var(--green);white-space:nowrap;flex-shrink:0">+${fmtAmt(t.ttc)} €</span>
+      ${linkBtn}
+    </div>`;
+  };
+
+  // Unmatched tx row — with line picker
+  const allCatLines = cat.rows.filter(r => r.l && !r.l.startsWith('(ligne')).map(r => r.l);
+  const txRowPicker = (t) => {
+    const idx = txIdx(t);
+    const opts = allCatLines.map(l => `<option value="${l.replace(/"/g,'&quot;')}">${l}</option>`).join('');
+    return `<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.02);gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text-dim);width:75px;flex-shrink:0">${(t.date||'').split(' ')[0]||'—'}</span>
+      <span style="font-size:13px;color:#fff;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">${t.fourn||'—'}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--green);white-space:nowrap;flex-shrink:0">+${fmtAmt(t.ttc)} €</span>
+      <select id="rec-pick-${idx}" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface-2);border:1px solid var(--border);color:#fff;max-width:120px;flex-shrink:0">
+        <option value="">Ligne…</option>${opts}
+      </select>
+      <button onclick="event.stopPropagation();const t=window._recDrawerTx[${idx}],sel=document.getElementById('rec-pick-${idx}');if(!sel.value){showToast('⚠','Choisis une ligne','amber');return;}linkRecTx(t.fourn||'',t.note||'',t.date||'',t.ht||0,t.ttc||0,sel.value,${ci})" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0">Relier →</button>
+    </div>`;
+  };
+
+  let txHtml = '';
+  lineMatches.forEach(({row, matches}) => {
+    matches.forEach(t => { txHtml += txRow(t, row.l, row.l); });
+  });
+  catMatched.forEach(t => { txHtml += txRowPicker(t); });
+
+  if (!txHtml) txHtml = `<div style="font-size:12px;color:var(--text-dim);padding:12px 14px">Aucune transaction détectée</div>`;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
       <table class="tbl">
-        <tr class="shead" onclick="const t=document.getElementById('drs${ci}'),h=document.getElementById('drh${ci}'),a=document.getElementById('dra${ci}');if(t.style.display==='none'){t.style.display='';h.style.display='';a.style.transform='rotate(90deg)'}else{t.style.display='none';h.style.display='none';a.style.transform='rotate(0deg)'}">
-          <td colspan="4" style="padding:0">
-            <div style="display:flex;align-items:center;padding:12px 16px;gap:0">
-              <span id="dra${ci}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(90deg);flex-shrink:0;margin-right:10px">▶</span>
-              <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${cat.cat}</span>
-              <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${cat.rows.length} ligne${cat.rows.length>1?'s':''}</span>
-              <span style="flex:1"></span>
-              <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(catEst)}</span>
-            </div>
-          </td>
-        </tr>
-        <tr id="drh${ci}">
+        <thead><tr>
           <th class="tl" style="min-width:140px">Poste</th>
           <th>Estimé HT</th>
           <th>Encaissé HT</th>
           <th>Écart</th>
-        </tr>
-        <tbody id="drs${ci}">${rows}</tbody>
+        </tr></thead>
+        <tbody>${linesHtml}</tbody>
         <tr class="trow">
           <td>TOTAL HT</td>
           <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
@@ -2891,21 +3050,25 @@ function openRecettesDrawer() {
           <td>${ecH(catEst-catReel,false,catReel>0)}</td>
         </tr>
       </table>
-    </div>`;
-  }).join('');
-
-  document.getElementById('drawer-body').innerHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
-      ${catHtml}
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden">
-      <table class="tbl"><tr class="trow" style="border-top:none!important">
-        <td style="font-size:14px;font-weight:700;color:var(--green)">TOTAL RECETTES</td>
-        <td><span class="cro" style="font-weight:700;color:var(--green)">${fe(totalEst)}</span></td>
-        <td><span class="cro" style="font-weight:700;color:var(--green)">${totalReel?fe(totalReel):'—'}</span></td>
-        <td>${ecH(totalEst-totalReel,false,totalReel>0)}</td>
-      </tr></table>
-    </div>`;
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
+      <span style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Transactions détectées</span>
+      ${allMatched.length ? `<span style="font-size:12px;font-weight:600;color:var(--green)">+${fmtAmt(matchedTotal)} €</span>` : ''}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;max-height:240px;overflow-y:auto">
+      ${txHtml}
+    </div>
+
+    ${unmatched.length > 0 ? `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
+      <span style="font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Autres recettes non reliées</span>
+      <span style="font-size:11px;color:var(--text-dim)">${unmatched.length} transaction${unmatched.length>1?'s':''}</span>
+    </div>
+    <div style="background:var(--surface);border:1px dashed rgba(255,255,255,.06);border-radius:10px;overflow:hidden;max-height:220px;overflow-y:auto">
+      ${unmatched.slice(0,8).map(t => txRowPicker(t)).join('')}
+      ${unmatched.length > 8 ? `<div style="font-size:11px;color:var(--text-dim);padding:8px 14px;text-align:center">+ ${unmatched.length-8} autres · voir Transactions</div>` : ''}
+    </div>` : ''}`;
 
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
@@ -2914,6 +3077,7 @@ function openRecettesDrawer() {
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 }
+
 
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
@@ -3225,6 +3389,30 @@ async function reattribuerTx(dept, ligne, fourn, note, ht, ttc) {
 
   // Background: refresh budget data for accurate totals (non-blocking)
   refreshBudgetData().catch(() => {});
+}
+
+// ── LINK RECETTE ↔ TRANSACTION ──
+async function linkRecTx(fourn, note, date, ht, ttc, ligne, ci) {
+  const btn = event?.target?.closest?.('button');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  try {
+    const resp = await fetch(`${API}/api/assign-direct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session: SESSION, dept: 'RECETTES', ligne, fourn, note, date, ht: Math.abs(ht), ttc: Math.abs(ttc) }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
+    closeDrawer();
+    await refreshBudgetData();
+    showToast('✅ Recette reliée', `+${fmtAmt(Math.abs(ttc))} € → "${ligne}"`, 'green');
+    setTimeout(() => openRecCatDrawer(ci), 300);
+  } catch (e) {
+    if (btn) { btn.textContent = 'Relier →'; btn.disabled = false; }
+    showToast('⚠ Erreur', e.message, 'red');
+  }
 }
 
 // ════════════════════════════════════════════════════
