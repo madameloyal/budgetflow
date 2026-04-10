@@ -38,7 +38,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .nm.pl{color:#333;cursor:default;font-style:normal}
 .nm.pl:hover{color:#333}
 .dt.on{background:rgba(255,255,255,.06);color:#fff;font-weight:600}
-.dept-tabs{max-width:1020px;margin:0 auto;padding:2px 20px;display:flex;overflow-x:auto;scrollbar-width:none;background:rgba(0,0,0,.15);border-top:1px solid rgba(255,255,255,.03)}
+.dept-tabs-bg{background:rgba(0,0,0,.15);border-top:1px solid rgba(255,255,255,.03)}
+.dept-tabs{max-width:1020px;margin:0 auto;padding:2px 20px;display:flex;overflow-x:auto;scrollbar-width:none}
 .dept-tabs::-webkit-scrollbar{display:none}
 .dt{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .15s}
 .dt:hover{color:var(--text-muted)}
@@ -399,6 +400,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <span style="flex:1"></span>
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
   </div>
+  <div class="dept-tabs-bg">
   <div id="dept-tabs" class="dept-tabs">
     <button class="dt" data-idx="0" onclick="goDeptTab('reperages',this)">Repérages</button>
     <button class="dt" data-idx="1" onclick="goDeptTab('vhr',this)">VHR</button>
@@ -410,6 +412,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="dt" data-idx="7" onclick="goDeptTab('sceno',this)">Aménagement</button>
     <button class="dt" data-idx="8" onclick="goDeptTab('partenariat',this)">Partenariat</button>
     <button class="dt" data-idx="9" onclick="goDeptTab('communication',this)">Communication</button>
+  </div>
   </div>
 </nav>
 
