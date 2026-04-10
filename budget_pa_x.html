@@ -1126,7 +1126,16 @@ function renderBilan(){
             <th>Encaissé HT</th>
             <th>Écart</th>
           </tr>
-          <tbody id="brs${ci}">${dataRows}</tbody>
+          <tbody id="brs${ci}">${dataRows}
+          <tr class="add-ligne-row">
+            <td colspan="4" style="padding:4px 10px">
+              <button class="add-ligne-btn" onclick="openAddRecLigne('${cat.cat.replace(/'/g,"\\'")}')">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Ajouter une ligne
+              </button>
+            </td>
+          </tr>
+          </tbody>
           <tr class="trow">
             <td>TOTAL HT</td>
             <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
@@ -1146,6 +1155,12 @@ function renderBilan(){
     </div>`;
     el('b-rec-expanded').innerHTML = `
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">${sections.join('')}</div>
+      <div style="padding:8px 0">
+        <button class="add-ligne-btn" onclick="openAddRecLigne('')" style="width:100%">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle catégorie de recette
+        </button>
+      </div>
       ${grandTotalHtml}
       <div onclick="toggleRecDetail()" style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-dim);cursor:pointer;transition:color .15s" onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-dim)'">
         ← Replier
@@ -1534,6 +1549,128 @@ function upRecSt(ci,ri,sel){
     }).catch(e=>console.warn('Recettes API write status failed:', e));
   }
   renderBilan();
+}
+
+function openAddRecLigne(preSection) {
+  const existingCats = REC.map(c => c.cat);
+  const catOpts = existingCats.map(c => `<option value="${c}">`).join('');
+  const isNewCat = !preSection;
+
+  document.getElementById('drawer-title').innerHTML = isNewCat
+    ? '<span style="color:var(--green)">+</span> Nouvelle catégorie'
+    : '<span style="color:var(--green)">+</span> Nouvelle ligne';
+  document.getElementById('drawer-sub').innerHTML = isNewCat
+    ? 'Recettes · Nouvelle catégorie + première ligne'
+    : `Recettes · ${preSection}`;
+
+  const inputSt = 'width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:monospace;font-size:.9em;outline:none';
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Ligne de recette</div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Nom *</label>
+        <input id="rec-add-nom" type="text" placeholder="ex: EARLY, BAR VIP, Sponsor Gold…" style="${inputSt};font-family:'DM Sans',sans-serif">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Quantité</label>
+          <input id="rec-add-qte" type="number" min="0" placeholder="0" style="${inputSt}">
+        </div>
+        <div>
+          <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Prix unitaire</label>
+          <input id="rec-add-pu" type="number" min="0" step="0.01" placeholder="0" style="${inputSt}">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Estimé HT (€)</label>
+        <input id="rec-add-est" type="number" min="0" step="0.01" placeholder="Auto si qté × prix" style="${inputSt}">
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px">Laisse vide pour calculer qté × prix unitaire automatiquement.</div>
+      </div>
+
+      <div style="margin:16px 0 14px;height:1px;background:rgba(255,255,255,.06)"></div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:.65em;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Catégorie</label>
+        <input id="rec-add-cat" type="text" list="rec-add-cat-list"
+          placeholder="Choisir ou créer…" value="${preSection||''}"
+          style="${inputSt};font-family:'DM Sans',sans-serif">
+        <datalist id="rec-add-cat-list">${catOpts}</datalist>
+        ${isNewCat ? '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">Tape un nouveau nom pour créer une catégorie, ou choisis une existante.</div>' : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    <button class="drawer-btn primary" id="rec-add-save" onclick="saveRecLigne()">+ Créer</button>`;
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  setTimeout(() => document.getElementById('rec-add-nom')?.focus(), 80);
+}
+
+async function saveRecLigne() {
+  const nom = document.getElementById('rec-add-nom')?.value.trim();
+  const cat = document.getElementById('rec-add-cat')?.value.trim();
+  const qte = parseFloat(document.getElementById('rec-add-qte')?.value) || 0;
+  const pu  = parseFloat(document.getElementById('rec-add-pu')?.value) || 0;
+  let est   = parseFloat(document.getElementById('rec-add-est')?.value) || 0;
+
+  if (!nom) {
+    document.getElementById('rec-add-nom').style.borderColor = 'rgba(248,113,113,.6)';
+    document.getElementById('rec-add-nom').focus();
+    return;
+  }
+  if (!cat) {
+    document.getElementById('rec-add-cat').style.borderColor = 'rgba(248,113,113,.6)';
+    document.getElementById('rec-add-cat').focus();
+    return;
+  }
+
+  // Auto-calc est from qte × pu if not manually set
+  if (!est && qte && pu) est = Math.round(qte * pu);
+
+  const btn = document.getElementById('rec-add-save');
+  if (btn) { btn.textContent = 'En cours…'; btn.disabled = true; }
+
+  try {
+    // obs = prix unitaire (stored in col C for RECETTES)
+    // rh = quantité (stored in col H) — but add-ligne doesn't have a rh field,
+    // so we write qte via a separate update call after insertion
+    const resp = await fetch(`${API}/api/budget/add-ligne`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        session: SESSION, dept: 'RECETTES',
+        section: cat, ligne: nom,
+        obs: pu ? String(pu) : '',
+        est_ht: est, statut: 'ESTIMATION'
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
+    const result = await resp.json();
+
+    // Write QTE to col H if provided (add-ligne doesn't have a rh field)
+    if (qte && result.inserted_row) {
+      await fetch(`${API}/api/budget/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({session: SESSION, dept: 'RECETTES', row: result.inserted_row, field: 'rh', value: String(qte)})
+      }).catch(() => {});
+    }
+
+    closeDrawer();
+    await refreshBudgetData();
+    renderBilan();
+    showToast('✅ Ligne créée', `"${nom}" ajoutée à ${cat}`, 'green');
+  } catch (e) {
+    if (btn) { btn.textContent = '+ Créer'; btn.disabled = false; }
+    showToast('⚠ Erreur', e.message, 'red');
+  }
 }
 
 function openRecetteDrawer(ci, ri) {

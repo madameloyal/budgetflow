@@ -517,6 +517,26 @@ def add_ligne(payload: AddLigne):
         if sheet_id is None:
             raise HTTPException(status_code=404, detail=f"Sheet '{tab}' not found")
 
+        # If section doesn't exist yet, insert a section header row first
+        if not in_section and payload.section.strip():
+            header_row = [""] * 12
+            header_row[COL["section"]] = payload.section.strip()
+            svc.batchUpdate(
+                spreadsheetId=SHEET_ID,
+                body={"requests": [{"insertDimension": {
+                    "range": {"sheetId": sheet_id, "dimension": "ROWS",
+                              "startIndex": insert_after, "endIndex": insert_after + 1},
+                    "inheritFromBefore": True
+                }}]}
+            ).execute()
+            svc.values().update(
+                spreadsheetId=SHEET_ID,
+                range=f"{tab}!A{insert_after + 1}:L{insert_after + 1}",
+                valueInputOption="USER_ENTERED",
+                body={"values": [header_row]}
+            ).execute()
+            insert_after += 1  # data line goes after the new header
+
         # Insert a blank row at insert_after position
         svc.batchUpdate(
             spreadsheetId=SHEET_ID,
