@@ -3064,6 +3064,9 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
           <option value="">Choisir une ligne…</option>
         </select>
       </div>
+      <div id="assign-divers-wrap" style="display:none;margin-bottom:14px">
+        <button onclick="selectAssignDivers()" style="width:100%;padding:10px;border-radius:8px;border:1px dashed rgba(251,191,36,.25);background:rgba(251,191,36,.04);color:var(--amber);font-family:'DM Sans',sans-serif;font-size:.78em;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(251,191,36,.08)'" onmouseout="this.style.background='rgba(251,191,36,.04)'">Pas sûr ? → Divers (non classé)</button>
+      </div>
       <div style="margin-top:18px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
         <div style="font-size:.65em;color:var(--text-dim);display:flex;align-items:center;gap:6px">
           <span style="color:var(--text-muted)">\u21C4</span> R\u00E9attribution vers une autre session (BDX, EPK\u2026) \u2014 <span style="color:var(--amber);font-weight:600">bient\u00F4t</span>
@@ -3111,35 +3114,77 @@ function populateAssignLines(tabName) {
 
   // Always add Divers fallback
   if (!lines.includes('Divers (non classé)')) lines.push('Divers (non classé)');
-
-  // Store full list for search filtering
   window._assignLines = lines;
 
-  sel.innerHTML = '<option value="">Choisir une ligne…</option>' +
-    lines.map(l => `<option value="${l}">${l}</option>`).join('');
+  // Build searchable list UI
+  sel.style.display = 'none';
+  let listWrap = document.getElementById('assign-list-wrap');
+  if (listWrap) listWrap.remove();
+
+  listWrap = document.createElement('div');
+  listWrap.id = 'assign-list-wrap';
+  listWrap.innerHTML = `
+    <input id="assign-search" type="text" placeholder="Rechercher une ligne…"
+      style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82em;outline:none;margin-bottom:8px"
+      oninput="filterAssignList(this.value)">
+    <div id="assign-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;background:var(--surface-2)"></div>`;
+  wrap.appendChild(listWrap);
   wrap.style.display = '';
 
-  // Add or update search input
-  let searchWrap = document.getElementById('assign-search-wrap');
-  if (!searchWrap) {
-    searchWrap = document.createElement('div');
-    searchWrap.id = 'assign-search-wrap';
-    searchWrap.style.cssText = 'margin-bottom:10px';
-    searchWrap.innerHTML = `<input id="assign-search" type="text" placeholder="Rechercher une ligne…"
-      style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82em;outline:none"
-      oninput="filterAssignLines(this.value)">`;
-    wrap.insertBefore(searchWrap, sel);
-  }
-  document.getElementById('assign-search').value = '';
+  renderAssignList(lines);
+
+  // Show the Divers quick button
+  const diversWrap = document.getElementById('assign-divers-wrap');
+  if (diversWrap) diversWrap.style.display = '';
 }
 
-function filterAssignLines(q) {
+function selectAssignDivers() {
   const sel = document.getElementById('assign-ligne');
+  sel.innerHTML = '<option value="Divers (non classé)" selected>Divers (non classé)</option>';
+  sel.value = 'Divers (non classé)';
+  // Highlight in list if visible
+  document.querySelectorAll('#assign-list > div').forEach(d => {
+    d.style.background = ''; d.style.fontWeight = '';
+  });
+  const diversItem = [...document.querySelectorAll('#assign-list > div')].find(d => d.textContent.includes('Divers'));
+  if (diversItem) { diversItem.style.background = 'rgba(251,191,36,.1)'; diversItem.style.fontWeight = '600'; diversItem.style.color = '#fff'; }
+  showToast('✓ Divers sélectionné', 'Confirme pour assigner à « Divers (non classé) »', 'amber');
+}
+
+function renderAssignList(lines) {
+  const list = document.getElementById('assign-list');
+  const sel = document.getElementById('assign-ligne');
+  if (!list) return;
+  list.innerHTML = lines.map(l => {
+    const isDivers = l === 'Divers (non classé)';
+    return `<div onclick="selectAssignLine(this,'${l.replace(/'/g,"\\'")}')"
+      style="padding:8px 12px;font-size:12px;color:${isDivers?'var(--amber)':'#ccc'};cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s${isDivers?';font-style:italic':''}"
+      onmouseover="this.style.background='rgba(255,255,255,.05)'"
+      onmouseout="this.style.background=''">${l}</div>`;
+  }).join('') || '<div style="padding:12px;font-size:12px;color:var(--text-dim);text-align:center">Aucun résultat</div>';
+}
+
+function selectAssignLine(el, value) {
+  const sel = document.getElementById('assign-ligne');
+  // Update hidden select
+  sel.innerHTML = `<option value="${value}" selected>${value}</option>`;
+  sel.value = value;
+  // Highlight selected
+  document.querySelectorAll('#assign-list > div').forEach(d => {
+    d.style.background = '';
+    d.style.fontWeight = '';
+  });
+  el.style.background = 'rgba(99,102,241,.1)';
+  el.style.fontWeight = '600';
+  el.style.color = '#fff';
+}
+
+function filterAssignList(q) {
   const norm = q.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const lines = window._assignLines || [];
-  sel.innerHTML = '<option value="">Choisir une ligne…</option>' +
-    lines.filter(l => l.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(norm))
-      .map(l => `<option value="${l}">${l}</option>`).join('');
+  const lines = (window._assignLines || []).filter(l =>
+    l.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(norm)
+  );
+  renderAssignList(lines);
 }
 
 // Orphan assign — for transactions in QONTO_RAW but not in UNMATCHED or MATCH_LOG
@@ -3180,6 +3225,9 @@ function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
         <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
           <option value="">Choisir une ligne…</option>
         </select>
+      </div>
+      <div id="assign-divers-wrap" style="display:none;margin-bottom:14px">
+        <button onclick="selectAssignDivers()" style="width:100%;padding:10px;border-radius:8px;border:1px dashed rgba(251,191,36,.25);background:rgba(251,191,36,.04);color:var(--amber);font-family:'DM Sans',sans-serif;font-size:.78em;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(251,191,36,.08)'" onmouseout="this.style.background='rgba(251,191,36,.04)'">Pas sûr ? → Divers (non classé)</button>
       </div>
     </div>
   `;
@@ -3849,7 +3897,7 @@ function checkPassword() {
 })();
 </script>
 <footer style="max-width:1020px;margin:0 auto;padding:40px 20px 24px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:11px;color:var(--text-dim);letter-spacing:.3px">
-  <span style="font-family:'Space Grotesk',sans-serif;font-weight:600">Festiflow: Budget v2</span>
+  <span style="font-family:'Space Grotesk',sans-serif;font-weight:600">Festiflow: Budget v2.8</span>
   <span style="opacity:.3">·</span>
   <span>Version Standalone HTML</span>
   <span style="opacity:.3">·</span>
