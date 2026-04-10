@@ -562,6 +562,7 @@ def add_ligne(payload: AddLigne):
             body={"values": [new_row]}
         ).execute()
 
+        invalidate_cache()
         return {"status": "ok", "inserted_row": sheet_row, "ligne": payload.ligne, "dept": tab}
     except HTTPException:
         raise
