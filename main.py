@@ -5,9 +5,76 @@ import os
 import re
 import io
 import json
+import time
 import unicodedata
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+
+# ── Simple read cache (30s TTL) to avoid Google Sheets rate limits ─────
+_cache = {}
+_CACHE_TTL = 30  # seconds
+
+def cached_get(svc, range_str):
+    """Read from cache if fresh, otherwise fetch from Sheets API."""
+    now = time.time()
+    if range_str in _cache and (now - _cache[range_str]["t"]) < _CACHE_TTL:
+        return _cache[range_str]["data"]
+    resp = svc.values().get(
+        spreadsheetId=SHEET_ID,
+        range=range_str,
+        valueRenderOption="UNFORMATTED_VALUE"
+    ).execute()
+    values = resp.get("values", [])
+    _cache[range_str] = {"t": now, "data": values}
+    return values
+
+def cached_batch_get(svc, ranges):
+    """Batch read with cache — only fetch uncached ranges."""
+    now = time.time()
+    result = {}
+    uncached = []
+    for r in ranges:
+        if r in _cache and (now - _cache[r]["t"]) < _CACHE_TTL:
+            result[r] = _cache[r]["data"]
+        else:
+            uncached.append(r)
+    if uncached:
+        resp = svc.values().batchGet(
+            spreadsheetId=SHEET_ID,
+            ranges=uncached,
+            valueRenderOption="UNFORMATTED_VALUE"
+        ).execute()
+        for vr in resp.get("valueRanges", []):
+            rng = vr.get("range", "")
+            # Normalize range key — Sheets API may return with sheet title quotes
+            for orig in uncached:
+                if orig.split("!")[0].replace("'","") in rng.replace("'",""):
+                    values = vr.get("values", [])
+                    _cache[orig] = {"t": now, "data": values}
+                    result[orig] = values
+                    break
+    return [result.get(r, []) for r in ranges]
+
+def invalidate_cache(prefix=""):
+    """Clear cache entries matching prefix (or all if empty)."""
+    if not prefix:
+        _cache.clear()
+    else:
+        keys = [k for k in _cache if prefix in k]
+        for k in keys:
+            del _cache[k]
+
+_sheet_id_cache = {}
+
+def get_sheet_id(svc, tab_title):
+    """Get the numeric sheetId for a tab title, cached permanently."""
+    if tab_title in _sheet_id_cache:
+        return _sheet_id_cache[tab_title]
+    meta = svc.get(spreadsheetId=SHEET_ID).execute()
+    for s in meta.get("sheets", []):
+        title = s["properties"]["title"]
+        _sheet_id_cache[title] = s["properties"]["sheetId"]
+    return _sheet_id_cache.get(tab_title)
 
 # ── Config ────────────────────────────────────────────────────────────────
 SHEET_ID = os.environ.get("SHEET_ID", "1mc_ofkHODCLuhFlV4w8-D3c8KeMYPkIooYpQh0pqLAM")
@@ -325,15 +392,11 @@ def get_budget(session: str = None):
     sess = get_session(session)
     try:
         svc = get_sheets_service()
+        ranges = [f"{tab_name(sess, base_tab)}!A:L" for base_tab in sess["dept_tabs"]]
+        value_ranges = cached_batch_get(svc, ranges)
         result = {}
-        for base_tab in sess["dept_tabs"]:
-            full_tab = tab_name(sess, base_tab)
-            resp = svc.values().get(
-                spreadsheetId=SHEET_ID,
-                range=f"{full_tab}!A:L",
-                valueRenderOption="UNFORMATTED_VALUE"
-            ).execute()
-            result[base_tab] = parse_dept_rows(resp.get("values", []), base_tab)
+        for idx, base_tab in enumerate(sess["dept_tabs"]):
+            result[base_tab] = parse_dept_rows(value_ranges[idx], base_tab)
         return {"status": "ok", "session": session or DEFAULT_SESSION, "data": result}
     except HTTPException:
         raise
@@ -349,12 +412,8 @@ def get_dept(dept: str, session: str = None):
     try:
         svc = get_sheets_service()
         full_tab = tab_name(sess, base_tab)
-        resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{full_tab}!A:L",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        return {"status": "ok", "dept": base_tab, "data": parse_dept_rows(resp.get("values", []), base_tab)}
+        values = cached_get(svc, f"{full_tab}!A:L")
+        return {"status": "ok", "dept": base_tab, "data": parse_dept_rows(values, base_tab)}
     except HTTPException:
         raise
     except Exception as e:
@@ -393,6 +452,7 @@ def update_cell(payload: UpdateCell):
             valueInputOption="USER_ENTERED",
             body={"values": [[val]]}
         ).execute()
+        invalidate_cache()
         return {"status": "ok", "updated": cell_range, "value": val}
     except HTTPException:
         raise
@@ -420,12 +480,7 @@ def add_ligne(payload: AddLigne):
     try:
         svc = get_sheets_service()
         # Read current sheet to find where to insert (after last row of the section)
-        resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{tab}!A:L",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        values = resp.get("values", [])
+        values = cached_get(svc, f"{tab}!A:L")
 
         # Find the last row of the target section
         insert_after = len(values)  # default: append at end
@@ -462,11 +517,7 @@ def add_ligne(payload: AddLigne):
         new_row[COL["statut"]]       = payload.statut
 
         # Get sheet ID for insert
-        sheet_meta = svc.get(spreadsheetId=SHEET_ID).execute()
-        sheet_id = next(
-            (s["properties"]["sheetId"] for s in sheet_meta["sheets"]
-             if s["properties"]["title"] == tab), None
-        )
+        sheet_id = get_sheet_id(svc, tab)
         if sheet_id is None:
             raise HTTPException(status_code=404, detail=f"Sheet '{tab}' not found")
 
@@ -527,12 +578,8 @@ def get_unmatched(session: str = None):
     unmatched_tab = tab_name(sess, UNMATCHED_TAB)
     try:
         svc = get_sheets_service()
-        resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{unmatched_tab}!A:N",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        rows = parse_unmatched_rows(resp.get("values", []))
+        values = cached_get(svc, f"{unmatched_tab}!A:N")
+        rows = parse_unmatched_rows(values)
         return {"status": "ok", "count": len(rows), "data": rows}
     except HTTPException:
         raise
@@ -546,12 +593,7 @@ def get_qonto_raw(session: str = None):
     raw_tab = tab_name(sess, RAW_TAB)
     try:
         svc = get_sheets_service()
-        resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{raw_tab}!A:K",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        values = resp.get("values", [])
+        values = cached_get(svc, f"{raw_tab}!A:K")
         if len(values) < 2:
             return {"status": "ok", "count": 0, "data": []}
         rows = []
@@ -652,9 +694,8 @@ def ensure_match_log_tab(svc, ml_tab=None):
     if ml_tab is None:
         ml_tab = MATCH_LOG_TAB
     try:
-        meta = svc.get(spreadsheetId=SHEET_ID).execute()
-        existing = {s["properties"]["title"] for s in meta["sheets"]}
-        if ml_tab not in existing:
+        existing_id = get_sheet_id(svc, ml_tab)
+        if existing_id is None:
             svc.batchUpdate(
                 spreadsheetId=SHEET_ID,
                 body={"requests": [{"addSheet": {"properties": {"title": ml_tab}}}]}
@@ -701,12 +742,7 @@ def recalc_reel_from_match_log(svc, sess):
 
     # 1. Read full MATCH_LOG
     try:
-        log_resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{ml_tab}!A:J",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        log_rows = log_resp.get("values", [])
+        log_rows = cached_get(svc, f"{ml_tab}!A:J")
     except Exception:
         log_rows = []
 
@@ -728,19 +764,19 @@ def recalc_reel_from_match_log(svc, sess):
         sums[key][0] += ht
         sums[key][1] += ttc
 
-    # 3. For each dept tab, read rows and build a write batch
+    # 3. For each dept tab, read ALL rows in one batch call
     write_data = []
-    for base_t in sess["dept_tabs"]:
+    ranges = [f"{sess['prefix']}{base_t}!A:L" for base_t in sess["dept_tabs"]]
+    try:
+        value_ranges = cached_batch_get(svc, ranges)
+    except Exception:
+        value_ranges = []
+
+    for idx, base_t in enumerate(sess["dept_tabs"]):
         full_t = f"{s_prefix}{base_t}"
-        try:
-            resp = svc.values().get(
-                spreadsheetId=SHEET_ID,
-                range=f"{full_t}!A:L",
-                valueRenderOption="UNFORMATTED_VALUE"
-            ).execute()
-            vals = resp.get("values", [])
-        except Exception:
+        if idx >= len(value_ranges):
             continue
+        vals = value_ranges[idx]
 
         for i, row in enumerate(vals):
             if i < 2:
@@ -775,12 +811,7 @@ def get_match_log(dept: str = "", ligne: str = "", session: str = None):
     try:
         svc = get_sheets_service()
         ensure_match_log_tab(svc, ml_tab)
-        resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{ml_tab}!A:J",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        values = resp.get("values", [])
+        values = cached_get(svc, f"{ml_tab}!A:J")
         rows = []
         for i, row in enumerate(values):
             if i == 0:
@@ -825,12 +856,7 @@ def assign_transaction(payload: AssignPayload):
     ml_tab = tab_name(sess, MATCH_LOG_TAB)
     try:
         svc = get_sheets_service()
-        unmatched_resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{unmatched_tab}!A:N",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        unmatched_rows = unmatched_resp.get("values", [])
+        unmatched_rows = cached_get(svc, f"{unmatched_tab}!A:N")
         if payload.unmatched_idx >= len(unmatched_rows):
             raise HTTPException(status_code=404, detail="Unmatched row not found")
         tx_row = list(unmatched_rows[payload.unmatched_idx]) + [""] * 14
@@ -838,14 +864,9 @@ def assign_transaction(payload: AssignPayload):
         ttc_val = safe_float(tx_row[UNMATCHED_COLS["ttc"]])
 
         # Verify budget line exists
-        dept_resp = svc.values().get(
-            spreadsheetId=SHEET_ID,
-            range=f"{tab}!A:L",
-            valueRenderOption="UNFORMATTED_VALUE"
-        ).execute()
-        dept_rows = dept_resp.get("values", [])
+        dept_values = cached_get(svc, f"{tab}!A:L")
         line_exists = False
-        for i, row in enumerate(dept_rows):
+        for i, row in enumerate(dept_values):
             row = list(row) + [""] * 12
             if str(row[COL["ligne"]]).strip() == payload.ligne.strip():
                 line_exists = True
@@ -854,11 +875,7 @@ def assign_transaction(payload: AssignPayload):
             raise HTTPException(status_code=404, detail=f"Ligne '{payload.ligne}' not found in {tab}")
 
         # 1. Remove from QONTO_UNMATCHED
-        sheet_meta = svc.get(spreadsheetId=SHEET_ID).execute()
-        unmatched_sheet_id = next(
-            (s["properties"]["sheetId"] for s in sheet_meta["sheets"]
-             if s["properties"]["title"] == unmatched_tab), None
-        )
+        unmatched_sheet_id = get_sheet_id(svc, unmatched_tab)
         if unmatched_sheet_id is not None:
             svc.batchUpdate(
                 spreadsheetId=SHEET_ID,
@@ -878,6 +895,7 @@ def assign_transaction(payload: AssignPayload):
 
         # 3. Recalculate ALL réel from MATCH_LOG
         recalc_reel_from_match_log(svc, sess)
+        invalidate_cache()
 
         return {"status": "ok", "assigned": payload.ligne, "dept": tab,
                 "ht_added": abs(ht_val), "ttc_added": abs(ttc_val)}
@@ -930,11 +948,7 @@ def dissociate_transaction(payload: DissociatePayload):
                 break
 
         if log_row_to_delete is not None:
-            sheet_meta = svc.get(spreadsheetId=SHEET_ID).execute()
-            log_sheet_id = next(
-                (s["properties"]["sheetId"] for s in sheet_meta["sheets"]
-                 if s["properties"]["title"] == ml_tab), None
-            )
+            log_sheet_id = get_sheet_id(svc, ml_tab)
             if log_sheet_id is not None:
                 svc.batchUpdate(
                     spreadsheetId=SHEET_ID,
@@ -961,6 +975,7 @@ def dissociate_transaction(payload: DissociatePayload):
 
         # 3. Recalculate ALL réel from MATCH_LOG
         recalc_reel_from_match_log(svc, sess)
+        invalidate_cache()
 
         return {"status": "ok", "dissociated": payload.ligne, "dept": tab,
                 "ht_removed": abs(payload.ht), "ttc_removed": abs(payload.ttc)}
@@ -1117,11 +1132,7 @@ async def import_qonto(file: UploadFile = File(...), session: str = None):
 
     # Ensure tabs exist
     try:
-        sheet_meta = svc.get(spreadsheetId=SHEET_ID).execute()
-        existing_tabs = {s["properties"]["title"]: s["properties"]["sheetId"]
-                         for s in sheet_meta["sheets"]}
-
-        tabs_to_create = [t for t in [raw_tab, unmatched_tab, ml_tab] if t not in existing_tabs]
+        tabs_to_create = [t for t in [raw_tab, unmatched_tab, ml_tab] if get_sheet_id(svc, t) is None]
         if tabs_to_create:
             svc.batchUpdate(
                 spreadsheetId=SHEET_ID,
@@ -1303,6 +1314,7 @@ async def import_qonto(file: UploadFile = File(...), session: str = None):
     # ── STEP 8: Recalculate ALL réel from MATCH_LOG ──
     try:
         recalc_reel_from_match_log(svc, sess)
+        invalidate_cache()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error recalculating RÉEL: {e}")
 
