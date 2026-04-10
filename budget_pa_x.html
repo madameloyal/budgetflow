@@ -116,13 +116,13 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 /* réel side C/G markers (col H in Excel) */
 .chip-c{background:rgba(52,211,153,.07);color:var(--green);font-size:.56em;padding:1px 5px;border-radius:3px}
 
-/* Statut select ── purple tint to signal editability */
-.ss{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.59em;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:2px 6px;-webkit-appearance:none;appearance:none;transition:all .15s}
-.ss.est{background:rgba(255,255,255,.04);color:var(--text-dim)}
-.ss.ec{background:rgba(251,191,36,.1);color:var(--amber)}
-.ss.ds{background:rgba(99,102,241,.1);color:#818cf8}
-.ss.val{background:rgba(52,211,153,.08);color:var(--green)}
-.ss.pay{background:rgba(52,211,153,.14);color:var(--green)}
+/* Statut select ── compact pill */
+.ss{background:none;border:none;font-family:'DM Sans',-apple-system,sans-serif;font-size:10px;font-weight:600;letter-spacing:.2px;cursor:pointer;border-radius:6px;padding:2px 6px;-webkit-appearance:none;appearance:none;transition:all .15s}
+.ss.est{background:rgba(255,255,255,.03);color:#444}
+.ss.ec{background:rgba(212,160,23,.08);color:#d4a017}
+.ss.ds{background:rgba(155,161,255,.08);color:#9ba1ff}
+.ss.val{background:rgba(80,227,194,.06);color:#50e3c2}
+.ss.pay{background:rgba(80,227,194,.1);color:#50e3c2}
 
 /* ── EDITABLE cells — clearly purple-tinted ── */
 .ce{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.85em;font-weight:500;color:#c4b5fd;text-align:right;width:100%;padding:3px 6px;transition:background .15s,border-color .15s,box-shadow .15s;min-width:70px;cursor:text}
@@ -130,26 +130,26 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .ce:focus{outline:none;border-color:var(--purple);background:rgba(168,85,247,.12);color:#e9d5ff;box-shadow:0 0 0 2px rgba(168,85,247,.12)}
 @keyframes ce-saved{0%{background:rgba(52,211,153,.25);border-color:rgba(52,211,153,.6)}100%{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.18)}}
 .ce.saved{animation:ce-saved .8s ease-out forwards}
-/* Read-only cells — dim, no border */
-.cro{font-size:.85em;color:#fff;text-align:right;display:block;padding:3px 6px}
-.cpos{color:var(--green);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
-.cneg{color:var(--red);font-weight:600;font-size:.85em;text-align:right;display:block;padding:3px 6px}
-.cdim{color:var(--text-dim);font-size:.85em;text-align:right;display:block;padding:3px 6px}
+/* Read-only cells */
+.cro{font-size:13px;color:#ededed;text-align:right;display:block;padding:0;font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.cpos{color:#50e3c2;font-weight:500;font-size:13px;text-align:right;display:block;padding:0;font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.cneg{color:var(--red);font-weight:500;font-size:13px;text-align:right;display:block;padding:0;font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.cdim{color:#2a2a2d;font-size:13px;text-align:right;display:block;padding:0;font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace}
 
 /* ── TABLES ──────────────────────────── */
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:.68em;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);font-weight:600;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
-.tbl th:first-child,.tbl th.tl{text-align:left}
+.tbl th{font-size:13px;color:var(--text-dim);font-weight:400;padding:10px 14px;text-align:right;border-bottom:1px solid rgba(255,255,255,.06)}
+.tbl th:first-child,.tbl th.tl{text-align:left;padding-left:18px}
 .tbl th.ec-col{color:var(--text-dim)}
-.tbl td{padding:8px 10px;font-size:.78em;text-align:right;border-bottom:1px solid rgba(255,255,255,.02);vertical-align:middle;color:var(--text-muted)}
-.tbl td:first-child{text-align:left;color:#fff;font-weight:500}
+.tbl td{padding:12px 14px;font-size:13px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;color:var(--text-muted);font-family:ui-monospace,'SF Mono','JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.tbl td:first-child{text-align:left;color:#ededed;font-weight:500;font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;padding-left:18px}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:rgba(255,255,255,.007)}
-.trow td{font-weight:700!important;color:#fff!important;background:rgba(255,255,255,.025);border-top:1px solid var(--border)!important;border-bottom:none!important}
+.tbl tr:hover td{background:rgba(255,255,255,.015)}
+.trow td{font-weight:700!important;color:#ededed!important;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06)!important;border-bottom:none!important}
 .shead{cursor:pointer}
-.shead td{background:var(--surface-2);padding:0;border-bottom:1px solid var(--border)!important}
-.shead:hover td{background:var(--surface-3)}
-.obs{min-width:150px;max-width:220px;color:var(--text-dim)!important;font-size:.78em!important;font-weight:400!important}
+.shead td{background:rgba(255,255,255,.02);padding:0;border-bottom:1px solid rgba(255,255,255,.06)!important}
+.shead:hover td{background:rgba(255,255,255,.035)}
+.obs{min-width:120px;max-width:200px;color:#444!important;font-size:13px!important;font-weight:400!important;font-family:'DM Sans',-apple-system,sans-serif!important}
 .obs-inp{width:100%;min-width:140px;background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:var(--text-muted);font-size:.8em;font-family:inherit}
 .twrap{overflow-x:auto}
 
@@ -1436,33 +1436,25 @@ function renderDept(id){
           <tr class="shead" onclick="tog('${sid}')">
             <td colspan="6" style="padding:0">
               <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
-                <span id="arr-${sid}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:12px">▶</span>
-                <span style="font-weight:700;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${sec.s}</span>
-                <span style="font-size:12px;color:var(--text-dim);background:rgba(255,255,255,.07);padding:3px 9px;border-radius:5px;margin-left:12px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
-                ${allSigned ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.1);padding:3px 9px;border-radius:5px;margin-left:7px;flex-shrink:0">✓ tout signé</span>` :
-                  hasUnsigned ? `<span style="font-size:12px;color:var(--amber);background:rgba(251,191,36,.1);padding:3px 9px;border-radius:5px;margin-left:7px;flex-shrink:0">⚠ à signer</span>` : ''}
-                ${nWarning>0 ? `<span style="font-size:12px;color:var(--amber);background:rgba(251,191,36,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">⚠ ${nWarning} sans devis</span>` : ''}
-                ${nReel>0 ? `<span style="font-size:12px;color:var(--green);background:rgba(52,211,153,.08);padding:3px 9px;border-radius:5px;margin-left:6px;flex-shrink:0">✓ ${nReel} réel</span>` : ''}
+                <span id="arr-${sid}" style="font-size:11px;color:#555;transition:transform .25s;display:inline-block;transform:rotate(0deg);flex-shrink:0;margin-right:10px">▶</span>
+                <span style="font-weight:600;font-size:14px;letter-spacing:.2px;color:#ededed;flex-shrink:0">${sec.s}</span>
+                <span style="font-size:12px;color:#555;margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
                 <span style="flex:1"></span>
-                <span style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-                  <span style="font-size:15px;font-weight:700;color:#fff">${fe(sE)}</span>
-                </span>
+                <span style="font-size:14px;font-weight:600;color:#888;font-family:ui-monospace,'SF Mono',monospace;font-variant-numeric:tabular-nums">${fe(sE)}</span>
               </div>
             </td>
           </tr>
           <tr id="hdr-${sid}" style="display:none">
-            <th class="tl" style="min-width:180px">Ligne budgétaire</th>
+            <th class="tl" style="min-width:180px">Ligne</th>
             <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir la source">
-              ${id==='technique'?'SIGNÉ HT':'Au budget HT'}
-              <span style="font-size:.7em;opacity:.35">↗</span>
+              ${id==='technique'?'Signé':'Budget'}
             </th>
             <th class="ec-col" style="cursor:pointer" title="Cliquer pour voir les transactions">
-              ${id==='technique'?'PAYÉ HT':'Dépensé HT'}
-              <span style="font-size:.7em;opacity:.35">↗</span>
+              ${id==='technique'?'Payé':'Dépensé'}
             </th>
-            <th>Écart HT</th>
-            <th>Statut</th>
-            <th class="tl obs">Observations</th>
+            <th>Écart</th>
+            <th style="text-align:center">Statut</th>
+            <th class="tl obs">Notes</th>
           </tr>
         </thead>
         <tbody id="${sid}" style="display:none">${rows}
