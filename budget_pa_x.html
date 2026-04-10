@@ -45,48 +45,28 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
 /* ── HEADER ──────────────────────────── */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px;padding:14px 22px;margin:12px 0 0;border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--purple),var(--indigo)) border-box}
-.htitle{font-family:'Space Grotesk',sans-serif;font-size:1.2em;font-weight:700;color:#fff}
-.hbrand{font-size:0.72em;color:var(--text-muted);font-weight:400}
-.hrr{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .badge{font-size:0.62em;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:5px;white-space:nowrap}
-.blive{background:rgba(52,211,153,0.12);color:var(--green);display:flex;align-items:center;gap:6px}
-.blive::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .bed{background:rgba(255,255,255,0.06);color:var(--text)}
-.infobtn{font-size:0.68em;color:var(--text-dim);cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--border);transition:all .2s;user-select:none}
-.infobtn:hover{border-color:var(--text-muted);color:var(--text-muted)}
-.hpanel{display:none;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:12px 22px}
 .hpanel.open{display:grid}
-.hpi{display:flex;flex-direction:column;gap:2px;padding:4px 0}
-.hpl{font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600}
-.hpv{font-size:0.75em;color:var(--text-muted);font-weight:500}
-.hpv strong{color:#fff}
 .hts{font-size:0.6em;color:var(--text-muted);padding:8px 22px 12px;text-align:right;opacity:.6;margin-bottom:12px}
 
 /* ── CARDS ───────────────────────────── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;transition:border-color .3s,box-shadow .3s}
 /* carousel cards inside g2 must fill their cell height */
 .card:hover{border-color:rgba(255,255,255,.08)}
-.clabel{font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:#fff}
-.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .mb{margin-bottom:14px}
 /* unified section blocks */
 .sec-block{margin-bottom:8px}
 .sec-block+.sec-block .shead td{border-top:none}
 
 /* ── TYPOGRAPHY ──────────────────────── */
-.hero{font-size:2em;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.5px}
 .hu{font-size:.32em;font-weight:400;color:var(--text-dim);letter-spacing:0;margin-left:2px}
 .tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:.72em;font-weight:600;margin-top:6px}
-.tg{background:rgba(52,211,153,.1);color:var(--green)}
 .tr{background:rgba(248,113,113,.1);color:var(--red)}
 .tn{background:rgba(255,255,255,.04);color:var(--text-dim)}
 .ta{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);color:var(--amber)}
-.wbadge{font-size:.72em;font-weight:600;color:var(--amber);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);padding:3px 10px;border-radius:6px;letter-spacing:.5px}
 .div{height:1px;background:var(--border);margin:16px 0}
-.mrow{display:flex;justify-content:space-between;align-items:center;font-size:.85em;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-.mrow:last-child{border-bottom:none}
-.mk{color:var(--text-muted)}.mv{color:#fff;font-weight:500}
 .sdiv{display:flex;align-items:center;gap:12px;margin:28px 0 14px}
 .sdl{flex:1;height:1px;background:var(--border)}
 .sdt{font-size:.63em;text-transform:uppercase;letter-spacing:3px;color:var(--text-dim);font-weight:600;white-space:nowrap}
@@ -96,13 +76,10 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .dept-hdr-body{background:var(--surface);padding:14px 18px}
 .dept-hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .dept-hdr-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.2px}
-.dept-hdr-pill{font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);padding:2px 9px;border-radius:4px;font-weight:500}
 
 
 /* ── PROGRESS ────────────────────────── */
 .pt{height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:8px 0 4px;display:flex;gap:1px}
-.pt-seg{height:100%;border-radius:2px;transition:width .4s ease}
-.pf{height:100%;border-radius:3px;transition:width .6s ease}
 .safe{background:var(--green)}.warn{background:var(--amber)}.danger{background:var(--red)}
 
 /* ── STATUT chips — only the 3 used in file + 2 logical next steps ── */
@@ -155,7 +132,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .shead td{background:var(--surface-2);padding:0;border-bottom:1px solid var(--border)!important}
 .shead:hover td{background:rgba(255,255,255,.035)}
 .obs{min-width:120px;max-width:200px;color:var(--text-dim)!important;font-size:12px!important;font-weight:400!important}
-.obs-inp{width:100%;min-width:140px;background:transparent;border:1px dashed rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:var(--text-muted);font-size:.8em;font-family:inherit}
 .twrap{overflow-x:auto}
 
 /* ── BILAN table ── */
@@ -167,20 +143,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .btbl .bcat td{background:var(--surface-2);font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);padding:6px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .btbl .btot td{font-weight:700;color:#fff;background:rgba(255,255,255,.02);border-top:1px solid var(--border);border-bottom:8px solid var(--bg)}
 .btbl .bgt td{font-weight:700;color:#fff;font-size:.9em;border-top:2px solid var(--purple)}
-.bpos{color:var(--green);font-weight:600}
-.bneg{color:var(--red);font-weight:600}
 
 /* ── DEPT summary rows ── */
-.drow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s}
-.drow:hover{background:rgba(255,255,255,.02)}
-.drow:last-child{border-bottom:none}
-.dname{font-size:.73em;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);min-width:160px;flex-shrink:0}
-.dbar{flex:1;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden}
-.dfill{height:100%;border-radius:3px}
-.dnums{display:flex;gap:12px;flex-shrink:0;align-items:center}
-.dest{font-size:.7em;color:var(--text-dim);min-width:86px;text-align:right}
-.dpct{font-size:.68em;font-weight:700;min-width:34px;text-align:right}
-.decart{font-size:.65em;padding:1px 7px;border-radius:4px;margin-top:0}
 
 /* ── CHART wrapper ── */
 
@@ -194,9 +158,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   /* ── layout ── */
   body{font-size:15px}
   .wrap{padding:0 12px 60px}
-  .g2,.g3{grid-template-columns:1fr}
   .hdr{flex-wrap:wrap;padding:12px 14px;gap:8px}
-  .hpanel{grid-template-columns:1fr 1fr;padding:10px 14px}
   .mb{margin-bottom:10px}
 
   /* ── tables: hide non-essential cols, allow horizontal scroll only inside .twrap ── */
@@ -208,11 +170,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .btbl th:nth-child(2),.btbl td:nth-child(2),
   .btbl th:nth-child(5),.btbl td:nth-child(5){display:none}
   .ce{min-width:54px;font-size:.8em;padding:2px 4px}
-  .dest{display:none}
 
   /* ── cards ── */
   .card{padding:18px 16px}
-  .hero{font-size:1.6em}
 
   /* ── nav brand hidden on small screens ── */
 }
@@ -364,7 +324,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .df-select:focus{border-color:rgba(168,85,247,.55)}
 .df-select option{background:#16161f;color:#fff}
 .df-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.df-divider{height:1px;background:var(--border);margin:18px 0}
 .df-badge{
   display:inline-flex;align-items:center;gap:5px;
   font-size:.62em;font-weight:600;text-transform:uppercase;
@@ -372,26 +331,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 }
 .df-badge.edit{background:rgba(168,85,247,.1);color:#c4b5fd;border:1px solid rgba(168,85,247,.2)}
 .df-badge.new{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2)}
-  width:100%;padding:12px;border-radius:9px;
-  border:none;
-  background:linear-gradient(135deg,rgba(168,85,247,.8),rgba(99,102,241,.8));
-  color:#fff;font-family:'DM Sans',sans-serif;
-  font-size:.85em;font-weight:700;letter-spacing:.3px;
-  cursor:pointer;transition:all .2s;
-  box-shadow:0 4px 16px rgba(99,102,241,.25);
-}
-  background:linear-gradient(135deg,rgba(168,85,247,.95),rgba(99,102,241,.95));
-  box-shadow:0 6px 24px rgba(99,102,241,.4);
-  transform:translateY(-1px);
-}
-.df-delete-btn{
-  width:100%;padding:10px;border-radius:9px;margin-top:8px;
-  border:1px solid rgba(248,113,113,.2);
-  background:rgba(248,113,113,.05);
-  color:var(--red);font-family:'DM Sans',sans-serif;
-  font-size:.8em;font-weight:600;cursor:pointer;transition:all .2s;
-}
-.df-delete-btn:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4)}
 
 /* ── MOBILE bottom sheet ─── */
 @media(max-width:720px){
