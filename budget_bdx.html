@@ -2221,6 +2221,7 @@ function upCell(inp){
   }
 }
 function upRec(ci,ri,field,inp){
+  if (!REC[ci] || !REC[ci].rows[ri]) return;
   const val=parseFloat(inp.value.replace(/[\s\u202f\u2009€,]/g,'').replace(',','.'))||0;
   REC[ci].rows[ri][field]=val;
   const r=REC[ci].rows[ri];
@@ -2249,6 +2250,7 @@ function upRec(ci,ri,field,inp){
   renderBilan();
 }
 function upRecSt(ci,ri,sel){
+  if (!REC[ci] || !REC[ci].rows[ri]) return;
   REC[ci].rows[ri].st=sel.value;
   sel.className='ss '+chipcls(sel.value);
   const r=REC[ci].rows[ri];
@@ -3552,7 +3554,7 @@ function openCoutRepasDrawer() {
           {label:'Budget total catering', val: totalBudget>0 ? (new Intl.NumberFormat('fr-FR').format(totalBudget).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'#fff'},
           {label:'Coût / repas estimé', val: coutParRepas>0 ? (new Intl.NumberFormat('fr-FR').format(coutParRepas).replace(/\u202f/g,'\u00a0')+'\u00a0€') : '—', color:'var(--amber)'},
           {label:'Effectif total', val: nbPersonnes+' pers.', color:'var(--text-muted)'},
-          {label:'Total repas servis', val: totalRepas.toLocaleString('fr-FR'), color:'var(--text-muted)'},
+          {label:'Total repas servis', val: (totalRepas||0).toLocaleString('fr-FR'), color:'var(--text-muted)'},
         ].map(k=>`<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
           <div style="font-size:.55em;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:4px">${k.label}</div>
           <div style="font-size:.9em;font-weight:700;color:${k.color}">${k.val}</div>
@@ -4739,8 +4741,8 @@ function filterReleve() {
     let deptHtml = '';
     const isAmenagement = (tx.cat||'').toUpperCase().replace(/[ÉÈÊË]/g,'E').includes('AMENAGEMENT');
     if (isMatched) {
-      deptHtml = `<div style="font-size:.78em;font-weight:600;color:var(--green)">${matchInfo.dept}</div>
-        <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${matchInfo.ligne}</div>`;
+      deptHtml = `<div style="font-size:.78em;font-weight:600;color:var(--green)">${matchInfo.dept||''}</div>
+        <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${matchInfo.ligne||''}</div>`;
       if (isAmenagement) {
         deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:2px">via Am\u00E9nagement</div>`;
       }
@@ -4773,7 +4775,7 @@ function filterReleve() {
         const safeF = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const safeN = (tx.note||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
         actionHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-          <button onclick="reattribuerTx('${matchInfo.dept}','${matchInfo.ligne.replace(/'/g,"\\'")}','${safeF}','${safeN}',${Math.abs(tx.ht||0)},${Math.abs(tx.ttc||0)})"
+          <button onclick="reattribuerTx('${matchInfo.dept}','${matchInfo.ligne?.replace(/'/g,"\\'")}','${safeF}','${safeN}',${Math.abs(tx.ht||0)},${Math.abs(tx.ttc||0)})"
           style="font-size:.65em;padding:4px 10px;border-radius:5px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.06);color:var(--amber);cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap"
           onmouseover="this.style.background='rgba(251,191,36,.15)'" onmouseout="this.style.background='rgba(251,191,36,.06)'"
           >R\u00E9attribuer</button>
