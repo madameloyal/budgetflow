@@ -2352,7 +2352,7 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
         <datalist id="ef-section-list">
           ${sections.map(s => `<option value="${s}">`).join('')}
         </datalist>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:5px">Existante ou taper un nom pour créer</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:5px;line-height:1.5">Choisir une section existante, ou taper un nouveau nom pour créer une section. La ligne budgétaire sera ajoutée à cette section.</div>
       </div>
       ` : ''}
     </div>
