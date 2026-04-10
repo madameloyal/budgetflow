@@ -720,20 +720,32 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <span style="color:var(--text-dim)">Ex: ARTISTIQUE - ML130326 - BOOKING FEE DJ NAME</span><br>
         <span style="color:var(--text-dim)">Ex: TECHNIQUE - ML130326 - ACOMPTE SON SCÈNE PRINCIPALE</span><br>
         <span style="font-size:.9em;margin-top:6px;display:block;color:var(--text-dim)">Les transactions sans catégorie Qonto sont détectées automatiquement si la note contient le département.</span>
+        <div style="margin-top:10px;padding:8px 12px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.12);border-radius:6px">
+          <span style="color:var(--amber);font-weight:600">⚠ Aménagement</span><span style="color:var(--text-dim)"> — Les transactions Qonto catégorisées « Aménagement » sont routées vers <strong style="color:var(--text-muted)">SCÉNO</strong> par défaut. Si la dépense concerne TECHNIQUE, utilisez le bouton « Réattribuer » ou précisez TECHNIQUE dans la note.</span>
+        </div>
       </div>
     </div>
 
     <!-- Transaction table -->
     <div id="releve-table-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      <table style="width:100%;border-collapse:collapse;font-size:.78em">
+      <table style="width:100%;border-collapse:collapse;font-size:.78em;table-layout:fixed">
+        <colgroup>
+          <col style="width:88px">
+          <col style="width:14%">
+          <col style="width:auto">
+          <col style="width:12%">
+          <col style="width:105px">
+          <col style="width:110px">
+          <col style="width:95px">
+        </colgroup>
         <thead>
           <tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;white-space:nowrap">Date</th>
-            <th style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Fournisseur</th>
-            <th style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Note</th>
-            <th style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Département</th>
-            <th style="padding:10px 14px;text-align:right;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Montant TTC</th>
-            <th style="padding:10px 14px;text-align:center;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Statut</th>
+            <th onclick="sortReleve('date')" style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none">Date <span id="sort-ind-date" style="opacity:.4">↕</span></th>
+            <th onclick="sortReleve('fourn')" style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;cursor:pointer;user-select:none">Fournisseur <span id="sort-ind-fourn" style="opacity:.4">↕</span></th>
+            <th onclick="sortReleve('note')" style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;cursor:pointer;user-select:none">Note <span id="sort-ind-note" style="opacity:.4">↕</span></th>
+            <th onclick="sortReleve('dept')" style="padding:10px 14px;text-align:left;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;cursor:pointer;user-select:none">Dept <span id="sort-ind-dept" style="opacity:.4">↕</span></th>
+            <th onclick="sortReleve('ttc')" style="padding:10px 14px;text-align:right;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;cursor:pointer;user-select:none">Montant <span id="sort-ind-ttc" style="opacity:.4">↕</span></th>
+            <th onclick="sortReleve('statut')" style="padding:10px 14px;text-align:center;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;cursor:pointer;user-select:none">Statut <span id="sort-ind-statut" style="opacity:.4">↕</span></th>
             <th style="padding:10px 14px;text-align:center;font-size:.65em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600">Action</th>
           </tr>
         </thead>
@@ -2567,6 +2579,8 @@ async function handleQontoFile(event) {
     // Re-run client-side matching with updated DEPTS
     storeQontoTransactions(csvData);
     setSyncTimestamp();
+    // Refresh transactions tab immediately
+    renderReleve();
 
     btn.classList.remove('loading');
     btn.classList.add('import-success');
@@ -4637,11 +4651,18 @@ function filterReleve() {
 
     // Département column
     let deptHtml = '';
+    const isAmenagement = (tx.cat||'').toUpperCase().replace(/[ÉÈÊË]/g,'E').includes('AMENAGEMENT');
     if (isMatched) {
       deptHtml = `<div style="font-size:.78em;font-weight:600;color:var(--green)">${matchInfo.dept}</div>
         <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${matchInfo.ligne}</div>`;
+      if (isAmenagement) {
+        deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:2px">via Am\u00E9nagement</div>`;
+      }
     } else if (tx.cat) {
       deptHtml = `<span style="font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text-muted)">${tx.cat}</span>`;
+      if (isAmenagement) {
+        deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:3px">\u2192 SCÉNO par d\u00E9faut</div>`;
+      }
     } else {
       deptHtml = `<span style="font-size:.68em;color:var(--text-dim)">\u2014</span>`;
     }
@@ -4680,9 +4701,9 @@ function filterReleve() {
 
     return `<tr style="border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.015)'" onmouseout="this.style.background=''">
       <td style="padding:9px 14px;color:var(--text-dim);font-family:monospace;font-size:.82em;white-space:nowrap">${d}</td>
-      <td style="padding:9px 14px;font-weight:600;color:#fff;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85em">${tx.fourn || '\u2014'}</td>
-      <td style="padding:9px 14px;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em" title="${(tx.note||'').replace(/"/g,'&quot;')}">${tx.note || ''}</td>
-      <td style="padding:9px 14px">${deptHtml}</td>
+      <td style="padding:9px 14px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85em">${tx.fourn || '\u2014'}</td>
+      <td style="padding:9px 14px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em" title="${(tx.note||'').replace(/"/g,'&quot;')}">${tx.note || ''}</td>
+      <td style="padding:9px 14px;overflow:hidden">${deptHtml}</td>
       <td style="padding:9px 14px;text-align:right;font-family:monospace;font-weight:700;color:${amtColor};white-space:nowrap;font-size:.85em">${amtVal}</td>
       <td style="padding:9px 14px;text-align:center">${statutHtml}</td>
       <td style="padding:9px 14px;text-align:center">${actionHtml}</td>
@@ -4691,6 +4712,75 @@ function filterReleve() {
 
   const count = document.getElementById('releve-count');
   if (count) count.textContent = `${filtered.length} transaction${filtered.length > 1 ? 's' : ''} affich\u00E9e${filtered.length > 1 ? 's' : ''}`;
+}
+
+let _releveSortCol = 'date';
+let _releveSortDir = 'desc';
+
+function sortReleve(col) {
+  // Toggle direction if same column, otherwise default desc (date/ttc) or asc (text)
+  if (_releveSortCol === col) {
+    _releveSortDir = _releveSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _releveSortCol = col;
+    _releveSortDir = (col === 'date' || col === 'ttc') ? 'desc' : 'asc';
+  }
+
+  // Sort _releveAllTx in place
+  _releveAllTx.sort((a, b) => {
+    let va, vb;
+    const keyA = _txKey(a.fourn, a.ttc, a.date);
+    const keyB = _txKey(b.fourn, b.ttc, b.date);
+    const matchA = _releveMatchMap[keyA];
+    const matchB = _releveMatchMap[keyB];
+
+    switch(col) {
+      case 'date':
+        va = (a.date||'').toString().trim(); vb = (b.date||'').toString().trim();
+        break;
+      case 'fourn':
+        va = (a.fourn||'').toLowerCase(); vb = (b.fourn||'').toLowerCase();
+        break;
+      case 'note':
+        va = (a.note||'').toLowerCase(); vb = (b.note||'').toLowerCase();
+        break;
+      case 'dept':
+        va = (matchA ? matchA.dept : a.cat || '').toLowerCase();
+        vb = (matchB ? matchB.dept : b.cat || '').toLowerCase();
+        break;
+      case 'ttc':
+        va = a.ttc || 0; vb = b.ttc || 0;
+        return _releveSortDir === 'asc' ? va - vb : vb - va;
+      case 'statut':
+        // Order: matched=0, unmatched=1, revenue=2
+        va = matchA ? 0 : (a.ttc||0) > 0 ? 2 : 1;
+        vb = matchB ? 0 : (b.ttc||0) > 0 ? 2 : 1;
+        return _releveSortDir === 'asc' ? va - vb : vb - va;
+      default:
+        va = ''; vb = '';
+    }
+    if (typeof va === 'string') {
+      const cmp = va.localeCompare(vb);
+      return _releveSortDir === 'asc' ? cmp : -cmp;
+    }
+    return 0;
+  });
+
+  // Update sort indicators
+  ['date','fourn','note','dept','ttc','statut'].forEach(c => {
+    const el = document.getElementById('sort-ind-' + c);
+    if (el) {
+      if (c === _releveSortCol) {
+        el.textContent = _releveSortDir === 'asc' ? '\u25B2' : '\u25BC';
+        el.style.opacity = '1';
+      } else {
+        el.textContent = '\u2195';
+        el.style.opacity = '.4';
+      }
+    }
+  });
+
+  filterReleve();
 }
 
 const SYNC_TS_KEY = 'bf_qonto_sync_ts';
