@@ -2299,10 +2299,26 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
           style="resize:vertical;min-height:80px;line-height:1.5"
           placeholder="Notes, références, détails…">${line.obs||''}</textarea>
       </div>
+
+      ${isNew ? `
+      <div style="margin:16px 24px 14px;height:1px;background:rgba(255,255,255,.06)"></div>
+
+      <div class="df-group">
+        <label class="df-label">Section</label>
+        <input id="ef-section" class="df-input" type="text"
+          list="ef-section-list"
+          placeholder="Choisir ou créer une section…"
+          value="${currentSection}">
+        <datalist id="ef-section-list">
+          ${sections.map(s => `<option value="${s}">`).join('')}
+        </datalist>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:5px">Existante ou taper un nom pour créer</div>
+      </div>
+      ` : ''}
     </div>
 
     <input type="hidden" id="ef-dept" value="${tabName}">
-    <input type="hidden" id="ef-section" value="${currentSection}">
+    ${isNew ? '' : `<input type="hidden" id="ef-section" value="${currentSection}">`}
     <input type="hidden" id="ef-qonto-ref" value="${line.qonto_ref||''}">
   `;
 
