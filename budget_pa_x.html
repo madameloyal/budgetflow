@@ -1919,12 +1919,14 @@ function toggleDeptGrid(){
 
 /* ═══ INIT ═══ */
 async function initApp(){
-  // Fetch unmatched + recettes in parallel BEFORE rendering any tabs
-  const [, unmJson] = await Promise.all([
+  // Fetch unmatched + recettes + qonto-raw in parallel BEFORE rendering any tabs
+  const [, unmJson, rawJson] = await Promise.all([
     loadRecettes(),
-    fetch(`${API}/api/unmatched?session=${SESSION}`, {headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null)
+    fetch(`${API}/api/unmatched?session=${SESSION}`, {headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch(`${API}/api/qonto-raw?session=${SESSION}`, {headers:{'Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null)
   ]);
   if (unmJson?.data) _unmatchedRows = unmJson.data;
+  if (rawJson?.data) _releveAllTx = rawJson.data;
 
   renderBilan();
   // Render whichever dept tab is active
