@@ -791,7 +791,29 @@ def recalc_reel_from_match_log(svc, sess):
                 "values": [[total[0], total[1]]]
             })
 
-    # 4. Write all RÉEL values in one batch
+    # 4. Also handle RECETTES tab — same column layout, Réel in I:J
+    rec_tab = tab_name(sess, RECETTES_TAB)
+    try:
+        rec_vals = cached_get(svc, f"{rec_tab}!A:L")
+    except Exception:
+        rec_vals = []
+    for i, row in enumerate(rec_vals):
+        if i == 0:
+            continue  # skip header only (RECETTES has 1 header row)
+        rp = list(row) + [""] * 12
+        ligne = str(rp[COL["ligne"]]).strip()
+        section = str(rp[COL["section"]]).strip()
+        if not ligne or ligne.startswith("(ligne") or is_total_row(section, ligne):
+            continue
+        key_full = (rec_tab, ligne)
+        key_base = (RECETTES_TAB, ligne)
+        total = sums.get(key_full) or sums.get(key_base) or [0.0, 0.0]
+        write_data.append({
+            "range": f"{rec_tab}!I{i+1}:J{i+1}",
+            "values": [[total[0], total[1]]]
+        })
+
+    # 5. Write all RÉEL values in one batch
     if write_data:
         svc.values().batchUpdate(
             spreadsheetId=SHEET_ID,
@@ -845,7 +867,8 @@ class AssignPayload(BaseModel):
 def assign_transaction(payload: AssignPayload):
     sess = get_session(payload.session)
     base_tab = payload.dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    valid_tabs = list(sess["dept_tabs"]) + [RECETTES_TAB]
+    if base_tab not in valid_tabs:
         raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found in session")
     tab = tab_name(sess, base_tab)
     unmatched_tab = tab_name(sess, UNMATCHED_TAB)
@@ -919,7 +942,8 @@ def assign_direct(payload: DirectAssignPayload):
     """Assign a transaction directly to MATCH_LOG without needing an UNMATCHED row."""
     sess = get_session(payload.session)
     base_tab = payload.dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    valid_tabs = list(sess["dept_tabs"]) + [RECETTES_TAB]
+    if base_tab not in valid_tabs:
         raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found")
     tab = tab_name(sess, base_tab)
     ml_tab = tab_name(sess, MATCH_LOG_TAB)
@@ -950,11 +974,13 @@ class DissociatePayload(BaseModel):
 def dissociate_transaction(payload: DissociatePayload):
     sess = get_session(payload.session)
     base_tab = payload.dept.upper()
-    if base_tab not in sess["dept_tabs"]:
+    valid_tabs = list(sess["dept_tabs"]) + [RECETTES_TAB]
+    if base_tab not in valid_tabs:
         raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found in session")
     tab = tab_name(sess, base_tab)
     unmatched_tab = tab_name(sess, UNMATCHED_TAB)
     ml_tab = tab_name(sess, MATCH_LOG_TAB)
+    is_recette = (base_tab == RECETTES_TAB)
     try:
         svc = get_sheets_service()
 
@@ -990,19 +1016,20 @@ def dissociate_transaction(payload: DissociatePayload):
                     }}}]}
                 ).execute()
 
-        # 2. Re-add to QONTO_UNMATCHED
-        unmatched_row = [
-            base_tab, "", payload.fourn, payload.note, "",
-            abs(payload.ht), abs(payload.ttc), "",
-            "Dissocié manuellement", "", "", "PENDING", "", ""
-        ]
-        svc.values().append(
-            spreadsheetId=SHEET_ID,
-            range=f"{unmatched_tab}!A:N",
-            valueInputOption="RAW",
-            insertDataOption="INSERT_ROWS",
-            body={"values": [unmatched_row]}
-        ).execute()
+        # 2. Re-add to QONTO_UNMATCHED (skip for recettes — positive tx don't belong in unmatched)
+        if not is_recette:
+            unmatched_row = [
+                base_tab, "", payload.fourn, payload.note, "",
+                abs(payload.ht), abs(payload.ttc), "",
+                "Dissocié manuellement", "", "", "PENDING", "", ""
+            ]
+            svc.values().append(
+                spreadsheetId=SHEET_ID,
+                range=f"{unmatched_tab}!A:N",
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body={"values": [unmatched_row]}
+            ).execute()
 
         # 3. Recalculate ALL réel from MATCH_LOG
         recalc_reel_from_match_log(svc, sess)
