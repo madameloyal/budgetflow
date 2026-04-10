@@ -903,6 +903,39 @@ def assign_transaction(payload: AssignPayload):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── DIRECT ASSIGN (for orphan transactions not in QONTO_UNMATCHED) ────
+class DirectAssignPayload(BaseModel):
+    session: str = None
+    dept:    str
+    ligne:   str = ""
+    fourn:   str
+    note:    str = ""
+    date:    str = ""
+    ht:      float
+    ttc:     float
+
+@app.post("/api/assign-direct")
+def assign_direct(payload: DirectAssignPayload):
+    """Assign a transaction directly to MATCH_LOG without needing an UNMATCHED row."""
+    sess = get_session(payload.session)
+    base_tab = payload.dept.upper()
+    if base_tab not in sess["dept_tabs"]:
+        raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found")
+    tab = tab_name(sess, base_tab)
+    ml_tab = tab_name(sess, MATCH_LOG_TAB)
+    ligne_val = payload.ligne.strip() if payload.ligne else "(non affecté)"
+    try:
+        svc = get_sheets_service()
+        ensure_match_log_tab(svc, ml_tab)
+        append_match_log(svc, tab, "", ligne_val, payload.fourn, payload.note, payload.date, abs(payload.ht), abs(payload.ttc), "manual", ml_tab)
+        recalc_reel_from_match_log(svc, sess)
+        invalidate_cache()
+        return {"status": "ok", "assigned": ligne_val, "dept": tab, "ttc_added": abs(payload.ttc)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── DISSOCIATE (undo a match) ─────────────────────────────────────────────
 class DissociatePayload(BaseModel):
     session: str = None

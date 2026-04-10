@@ -688,6 +688,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:.78em;outline:none">
         <option value="">Toutes</option>
         <option value="matched">✓ Reliées</option>
+        <option value="matched-noline">✓ Reliées — non affectées à une ligne</option>
         <option value="unmatched">⚠ Non reliées (toutes)</option>
         <option value="unmatched-nodept">⚠ Non reliées — sans département</option>
         <option value="unmatched-noligne">⚠ Non reliées — dept identifié, sans ligne</option>
@@ -874,11 +875,14 @@ function apiRowsToDept(tabName, rows) {
       _row:      row._row,
     });
   }
+  // Always put DÉPENSES IMPRÉVUES last
+  const sortedOrder = sectionsOrder.filter(s => s !== 'DÉPENSES IMPRÉVUES');
+  if (sectionsOrder.includes('DÉPENSES IMPRÉVUES')) sortedOrder.push('DÉPENSES IMPRÉVUES');
   return {
     id: meta.id,
     name: meta.name,
     note: '',
-    sections: sectionsOrder.map(s => ({s, lines: sectionsMap[s]})),
+    sections: sortedOrder.map(s => ({s, lines: sectionsMap[s]})),
   };
 }
 
@@ -4417,6 +4421,91 @@ function populateAssignLines(tabName) {
   wrap.style.display = '';
 }
 
+// Orphan assign — for transactions in QONTO_RAW but not in UNMATCHED or MATCH_LOG
+let _orphanData = null;
+function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
+  _orphanData = { fourn, note, ht, ttc, cat, date };
+
+  const deptOptions = Object.keys(DEPT_META).map(k =>
+    `<option value="${k}" ${k === POLE_MAP_CLIENT[cat?.toUpperCase()] ? 'selected' : ''}>${DEPT_META[k].name}</option>`
+  ).join('');
+  const preselect = POLE_MAP_CLIENT[cat?.toUpperCase()] || '';
+
+  document.getElementById('drawer-title').textContent = 'Assigner la transaction';
+  document.getElementById('drawer-sub').innerHTML = `<span style="color:var(--amber)">Orpheline</span> \u2014 pas dans la liste non reli\u00E9es`;
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <div class="drawer-section-title">Transaction</div>
+      <div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:.8em;font-weight:600;color:#fff">${fourn || '\u2014'}</div>
+        <div style="font-size:.68em;color:var(--text-muted);margin-top:4px">${note || ''}</div>
+        <div style="font-size:.65em;color:var(--text-dim);margin-top:4px">${cat || ''} <span style="color:var(--red);font-weight:600">\u2212${fmtAmt(Math.abs(ttc))}</span></div>
+      </div>
+      <div class="drawer-section-title">Destination</div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">D\u00E9partement</label>
+        <select id="assign-dept" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none" onchange="populateAssignLines(this.value)">
+          <option value="">Choisir un d\u00E9partement\u2026</option>
+          ${deptOptions}
+        </select>
+      </div>
+      <div id="assign-ligne-wrap" style="margin-bottom:14px;display:none">
+        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budg\u00E9taire <span style="font-weight:400;opacity:.5">(facultatif)</span></label>
+        <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
+          <option value="">Sans ligne (dept uniquement)</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  if (preselect) {
+    setTimeout(() => {
+      const sel = document.getElementById('assign-dept');
+      if (sel) { sel.value = preselect; populateAssignLines(preselect); }
+    }, 0);
+  }
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    <button class="drawer-btn primary" onclick="confirmOrphanAssign()">Confirmer \u2192</button>
+  `;
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  _drawerScrollY = window.scrollY; document.body.style.overflow = 'hidden';
+}
+
+async function confirmOrphanAssign() {
+  const dept = document.getElementById('assign-dept')?.value;
+  const ligne = document.getElementById('assign-ligne')?.value;
+  if (!dept) {
+    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne au moins un d\u00E9partement.', 'amber');
+    return;
+  }
+  const btn = document.querySelector('#drawer-footer .primary');
+  if (btn) { btn.textContent = 'En cours\u2026'; btn.disabled = true; }
+  try {
+    const resp = await fetch(`${API}/api/assign-direct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session: SESSION, dept, ligne, fourn: _orphanData.fourn, note: _orphanData.note, date: _orphanData.date, ht: Math.abs(_orphanData.ht), ttc: Math.abs(_orphanData.ttc) }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
+    closeDrawer();
+    await refreshBudgetData();
+    const activeTab = document.querySelector(".nl.on");
+    if (activeTab && activeTab.textContent.includes("Transactions")) renderReleve();
+    showToast('\u2713 Transaction assign\u00E9e',
+      ligne ? `\u2212${fmtAmt(Math.abs(_orphanData.ttc))} \u20AC ajout\u00E9s \u00E0 "${ligne}" dans ${dept}.` : `\u2212${fmtAmt(Math.abs(_orphanData.ttc))} \u20AC assign\u00E9s au d\u00E9partement ${dept}.`, 'green');
+  } catch (e) {
+    if (btn) { btn.textContent = 'Confirmer \u2192'; btn.disabled = false; }
+    showToast('\u26A0 Erreur', e.message, 'red');
+  }
+}
+
 async function confirmAssign(unmatchedIdx) {
   const dept = document.getElementById('assign-dept')?.value;
   const ligne = document.getElementById('assign-ligne')?.value;
@@ -4712,6 +4801,7 @@ function filterReleve() {
 
     if (catFilter && txDept.toUpperCase() !== catFilter.toUpperCase()) return false;
     if (matchFilter === 'matched' && !isMatched) return false;
+    if (matchFilter === 'matched-noline' && (!isMatched || !matchInfo || matchInfo.ligne !== '(non affecté)')) return false;
     if (matchFilter === 'unmatched' && (isMatched || isRec)) return false;
     if (matchFilter === 'unmatched-nodept' && (isMatched || isRec || txDept)) return false;
     if (matchFilter === 'unmatched-noligne' && (isMatched || isRec || !txDept)) return false;
@@ -4741,8 +4831,11 @@ function filterReleve() {
     let deptHtml = '';
     const isAmenagement = (tx.cat||'').toUpperCase().replace(/[ÉÈÊË]/g,'E').includes('AMENAGEMENT');
     if (isMatched) {
+      const ligneDisplay = matchInfo.ligne === '(non affecté)' 
+        ? `<span style="color:var(--amber);font-style:italic">non affect\u00E9 \u00E0 une ligne</span>`
+        : (matchInfo.ligne||'');
       deptHtml = `<div style="font-size:.78em;font-weight:600;color:var(--green)">${matchInfo.dept||''}</div>
-        <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${matchInfo.ligne||''}</div>`;
+        <div style="font-size:.58em;color:var(--text-dim);margin-top:1px">${ligneDisplay}</div>`;
       if (isAmenagement) {
         deptHtml += `<div style="font-size:.52em;color:var(--amber);margin-top:2px">via Am\u00E9nagement</div>`;
       }
@@ -4791,6 +4884,18 @@ function filterReleve() {
           onmouseover="this.style.background='rgba(99,102,241,.18)'" onmouseout="this.style.background='rgba(99,102,241,.08)'"
           >Assigner \u2192</button>
           <span style="font-size:.48em;color:var(--text-dim)" title="Bient\u00F4t : d\u00E9placer vers une autre session (BDX, EPK\u2026)">\u21C4 autre session \u00B7 bient\u00F4t</span>
+        </div>`;
+      } else {
+        // Orphan: in QONTO_RAW but not in MATCH_LOG or UNMATCHED — show manual assign
+        const safeF3 = (tx.fourn||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const safeN3 = (tx.note||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const safeDept3 = (tx.cat||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        actionHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <button onclick="openOrphanAssign('${safeF3}','${safeN3}',${tx.ht||0},${tx.ttc||0},'${safeDept3}','${tx.date||''}')"
+          style="font-size:.65em;padding:4px 10px;border-radius:5px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.06);color:var(--amber);cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap"
+          onmouseover="this.style.background='rgba(251,191,36,.15)'" onmouseout="this.style.background='rgba(251,191,36,.06)'"
+          >Assigner \u2192</button>
+          <span style="font-size:.48em;color:var(--text-dim)">orpheline</span>
         </div>`;
       }
     }
