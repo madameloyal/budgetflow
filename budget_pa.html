@@ -2454,6 +2454,8 @@ async function initApp(){
   }
   // Load QONTO_RAW and rebuild match map on init
   loadAndMatchQontoRaw();
+  // Pre-load transactions tab data in background
+  renderReleve();
 }
 
 async function loadAndMatchQontoRaw() {
@@ -4673,6 +4675,11 @@ function _txKey(fourn, ttc, date) {
 }
 
 async function renderReleve() {
+  // Save current filter state before re-rendering
+  const savedSearch = document.getElementById('releve-search')?.value || '';
+  const savedCat = document.getElementById('releve-filter-cat')?.value || '';
+  const savedMatch = document.getElementById('releve-filter-match')?.value || '';
+
   const empty = document.getElementById('releve-empty');
   const stats = document.getElementById('releve-stats');
   const wrap  = document.getElementById('releve-table-wrap');
@@ -4784,6 +4791,14 @@ async function renderReleve() {
       ? `Dernier import : ${formatSyncTs(syncTs)} \u00B7 ${allTx.length} transactions \u00B7 ${matchLog.length} reli\u00E9es`
       : `${allTx.length} transactions charg\u00E9es`;
   }
+
+  // Restore saved filter state
+  const searchEl = document.getElementById('releve-search');
+  const catEl = document.getElementById('releve-filter-cat');
+  const matchEl = document.getElementById('releve-filter-match');
+  if (searchEl && savedSearch) searchEl.value = savedSearch;
+  if (catEl && savedCat) catEl.value = savedCat;
+  if (matchEl && savedMatch) matchEl.value = savedMatch;
 
   filterReleve();
 }
