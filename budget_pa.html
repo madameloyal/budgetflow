@@ -4404,6 +4404,11 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
           <option value="">Choisir une ligne…</option>
         </select>
       </div>
+      <div style="margin-top:18px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
+        <div style="font-size:.65em;color:var(--text-dim);display:flex;align-items:center;gap:6px">
+          <span style="color:var(--text-muted)">\u21C4</span> R\u00E9attribution vers une autre session (BDX, EPK\u2026) \u2014 <span style="color:var(--amber);font-weight:600">bient\u00F4t</span>
+        </div>
+      </div>
     </div>
   `;
 
@@ -4519,6 +4524,10 @@ async function dissociateTransaction(dept, ligne, fourn, note, ht, ttc, deptId, 
 
 // ── RÉATTRIBUER (dissociate + assign in one flow) ──
 async function reattribuerTx(dept, ligne, fourn, note, ht, ttc) {
+  // Close current drawer and show loading
+  closeDrawer();
+  showToast('\u23F3 Dissociation...', `${fourn} \u2014 en cours`, 'amber');
+
   // Step 1: dissociate from current line
   try {
     const resp = await fetch(`${API}/api/dissociate`, {
@@ -4535,29 +4544,28 @@ async function reattribuerTx(dept, ligne, fourn, note, ht, ttc) {
     return;
   }
 
-  // Step 2: refresh data so unmatched list has the newly dissociated tx
-  await refreshBudgetData();
-  // Reload unmatched to get the new idx
+  // Step 2: fetch unmatched list directly (skip full budget refresh — do that in background)
   try {
     const unmResp = await fetch(`${API}/api/unmatched?session=${SESSION}`, { headers: {'Accept':'application/json'} });
     if (unmResp.ok) {
       const json = await unmResp.json();
       _unmatchedRows = json.data || [];
-      // Find the newly dissociated transaction in unmatched
       const newRow = _unmatchedRows.find(r =>
         r.fourn === fourn && Math.abs(Math.abs(r.ttc) - Math.abs(ttc)) < 0.01
       );
+      hideToast();
       if (newRow) {
         openAssignDrawer(newRow.idx, fourn, note, ttc, dept);
       } else {
-        // Fallback: open assign with a generic drawer
-        showToast('\u2713 Dissoci\u00E9e', `${fourn} retir\u00E9 de \u00AB ${ligne} \u00BB. Ouvre "Non reli\u00E9es" pour r\u00E9assigner.`, 'amber');
-        renderReleve();
+        showToast('\u2713 Dissoci\u00E9e', `${fourn} retir\u00E9 de \u00AB ${ligne} \u00BB.`, 'amber');
       }
     }
   } catch(e) {
     showToast('\u26A0 Erreur', 'Dissoci\u00E9e mais impossible de charger les non reli\u00E9es.', 'amber');
   }
+
+  // Background: refresh budget data for accurate totals (non-blocking)
+  refreshBudgetData().catch(() => {});
 }
 
 // ════════════════════════════════════════════════════
