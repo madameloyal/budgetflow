@@ -473,7 +473,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       </select>
     </div>
     <button class="nm on" onclick="go('bilan',this)">Bilan P&L</button>
-    <button class="nm pl">Identité événement</button>
+    <button class="nm pl">Fiche événement</button>
     <button class="nm pl">Documents</button>
     <span style="flex:1"></span>
     <button class="nm" onclick="go('releve',this)">Transactions</button>
@@ -526,18 +526,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
   </div>
 
-  <!-- ── ROW 2: Dépenses imprévues par pôle — full width ── -->
-  <div class="card mb" style="padding:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Dépenses imprévues par pôle</div>
-        <div style="font-size:.85em;font-weight:700;color:var(--red)" id="b-imp-total">—</div>
-        <div style="font-size:.65em;color:var(--text-muted)" id="b-imp-detail">—</div>
-      </div>
-    </div>
-    <div id="b-imp-bars" style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"></div>
-  </div>
-
   <!-- ── ROW 4: Dépenses par département ── -->
   <div class="sdiv" style="align-items:center">
     <div class="sdl"></div>
@@ -549,6 +537,18 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </button>
   </div>
   <div id="b-dep-wrapper" class="mb"></div>
+
+  <!-- ── Dépenses imprévues par pôle ── -->
+  <div class="card mb" style="padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:.62em;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)">Dépenses imprévues par pôle</div>
+        <div style="font-size:.85em;font-weight:700;color:var(--red)" id="b-imp-total">—</div>
+        <div style="font-size:.65em;color:var(--text-muted)" id="b-imp-detail">—</div>
+      </div>
+    </div>
+    <div id="b-imp-bars" style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"></div>
+  </div>
 
   <!-- P&L Recettes — one card per category -->
   <div class="sdiv" style="align-items:center">
@@ -1772,21 +1772,25 @@ function toggleAllSections(deptId, btn){
 }
 function go(id,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  // Clear module tab highlights
   document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
-  // Clear dept grid highlights
-  document.querySelectorAll('.dg').forEach(d=>d.classList.remove('on'));
+  document.querySelectorAll('.dt').forEach(d=>d.classList.remove('on'));
   if(tabEl) tabEl.classList.add('on');
   const page=document.getElementById('page-'+id);
   if(!page) return;
   const isTabChange = !page.classList.contains('on');
   page.classList.add('on');
-  // Update dept trigger label
-  document.getElementById('dept-trigger-label').textContent = '';
-  document.getElementById('dept-trigger').classList.remove('visible');
-  if(id==='bilan') renderBilan();
-  else if(id==='releve') { renderReleve(); }
-  else renderDept(id);
+  if(id==='bilan') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'bilan'")); if(b) b.classList.add('on'); }
+    renderBilan();
+  } else if(id==='releve') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'releve'")); if(b) b.classList.add('on'); }
+    renderReleve();
+  } else {
+    // Dept navigation — highlight matching tab strip button
+    const dtMatch = [...document.querySelectorAll('.dt')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));
+    if(dtMatch) dtMatch.classList.add('on');
+    renderDept(id);
+  }
   if(isTabChange) window.scrollTo({top:0,behavior:'smooth'});
 }
 
