@@ -1618,6 +1618,7 @@ function openRecetteDrawer(ci, ri) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    ${r._row ? `<button class="drawer-btn" onclick="deleteLigne('RECETTES',${r._row},'${(r.l||'').replace(/'/g,"\\'")}','bilan')" style="color:var(--red);border-color:rgba(248,113,113,.2)">Supprimer</button>` : ''}
     <button class="drawer-btn" id="rf-save-btn" onclick="saveRecEdit(${ci},${ri})">Enregistrer</button>
   `;
 
@@ -1650,11 +1651,14 @@ async function saveRecEdit(ci, ri) {
   if (!r?._row) { showToast('\u26A0 Erreur', 'Ligne introuvable', 'red'); return; }
 
   try {
+    const tvaNum = parseFloat(tva);
+    const estTTC = est && !isNaN(tvaNum) ? Math.round(est * (1 + tvaNum)) : est;
     const updates = [
       {field: 'ligne',        value: nom},
       {field: 'observations', value: pu ? String(pu) : ''},
       {field: 'rh',           value: qte ? String(qte) : ''},
       {field: 'est_ht',       value: String(est)},
+      {field: 'est_ttc',      value: String(estTTC)},
       {field: 'tva',          value: tva},
       {field: 'statut',       value: st},
     ];
@@ -1676,13 +1680,43 @@ async function saveRecEdit(ci, ri) {
   }
 }
 
+async function deleteLigne(dept, row, ligneName, returnTo) {
+  if (!confirm(`Supprimer « ${ligneName} » ?\n\nCette action est irréversible.`)) return;
+  try {
+    const resp = await fetch(`${API}/api/budget/delete-ligne`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session: SESSION, dept, row})
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${resp.status}`);
+    }
+    closeDrawer();
+    await refreshBudgetData();
+    if (returnTo === 'bilan') renderBilan();
+    else if (returnTo) go(returnTo, null);
+    showToast('✅ Ligne supprimée', `"${ligneName}" a été supprimée`, 'green');
+  } catch (e) {
+    showToast('⚠ Erreur', e.message, 'red');
+  }
+}
+
 
 
 function upSt(sel){
   const {id,si,li}=sel.dataset;
   const dept=DEPTS.find(d=>d.id===id);
-  dept.sections[si].lines[li].st=sel.value;
+  const line=dept.sections[si].lines[li];
+  line.st=sel.value;
   sel.className='ss '+stcls(sel.value);
+  if(line._row){
+    const tabName=Object.entries(DEPT_META).find(([,m])=>m.id===id)?.[0];
+    if(tabName) fetch(`${API}/api/budget/update`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({session:SESSION,dept:tabName,row:line._row,field:'statut',value:sel.value})
+    }).catch(e=>console.warn('Status write failed:',e));
+  }
 }
 function tog(sid){
   const tb=document.getElementById(sid);
@@ -2214,6 +2248,7 @@ function buildEditDrawer(deptId, sectionIdx, lineIdx, isNew) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    ${!isNew && line._row ? `<button class="drawer-btn" onclick="deleteLigne('${tabName}',${line._row},'${(line.l||'').replace(/'/g,"\\'")}','${deptId}')" style="color:var(--red);border-color:rgba(248,113,113,.2)">Supprimer</button>` : ''}
     <button class="drawer-btn" id="ef-save-btn"
       onclick="saveLigne('${deptId}',${sectionIdx},${lineIdx},${isNew})">
       ${isNew ? '+ Créer' : 'Enregistrer'}
@@ -2296,10 +2331,13 @@ async function saveLigne(deptId, sectionIdx, lineIdx, isNew) {
     } else {
       const line = dept.sections[sectionIdx]?.lines[lineIdx];
       if (!line?._row) throw new Error('Numéro de ligne introuvable');
+      const tvaNum = parseFloat(tva);
+      const estTTC = est && !isNaN(tvaNum) ? Math.round(est * (1 + tvaNum)) : est;
       const updates = [
         {field:'ligne',        value: nom},
         {field:'tva',          value: tva},
         {field:'est_ht',       value: String(est)},
+        {field:'est_ttc',      value: String(estTTC)},
         {field:'statut',       value: st},
         {field:'observations', value: obsWithRef},
       ];
@@ -3021,9 +3059,9 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
         </select>
       </div>
       <div id="assign-ligne-wrap" style="margin-bottom:14px;display:none">
-        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budgétaire <span style="font-weight:400;opacity:.5">(facultatif)</span></label>
+        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budgétaire *</label>
         <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
-          <option value="">Sans ligne (dept uniquement)</option>
+          <option value="">Choisir une ligne…</option>
         </select>
       </div>
       <div style="margin-top:18px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
@@ -3061,25 +3099,47 @@ function populateAssignLines(tabName) {
   const sel = document.getElementById('assign-ligne');
   if (!tabName) { wrap.style.display = 'none'; return; }
 
-  // RECETTES: use recette lines from REC array
+  let lines = [];
   if (tabName === 'RECETTES') {
-    const recLines = REC.flatMap(cat => cat.rows).filter(r => r.l);
-    sel.innerHTML = '<option value="">Sans ligne (dept uniquement)</option>' +
-      recLines.map(r => `<option value="${r.l}">${r.l}</option>`).join('');
-    wrap.style.display = '';
-    return;
+    lines = REC.flatMap(cat => cat.rows).filter(r => r.l).map(r => r.l);
+  } else {
+    const meta = DEPT_META[tabName];
+    const dept = DEPTS.find(d => d.id === meta?.id);
+    if (!dept) { wrap.style.display = 'none'; return; }
+    lines = dept.sections.flatMap(s => s.lines).filter(l => l.l && !l.l.startsWith('(ligne')).map(l => l.l);
   }
 
-  const meta = DEPT_META[tabName];
-  const dept = DEPTS.find(d => d.id === meta?.id);
-  if (!dept) { wrap.style.display = 'none'; return; }
+  // Always add Divers fallback
+  if (!lines.includes('Divers (non classé)')) lines.push('Divers (non classé)');
 
-  const lines = dept.sections.flatMap(s => s.lines)
-    .filter(l => l.l && !l.l.startsWith('(ligne'));
+  // Store full list for search filtering
+  window._assignLines = lines;
 
-  sel.innerHTML = '<option value="">Sans ligne (dept uniquement)</option>' +
-    lines.map(l => `<option value="${l.l}">${l.l}</option>`).join('');
+  sel.innerHTML = '<option value="">Choisir une ligne…</option>' +
+    lines.map(l => `<option value="${l}">${l}</option>`).join('');
   wrap.style.display = '';
+
+  // Add or update search input
+  let searchWrap = document.getElementById('assign-search-wrap');
+  if (!searchWrap) {
+    searchWrap = document.createElement('div');
+    searchWrap.id = 'assign-search-wrap';
+    searchWrap.style.cssText = 'margin-bottom:10px';
+    searchWrap.innerHTML = `<input id="assign-search" type="text" placeholder="Rechercher une ligne…"
+      style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82em;outline:none"
+      oninput="filterAssignLines(this.value)">`;
+    wrap.insertBefore(searchWrap, sel);
+  }
+  document.getElementById('assign-search').value = '';
+}
+
+function filterAssignLines(q) {
+  const sel = document.getElementById('assign-ligne');
+  const norm = q.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const lines = window._assignLines || [];
+  sel.innerHTML = '<option value="">Choisir une ligne…</option>' +
+    lines.filter(l => l.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(norm))
+      .map(l => `<option value="${l}">${l}</option>`).join('');
 }
 
 // Orphan assign — for transactions in QONTO_RAW but not in UNMATCHED or MATCH_LOG
@@ -3116,9 +3176,9 @@ function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
         </select>
       </div>
       <div id="assign-ligne-wrap" style="margin-bottom:14px;display:none">
-        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budg\u00E9taire <span style="font-weight:400;opacity:.5">(facultatif)</span></label>
+        <label style="font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Ligne budg\u00E9taire *</label>
         <select id="assign-ligne" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85em;outline:none">
-          <option value="">Sans ligne (dept uniquement)</option>
+          <option value="">Choisir une ligne…</option>
         </select>
       </div>
     </div>
@@ -3145,7 +3205,11 @@ async function confirmOrphanAssign() {
   const dept = document.getElementById('assign-dept')?.value;
   const ligne = document.getElementById('assign-ligne')?.value;
   if (!dept) {
-    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne au moins un d\u00E9partement.', 'amber');
+    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne un d\u00E9partement.', 'amber');
+    return;
+  }
+  if (!ligne) {
+    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne une ligne budg\u00E9taire.', 'amber');
     return;
   }
   const btn = document.querySelector('#drawer-footer .primary');
@@ -3177,7 +3241,11 @@ async function confirmAssign(unmatchedIdx) {
   const ligne = document.getElementById('assign-ligne')?.value;
 
   if (!dept) {
-    showToast('⚠ Champ manquant', 'Sélectionne au moins un département.', 'amber');
+    showToast('⚠ Champ manquant', 'Sélectionne un département.', 'amber');
+    return;
+  }
+  if (!ligne) {
+    showToast('⚠ Champ manquant', 'Sélectionne une ligne budgétaire.', 'amber');
     return;
   }
 
