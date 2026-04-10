@@ -42,7 +42,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .dept-tabs::-webkit-scrollbar{display:none}
 .dt{padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-dim);white-space:nowrap;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;cursor:pointer;transition:color .15s}
 .dt:hover{color:var(--text-muted)}
-.dt.on{color:#fff;font-weight:600;border-bottom-color:#fff}
+.dt.on{color:#fff;font-weight:600}
 
 /* ── HEADER ──────────────────────────── */
 .hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px;padding:14px 22px;margin:12px 0 0;border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--purple),var(--indigo)) border-box}
@@ -400,16 +400,16 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
   </div>
   <div id="dept-tabs" class="dept-tabs">
-    <button class="dt" onclick="goDeptTab('reperages',this)">Repérages</button>
-    <button class="dt" onclick="goDeptTab('vhr',this)">VHR</button>
-    <button class="dt" onclick="goDeptTab('production',this)">Production</button>
-    <button class="dt" onclick="goDeptTab('catering',this)">Catering</button>
-    <button class="dt" onclick="goDeptTab('bar',this)">Bar / Commis</button>
-    <button class="dt" onclick="goDeptTab('artistique',this)">Artistique</button>
-    <button class="dt" onclick="goDeptTab('technique',this)">Technique</button>
-    <button class="dt" onclick="goDeptTab('sceno',this)">Aménagement</button>
-    <button class="dt" onclick="goDeptTab('partenariat',this)">Partenariat</button>
-    <button class="dt" onclick="goDeptTab('communication',this)">Communication</button>
+    <button class="dt" data-idx="0" onclick="goDeptTab('reperages',this)">Repérages</button>
+    <button class="dt" data-idx="1" onclick="goDeptTab('vhr',this)">VHR</button>
+    <button class="dt" data-idx="2" onclick="goDeptTab('production',this)">Production</button>
+    <button class="dt" data-idx="3" onclick="goDeptTab('catering',this)">Catering</button>
+    <button class="dt" data-idx="4" onclick="goDeptTab('bar',this)">Bar / Commis</button>
+    <button class="dt" data-idx="5" onclick="goDeptTab('artistique',this)">Artistique</button>
+    <button class="dt" data-idx="6" onclick="goDeptTab('technique',this)">Technique</button>
+    <button class="dt" data-idx="7" onclick="goDeptTab('sceno',this)">Aménagement</button>
+    <button class="dt" data-idx="8" onclick="goDeptTab('partenariat',this)">Partenariat</button>
+    <button class="dt" data-idx="9" onclick="goDeptTab('communication',this)">Communication</button>
   </div>
 </nav>
 
@@ -1720,6 +1720,19 @@ function toggleAllSections(deptId, btn){
     if(label) label.textContent='TOUT DÉPLIER';
   }
 }
+function applyDeptTabColor(){
+  document.querySelectorAll('.dt').forEach(d=>{
+    if(d.classList.contains('on')){
+      const idx=parseInt(d.dataset.idx);
+      const col=DEPT_COLORS[idx]||'#fff';
+      d.style.borderBottomColor=col;
+      d.style.color=col;
+    } else {
+      d.style.borderBottomColor='transparent';
+      d.style.color='';
+    }
+  });
+}
 function go(id,tabEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nm').forEach(l=>l.classList.remove('on'));
@@ -1742,6 +1755,7 @@ function go(id,tabEl){
     renderDept(id);
   }
   if(isTabChange) window.scrollTo({top:0,behavior:'smooth'});
+  applyDeptTabColor();
 }
 
 function goDeptTab(id, tabEl){
@@ -1753,6 +1767,7 @@ function goDeptTab(id, tabEl){
   if(!page) return;
   page.classList.add('on');
   renderDept(id);
+  applyDeptTabColor();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
