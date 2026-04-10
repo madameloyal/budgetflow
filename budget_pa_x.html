@@ -507,14 +507,14 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
   </div>
 
-  <!-- P&L Recettes -->
+  <!-- P&L Recettes — clickable summary row -->
   <div class="sdiv" style="align-items:center">
     <div class="sdl"></div>
     <div class="sdt" style="white-space:nowrap">Recettes</div>
     <div class="sdl"></div>
     <span style="font-size:10px;color:var(--text-dim);margin-left:8px;letter-spacing:.5px;flex-shrink:0">HT</span>
   </div>
-  <div id="b-rec-cards" style="display:flex;flex-direction:column;gap:12px" class="mb"></div>
+  <div id="b-rec-summary" class="mb" style="cursor:pointer" onclick="openRecettesDrawer()"></div>
 
   <!-- ── Dépenses par département ── -->
   <div class="sdiv" style="align-items:center">
@@ -1050,66 +1050,45 @@ function renderBilan(){
 
   // ── Recettes — one card per category ────────────────────────────
   let totalRecEst = 0, totalRecReel = 0;
-  if(el('b-rec-cards')) {
-    const sections = REC.map((cat, ci) => {
-      const catEst  = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
-      const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
-      totalRecEst  += catEst;
-      totalRecReel += catReel;
-      const nLines = cat.rows.length;
+  REC.forEach(cat => {
+    totalRecEst  += cat.rows.reduce((a,r)=>a+(r.ht||0),0);
+    totalRecReel += cat.rows.reduce((a,r)=>a+(r.reel||0),0);
+  });
 
-      const dataRows = cat.rows.map((r, ri) => {
-        const reeH = r.reel||0;
-        const ec3  = r.ht - reeH;
-        return `<tr style="cursor:pointer" onclick="openRecetteDrawer(${ci},${ri})">
-          <td style="font-weight:500;color:#fff">${r.l}</td>
-          <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
-          <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
-          <td>${ecH(ec3,false,reeH>0)}</td>
-        </tr>`;
-      }).join('');
-
-      return `<div class="sec-block">
+  // Summary row on Bilan — clickable to open drawer
+  if(el('b-rec-summary')) {
+    const nCats = REC.length;
+    const nLines = REC.reduce((a,c)=>a+c.rows.length,0);
+    el('b-rec-summary').innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <table class="tbl">
-          <tr class="shead" onclick="const t=document.getElementById('brs${ci}'),h=document.getElementById('brh${ci}'),a=document.getElementById('bra${ci}');if(t.style.display==='none'){t.style.display='';h.style.display='';a.style.transform='rotate(90deg)'}else{t.style.display='none';h.style.display='none';a.style.transform='rotate(0deg)'}">
-            <td colspan="4" style="padding:0">
-              <div style="display:flex;align-items:center;padding:14px 16px;gap:0">
-                <span id="bra${ci}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(90deg);flex-shrink:0;margin-right:10px">▶</span>
-                <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${cat.cat}</span>
-                <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${nLines} ligne${nLines>1?'s':''}</span>
-                <span style="flex:1"></span>
-                <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(catEst)}</span>
-              </div>
-            </td>
-          </tr>
-          <tr id="brh${ci}">
-            <th class="tl" style="min-width:180px">Poste</th>
+          <thead><tr>
+            <th class="tl">Catégorie</th>
             <th>Estimé HT</th>
             <th>Encaissé HT</th>
             <th>Écart</th>
-          </tr>
-          <tbody id="brs${ci}">${dataRows}</tbody>
+          </tr></thead>
+          <tbody>
+            ${REC.map((cat,ci) => {
+              const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
+              const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
+              return `<tr>
+                <td style="font-weight:500;color:#fff">${cat.cat}</td>
+                <td><span class="cro" style="color:#fff;font-weight:600">${fe(catEst)}</span></td>
+                <td><span class="cro">${catReel?fe(catReel):'—'}</span></td>
+                <td>${ecH(catEst-catReel,false,catReel>0)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
           <tr class="trow">
-            <td>TOTAL HT</td>
-            <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
-            <td><span class="cro" style="font-weight:700;color:#fff">${catReel?fe(catReel):'—'}</span></td>
-            <td>${ecH(catEst-catReel,false,catReel>0)}</td>
+            <td style="font-weight:700;color:var(--green)">TOTAL RECETTES</td>
+            <td><span class="cro" style="font-weight:700;color:var(--green)">${fe(totalRecEst)}</span></td>
+            <td><span class="cro" style="font-weight:700;color:var(--green)">${totalRecReel?fe(totalRecReel):'—'}</span></td>
+            <td>${ecH(totalRecEst-totalRecReel,false,totalRecReel>0)}</td>
           </tr>
         </table>
-      </div>`;
-    });
-
-    // Grand total row
-    const grandTotalHtml = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:8px">
-      <table class="tbl"><tr class="trow" style="border-top:none!important">
-        <td style="font-size:14px;font-weight:700;color:#fff">TOTAL RECETTES</td>
-        <td><span class="cro" style="font-weight:700;color:var(--green)">${fe(totalRecEst)}</span></td>
-        <td><span class="cro" style="font-weight:700;color:var(--green)">${totalRecReel?fe(totalRecReel):'—'}</span></td>
-        <td>${ecH(totalRecEst-totalRecReel,false,totalRecReel>0)}</td>
-      </tr></table>
-    </div>`;
-
-    el('b-rec-cards').innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">${sections.join('')}</div>${grandTotalHtml}`;
+      </div>
+      <div style="text-align:center;padding:6px 0;font-size:11px;color:var(--text-dim);cursor:pointer">Cliquer pour détails et édition →</div>`;
   }
 
   // ── Résultat net — P&L bottom line ────────────────────────────
@@ -1558,49 +1537,7 @@ function openRecetteDrawer(ci, ri) {
   
 }
 
-function togglePencilMode(sid, btn){
-  const tbody = document.getElementById(sid);
-  if(!tbody) return;
-  const allInputs = tbody.querySelectorAll('.pencil-inp, .obs-inp');
-  const allLabels = tbody.querySelectorAll('.ligne-label,.tva-label,.est-label,.obs-label');
-  const editing = allInputs.length > 0 && allInputs[0].style.display !== 'none';
-  if(editing){
-    // Save all pending changes and close
-    allInputs.forEach(inp=>{
-      if(inp.dataset.f) upCell(inp);
-      inp.style.display='none';
-    });
-    allLabels.forEach(l=>l.style.display='');
-    btn.style.color='var(--text-dim)';
-    btn.style.opacity='.5';
-    btn.title='Modifier';
-  } else {
-    // Open pencil mode
-    allLabels.forEach(l=>l.style.display='none');
-    allInputs.forEach(i=>{ i.style.display=''; });
-    btn.style.color='var(--indigo)';
-    btn.style.opacity='1';
-    btn.title='Terminer';
-    allInputs[0] && allInputs[0].focus();
-  }
-}
 
-function pencilKey(e, inp){
-  e.stopPropagation();
-  if(e.key==='Enter'){
-    e.preventDefault();
-    upCell(inp);
-    // Move to next pencil input in same section
-    const all=[...inp.closest('tbody').querySelectorAll('.pencil-inp,.obs-inp')].filter(i=>i.style.display!=='none');
-    const idx=all.indexOf(inp);
-    if(idx>=0 && idx<all.length-1) all[idx+1].focus();
-    else inp.blur();
-  }
-  if(e.key==='Escape'){
-    e.preventDefault();
-    inp.blur();
-  }
-}
 
 function upSt(sel){
   const {id,si,li}=sel.dataset;
@@ -2895,555 +2832,87 @@ async function openImprevuesDrawer(deptId) {
   }
 }
 
-function openUnmatchedDrawer(deptId) {
-  const dept = DEPTS.find(d => d.id === deptId);
-  const deptName = dept ? dept.name : deptId;
-  // Build set of Qonto categories for this dept
-  const tabName = Object.keys(DEPT_META).find(k => DEPT_META[k].id === deptId) || deptId.toUpperCase();
-  const cats = new Set();
-  cats.add(tabName);
-  Object.entries(POLE_MAP_CLIENT).forEach(([qCat, mapped]) => { if (mapped === tabName) cats.add(qCat); });
-  const deptRows = _unmatchedRows.filter(r => {
-    const rCat = normStr(r.dept||'');
-    return [...cats].some(c => normStr(c) === rCat);
-  });
-  const totalTTC = deptRows.reduce((a,r) => a + Math.abs(r.ttc||0), 0);
-
-  document.getElementById('drawer-title').innerHTML = `<span style="color:var(--red)">⚠</span> Transactions non reliées`;
-  document.getElementById('drawer-sub').innerHTML = `${deptName} · ${deptRows.length} transaction${deptRows.length>1?'s':''} · −${fmtAmt(totalTTC)}`;
-
-  const rowsHtml = deptRows.length ? deptRows.map(r => {
-    const amt = r.ttc ? `−${fmtAmt(Math.abs(r.ttc))}` : '—';
-    const dateStr = r.date ? (() => {
-      const d = r.date.toString().trim();
-      if (d.includes('/')) { const p=d.split('/'); return p[0].length===4 ? `${p[2]}/${p[1]}/${p[0]}` : d.slice(0,10); }
-      if (d.includes('-')) return d.slice(0,10).split('-').reverse().join('/');
-      return d.slice(0,10);
-    })() : '';
-    return `<div style="background:var(--surface-2);border-radius:8px;padding:12px 14px;border:1px solid rgba(255,255,255,.04)">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78em;font-weight:600;color:#fff;margin-bottom:2px">${r.fourn || '—'}</div>
-          ${r.note ? `<div style="font-size:.68em;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.note}</div>` : ''}
-        </div>
-        <div style="text-align:right;flex-shrink:0;margin-left:12px">
-          <div style="font-family:monospace;font-size:.85em;font-weight:700;color:var(--red)">${amt}</div>
-          ${dateStr ? `<div style="font-size:.6em;color:var(--text-dim);margin-top:2px">${dateStr}</div>` : ''}
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          ${r.section ? `<span style="font-size:.6em;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--text-muted);text-transform:uppercase;font-weight:600">${r.section}</span>` : ''}
-          ${r.raison ? `<span style="font-size:.58em;color:var(--text-dim)">${r.raison}</span>` : ''}
-        </div>
-        <button onclick="openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')"
-          style="font-size:.65em;padding:4px 10px;border-radius:5px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;white-space:nowrap;flex-shrink:0"
-          onmouseover="this.style.background='rgba(99,102,241,.22)'" onmouseout="this.style.background='rgba(99,102,241,.1)'">
-          Assigner →
-        </button>
-      </div>
-    </div>`;
-  }).join('') : `<div style="text-align:center;padding:30px 0">
-    <div style="font-size:1.5em;margin-bottom:8px">📭</div>
-    <div style="font-size:.82em;color:var(--text-muted);font-weight:600">Aucune transaction pour ce pôle</div>
-    <div style="font-size:.7em;color:var(--text-dim);margin-top:4px">Pas de transaction Qonto non reliée pour ${deptName}</div>
-  </div>`;
-
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>Transactions Qonto → ${deptName}</span>
-        <span style="font-size:.75em;color:var(--red);font-weight:600">${deptRows.length} non reliée${deptRows.length>1?'s':''}</span>
-      </div>
-      <div style="font-size:.68em;color:var(--text-dim);margin-bottom:14px;line-height:1.5">
-        Ces transactions Qonto sont catégorisées « ${deptName} » mais n'ont pas pu être associées automatiquement à une ligne budgétaire. Cliquez « Assigner » pour les relier manuellement.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${rowsHtml}
-      </div>
-    </div>
-  `;
-
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `
-    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
-    <button class="drawer-btn" onclick="closeDrawer();setTimeout(()=>go('releve',null),100)" style="color:#818cf8;border-color:rgba(99,102,241,.3)">Voir toutes les transactions →</button>
-  `;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
-
-function openDeptComparisonDrawer(deptId) {
-  const dept = DEPTS.find(d => d.id === deptId);
-  if (!dept) return;
-  const tot2026 = dept.sections.flatMap(s=>s.lines).reduce((a,l)=>a+(l.est||0),0);
-  const sections = dept.sections.filter(s=>s.lines.reduce((a,l)=>a+(l.est||0),0)>0);
-
-  document.getElementById('drawer-title').innerHTML = `📊 Comparaison éditions`;
-  document.getElementById('drawer-sub').innerHTML = `${dept.name} · Paris XXL 2025 vs 2026`;
-
-  const rows = sections.map(s => {
-    const est2026 = s.lines.reduce((a,l)=>a+(l.est||0),0);
-    const mock2025 = Math.round(est2026 * (0.78 + (s.s.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 40) / 100));
-    const diff = est2026 - mock2025;
-    const diffPct = mock2025>0 ? Math.round(diff/mock2025*100) : 0;
-    const max = Math.max(est2026, mock2025, 1);
-    return {s:s.s, est2026, mock2025, diff, diffPct, max};
-  });
-
-  const total2025 = rows.reduce((a,r)=>a+r.mock2025,0);
-  const totalDiff = tot2026 - total2025;
-  const totalDiffPct = total2025>0 ? Math.round(totalDiff/total2025*100) : 0;
-
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Vue d'ensemble
-        <span class="future-badge">✦ Données 2025 simulées</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-          <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">Budget 2025</div>
-          <div style="font-size:.88em;font-weight:700;color:rgba(255,255,255,.4)">${new Intl.NumberFormat('fr-FR').format(total2025).replace(/\u202f/g,'\u00a0')}\u00a0€</div>
-        </div>
-        <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-          <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">Budget 2026</div>
-          <div style="font-size:.88em;font-weight:700;color:#fff">${new Intl.NumberFormat('fr-FR').format(tot2026).replace(/\u202f/g,'\u00a0')}\u00a0€</div>
-        </div>
-        <div style="background:${totalDiff>0?'rgba(248,113,113,.08)':'rgba(52,211,153,.08)'};border:1px solid ${totalDiff>0?'rgba(248,113,113,.2)':'rgba(52,211,153,.2)'};border-radius:8px;padding:10px 12px">
-          <div style="font-size:.55em;color:var(--text-dim);margin-bottom:3px">Évolution</div>
-          <div style="font-size:.88em;font-weight:700;color:${totalDiff>0?'var(--red)':'var(--green)'}">${totalDiff>0?'+':''}${totalDiffPct}%</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title">Par section</div>
-      <div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6em">
-        <span style="display:flex;align-items:center;gap:3px;color:var(--text-dim)"><span style="width:7px;height:7px;border-radius:2px;background:rgba(255,255,255,.2)"></span>2025</span>
-        <span style="display:flex;align-items:center;gap:3px;color:#818cf8"><span style="width:7px;height:7px;border-radius:2px;background:var(--indigo)"></span>2026</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${rows.map(r=>`
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-              <span style="font-size:.72em;font-weight:600;color:var(--text-muted)">${r.s}</span>
-              <span style="font-size:.65em;font-weight:700;color:${r.diff>0?'var(--red)':'var(--green)'}">${r.diff>0?'+':''}${r.diffPct}%</span>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="width:35px;font-size:.58em;color:var(--text-dim)">2025</span>
-                <div style="flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
-                  <div style="width:${Math.round(r.mock2025/r.max*100)}%;height:100%;background:rgba(255,255,255,.2);border-radius:2px"></div>
-                </div>
-                <span style="width:75px;font-size:.62em;color:rgba(255,255,255,.4);text-align:right">${new Intl.NumberFormat('fr-FR').format(r.mock2025).replace(/\u202f/g,'\u00a0')}\u00a0€</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="width:35px;font-size:.58em;color:#818cf8">2026</span>
-                <div style="flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
-                  <div style="width:${Math.round(r.est2026/r.max*100)}%;height:100%;background:var(--indigo);opacity:.8;border-radius:2px"></div>
-                </div>
-                <span style="width:75px;font-size:.62em;color:#fff;font-weight:600;text-align:right">${new Intl.NumberFormat('fr-FR').format(r.est2026).replace(/\u202f/g,'\u00a0')}\u00a0€</span>
-              </div>
-            </div>
-            ${r.diff>0
-              ? `<div style="font-size:.6em;color:var(--red)">▲ +${new Intl.NumberFormat('fr-FR').format(Math.abs(r.diff)).replace(/\u202f/g,'\u00a0')}\u00a0€ vs 2025</div>`
-              : `<div style="font-size:.6em;color:var(--green)">▼ ${new Intl.NumberFormat('fr-FR').format(Math.abs(r.diff)).replace(/\u202f/g,'\u00a0')}\u00a0€ vs 2025</div>`}
-          </div>`).join('')}
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title">Activer la comparaison réelle</div>
-      <div style="border:1px dashed rgba(99,102,241,.25);border-radius:10px;padding:14px;text-align:center">
-        <div style="font-size:.72em;color:var(--text-muted);margin-bottom:8px;line-height:1.5">
-          Importez un export BudgetFlow de Paris XXL 2025 pour remplacer les données simulées par les vraies valeurs.
-        </div>
-        <div style="font-size:.65em;padding:5px 12px;border-radius:6px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#818cf8;display:inline-block">
-          Disponible via Festiflow — module Événements
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
 
 
-function openProductionPanel(type) {
-  if (type === 'comparaison') {
-    document.getElementById('drawer-title').innerHTML = `📊 Comparaison éditions`;
-    document.getElementById('drawer-sub').innerHTML = `Production · Paris XXL 2025 vs 2026`;
-    const dept = DEPTS.find(d => d.id === 'production');
-    const sections2026 = dept ? dept.sections.map(s => ({
-      name: s.s,
-      est2026: s.lines.reduce((a,l)=>a+(l.est||0),0),
-    })) : [];
 
-    document.getElementById('drawer-body').innerHTML = `
-      <div class="drawer-section">
-        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-          Par section — Production
-          <span class="future-badge">✦ Données 2025 à importer</span>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:12px;font-size:.62em">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.15)"></span>2025</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:var(--indigo)"></span>2026</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${sections2026.map(s => {
-            const mock2025 = Math.round(s.est2026 * (0.78 + (s.s.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 40) / 100));
-            const diff = s.est2026 - mock2025;
-            const diffPct = mock2025 > 0 ? Math.round(diff/mock2025*100) : 0;
-            const max = Math.max(s.est2026, mock2025, 1);
-            return `<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span style="font-size:.72em;font-weight:600;color:var(--text-muted)">${s.name}</span>
-                <span style="font-size:.65em;font-weight:700;color:${diff>0?'var(--red)':'var(--green)'}">${diff>0?'+':''}${diffPct}%</span>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:3px">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <div style="width:60px;font-size:.58em;color:var(--text-dim)">2025</div>
-                  <div style="flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
-                    <div style="width:${Math.round(mock2025/max*100)}%;height:100%;background:rgba(255,255,255,.15);border-radius:2px"></div>
-                  </div>
-                  <div style="width:70px;font-size:.62em;color:var(--text-dim);text-align:right">${fe(mock2025)}</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <div style="width:60px;font-size:.58em;color:#818cf8">2026</div>
-                  <div style="flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden">
-                    <div style="width:${Math.round(s.est2026/max*100)}%;height:100%;background:var(--indigo);opacity:.8;border-radius:2px"></div>
-                  </div>
-                  <div style="width:70px;font-size:.62em;color:#fff;font-weight:600;text-align:right">${fe(s.est2026)}</div>
-                </div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">Importer les données 2025</div>
-        <div style="border:1px dashed rgba(99,102,241,.25);border-radius:10px;padding:14px;text-align:center;opacity:.7">
-          <div style="font-size:.72em;color:var(--text-muted);margin-bottom:6px">Chargez un export BudgetFlow d'une édition précédente pour activer la comparaison réelle.</div>
-          <div style="font-size:.65em;padding:5px 12px;border-radius:6px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#818cf8;display:inline-block">
-            Disponible via Festiflow — module Événements
-          </div>
-        </div>
-      </div>`;
 
-  }
 
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
-
-function openRepéragesPanel(type) {
-  if (type === 'reperages_visits') {
-    document.getElementById('drawer-title').innerHTML = `🗓 Prochains repérages`;
-    document.getElementById('drawer-sub').innerHTML = `Repérages · Paris XXL 2026`;
-    document.getElementById('drawer-body').innerHTML = `
-      <div class="drawer-section">
-        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-          Planning des visites
-          <span class="future-badge">✦ Bientôt</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${[
-            {j:'J-45',date:'29 jan. 2026',lieu:'Paris Nord Villepinte',type:'Inspection technique',statut:'Planifié',color:'#818cf8'},
-            {j:'J-30',date:'13 fév. 2026',lieu:'Paris Nord Villepinte',type:'Validation scénographie',statut:'Planifié',color:'#818cf8'},
-            {j:'J-15',date:'28 fév. 2026',lieu:'Paris — réunion interne',type:'Réunion finale',statut:'À confirmer',color:'var(--amber)'},
-          ].map(v=>`
-            <div style="background:var(--surface-2);border-radius:10px;padding:12px 14px;border:1px solid rgba(255,255,255,.04);opacity:.7">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span style="font-size:.62em;font-weight:700;color:${v.color};background:${v.color}18;padding:2px 8px;border-radius:4px">${v.j}</span>
-                <span style="font-size:.62em;color:var(--text-dim)">${v.date}</span>
-              </div>
-              <div style="font-size:.78em;font-weight:600;color:#fff;margin-bottom:2px">${v.type}</div>
-              <div style="font-size:.65em;color:var(--text-dim)">${v.lieu}</div>
-              <div style="margin-top:6px">
-                <span style="font-size:.6em;color:${v.statut==='Planifié'?'#818cf8':'var(--amber)'};background:${v.statut==='Planifié'?'rgba(129,140,248,.1)':'rgba(251,191,36,.1)'};padding:2px 7px;border-radius:4px">${v.statut}</span>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-          Participants par visite
-          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-        </div>
-        <div style="border:1px dashed rgba(99,102,241,.2);border-radius:10px;padding:14px;opacity:.7">
-          <div style="font-size:.68em;color:var(--text-dim);line-height:1.6;margin-bottom:10px">
-            Les participants aux repérages seront assignés depuis le module Contacts Festiflow. Chaque visite aura sa liste de participants avec notes de frais associées.
-          </div>
-          ${[
-            {name:'Hugo Le Guellec', role:'Dir. technique', avatar:'HG'},
-            {name:'Chloe Adour', role:'Prod. exécutive', avatar:'CA'},
-            {name:'Leon Saturnin', role:'Régisseur général', avatar:'LS'},
-          ].map(p=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);opacity:.6">
-              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(168,85,247,.4));display:flex;align-items:center;justify-content:center;font-size:.6em;font-weight:700;color:#fff;flex-shrink:0">${p.avatar}</div>
-              <div>
-                <div style="font-size:.75em;color:#fff;font-weight:500">${p.name}</div>
-                <div style="font-size:.62em;color:var(--text-dim)">${p.role}</div>
-              </div>
-              <div style="margin-left:auto;font-size:.62em;color:var(--text-dim)">— frais</div>
-            </div>`).join('')}
-        </div>
-      </div>`;
-  } else {
-    // reperages_contacts — Frais par intervenant
-    document.getElementById('drawer-title').innerHTML = `👥 Frais par intervenant`;
-    document.getElementById('drawer-sub').innerHTML = `Repérages · Notes de frais`;
-    document.getElementById('drawer-body').innerHTML = `
-      <div class="drawer-section">
-        <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-          Contacts assignés aux repérages
-          <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-        </div>
-        ${[
-          {name:'Hugo Le Guellec', role:'Directeur technique', tel:'+33 6 —', mail:'hugo@madameloyal.fr', frais:'—', avatar:'HG', color:'#60a5fa'},
-          {name:'Chloe Nadia Andrea Adour', role:'Prod. exécutive', tel:'+33 6 —', mail:'chloe@madameloyal.fr', frais:'—', avatar:'CA', color:'#e879f9'},
-          {name:'Leon Saturnin Austin', role:'Régisseur général', tel:'+33 6 —', mail:'leon@madameloyal.fr', frais:'—', avatar:'LS', color:'#34d399'},
-        ].map(p=>`
-          <div style="background:var(--surface-2);border-radius:10px;padding:14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04);opacity:.8">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-              <div style="width:36px;height:36px;border-radius:50%;background:${p.color}22;border:1px solid ${p.color}44;display:flex;align-items:center;justify-content:center;font-size:.65em;font-weight:700;color:${p.color};flex-shrink:0">${p.avatar}</div>
-              <div>
-                <div style="font-size:.8em;font-weight:600;color:#fff">${p.name}</div>
-                <div style="font-size:.62em;color:var(--text-dim)">${p.role}</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-              ${[['📞 Téléphone',p.tel],['✉ Email',p.mail]].map(([l,v])=>`
-                <div style="background:var(--surface);border-radius:6px;padding:7px 10px">
-                  <div style="font-size:.55em;color:var(--text-dim);margin-bottom:2px">${l}</div>
-                  <div style="font-size:.68em;color:var(--text-muted)">${v}</div>
-                </div>`).join('')}
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.12);border-radius:6px">
-              <span style="font-size:.65em;color:var(--green)">💰 Notes de frais</span>
-              <span style="font-size:.68em;font-weight:600;color:var(--text-dim)">${p.frais}</span>
-            </div>
-          </div>`).join('')}
-        <div style="padding:10px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;font-size:.65em;color:var(--text-dim);line-height:1.5;margin-top:4px">
-          Les données de contact complètes (IBAN, sécu, contrat) seront disponibles via le module Contacts Festiflow. Les notes de frais seront soumises directement par les intervenants.
-        </div>
-      </div>`;
-  }
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
-
-function openBilanBudgetsDrawer() {
-  document.getElementById('drawer-title').innerHTML = `📋 Budgets soumis par pôle`;
-  document.getElementById('drawer-sub').innerHTML = `Vue consolidée · Paris XXL 2026`;
-
-  const totalBudget = DEPTS.reduce((a,d)=>a+dtot(d).est,0);
-
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title">Soumissions par département</div>
-      ${DEPTS.map(d => {
-        const t = dtot(d);
-        const pct2 = totalBudget>0 ? Math.round(t.est/totalBudget*100) : 0;
-        const hasData = t.est > 0;
-        const statusColor = hasData ? 'var(--green)' : 'var(--amber)';
-        const statusLabel = hasData ? '✓ Soumis' : '⏳ En attente';
-        return `<div style="background:var(--surface-2);border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div>
-              <div style="font-size:.78em;font-weight:600;color:#fff">${d.name}</div>
-              <div style="font-size:.62em;margin-top:2px"><span style="color:${statusColor}">${statusLabel}</span></div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:.85em;font-weight:700;color:${hasData?'#fff':'var(--text-dim)'}">${hasData?fe(t.est):'—'}</div>
-              ${hasData?`<div style="font-size:.6em;color:var(--text-dim)">${pct2}% du budget total</div>`:''}
-            </div>
-          </div>
-          ${hasData ? `<div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
-            <div style="width:${pct2}%;height:100%;background:var(--indigo);opacity:.7;border-radius:2px"></div>
-          </div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>
-
-    <!-- Coming soon: reject/confirm/note -->
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Actions CEO
-        <span class="future-badge">✦ Bientôt</span>
-      </div>
-      <div style="border:1px dashed rgba(168,85,247,.2);border-radius:10px;padding:16px;opacity:.75">
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-          ${['✅ Confirmer le budget','❌ Rejeter et demander révision','💬 Ajouter une note sticky'].map(a=>
-            `<div style="padding:9px 12px;background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:8px;font-size:.75em;color:var(--text-dim);display:flex;align-items:center;gap:8px;pointer-events:none">
-              ${a}
-            </div>`
-          ).join('')}
-        </div>
-        <div style="text-align:center;font-size:.65em;color:var(--text-dim)">
-          Ces actions seront disponibles lorsque les chefs de pôle soumettront leurs budgets via Festiflow
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `
-    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
-  `;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
-}
 
 // ════════════════════════════════════════════════════
 // VHR — Rooming & Transport drawers
 // ════════════════════════════════════════════════════
-function openVhrRoomingDrawer() {
-  document.getElementById('drawer-title').innerHTML = '🏨 Rooming list';
-  document.getElementById('drawer-sub').innerHTML = `<span class="df-badge new">Paris XXL 2026</span> <span style="margin-left:6px">VHR · Hébergement</span>`;
+
+
+// ════════════════════════════════════════════════════
+// RECETTES DRAWER — full detail + edit
+// ════════════════════════════════════════════════════
+function openRecettesDrawer() {
+  document.getElementById('drawer-title').innerHTML = `<span style="color:var(--green)">📊</span> Recettes`;
+  document.getElementById('drawer-sub').innerHTML = `Détail par catégorie · ${REC.reduce((a,c)=>a+c.rows.length,0)} lignes`;
+
+  let totalEst = 0, totalReel = 0;
+  const catHtml = REC.map((cat, ci) => {
+    const catEst = cat.rows.reduce((a,r)=>a+(r.ht||0),0);
+    const catReel = cat.rows.reduce((a,r)=>a+(r.reel||0),0);
+    totalEst += catEst; totalReel += catReel;
+    const rows = cat.rows.map((r, ri) => {
+      const reeH = r.reel||0;
+      return `<tr style="cursor:pointer" onclick="closeDrawer();openRecetteDrawer(${ci},${ri})">
+        <td style="font-weight:500;color:#fff">${r.l}</td>
+        <td><span class="cro" style="color:#fff;font-weight:600">${r.ht?fe(r.ht):'—'}</span></td>
+        <td><span class="cro">${reeH?fe(reeH):'—'}</span></td>
+        <td>${ecH(r.ht-reeH,false,reeH>0)}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="sec-block">
+      <table class="tbl">
+        <tr class="shead" onclick="const t=document.getElementById('drs${ci}'),h=document.getElementById('drh${ci}'),a=document.getElementById('dra${ci}');if(t.style.display==='none'){t.style.display='';h.style.display='';a.style.transform='rotate(90deg)'}else{t.style.display='none';h.style.display='none';a.style.transform='rotate(0deg)'}">
+          <td colspan="4" style="padding:0">
+            <div style="display:flex;align-items:center;padding:12px 16px;gap:0">
+              <span id="dra${ci}" style="font-size:12px;color:var(--text-dim);transition:transform .25s;display:inline-block;transform:rotate(90deg);flex-shrink:0;margin-right:10px">▶</span>
+              <span style="font-weight:700;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:#fff;flex-shrink:0">${cat.cat}</span>
+              <span style="font-size:12px;color:var(--text-dim);margin-left:10px;flex-shrink:0">${cat.rows.length} ligne${cat.rows.length>1?'s':''}</span>
+              <span style="flex:1"></span>
+              <span style="font-size:13px;font-weight:700;color:var(--text-muted)">${fe(catEst)}</span>
+            </div>
+          </td>
+        </tr>
+        <tr id="drh${ci}">
+          <th class="tl" style="min-width:140px">Poste</th>
+          <th>Estimé HT</th>
+          <th>Encaissé HT</th>
+          <th>Écart</th>
+        </tr>
+        <tbody id="drs${ci}">${rows}</tbody>
+        <tr class="trow">
+          <td>TOTAL HT</td>
+          <td><span class="cro" style="font-weight:700;color:#fff">${fe(catEst)}</span></td>
+          <td><span class="cro" style="font-weight:700;color:#fff">${catReel?fe(catReel):'—'}</span></td>
+          <td>${ecH(catEst-catReel,false,catReel>0)}</td>
+        </tr>
+      </table>
+    </div>`;
+  }).join('');
 
   document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title">Vue d'ensemble hébergement</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-        ${[
-          ['🏨 Hôtels contractualisés','—','Confirmés'],
-          ['🛏 Chambres réservées','—','Total'],
-          ['👥 Personnes à loger','— / 213','Staff confirmé'],
-          ['📅 Nuitées totales','—','J-2 à J+2'],
-          ['💶 Budget hébergement','—','Au budget'],
-          ['✓ Devis signés','—','Hôtels'],
-        ].map(([l,v,s])=>`
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
-            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
-            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
-          </div>`).join('')}
-      </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px">
+      ${catHtml}
     </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Hôtels prévus
-        <span class="future-badge">✦ Bientôt</span>
-      </div>
-      <div style="border:1px dashed rgba(96,165,250,.2);border-radius:10px;padding:14px;opacity:.7">
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${[
-            ['🏨 Hôtel Ibis Paris Nord 2','12 chambres · J-1 à J+1','En négociation'],
-            ['🏨 B&B Hôtel Villepinte','8 chambres · J-2 à J+2','En négociation'],
-            ['🏠 Logements équipe core','6 pers. · appartement','En négociation'],
-          ].map(([h,d,s])=>`
-            <div style="background:var(--surface);border-radius:7px;padding:9px 12px">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                  <div style="font-size:.72em;font-weight:600;color:var(--text-muted)">${h}</div>
-                  <div style="font-size:.62em;color:var(--text-dim);margin-top:2px">${d}</div>
-                </div>
-                <span style="font-size:.58em;padding:2px 7px;border-radius:4px;background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.2)">${s}</span>
-              </div>
-            </div>`).join('')}
-        </div>
-        <div style="margin-top:10px;font-size:.62em;color:var(--text-dim);text-align:center">
-          Données du LOG_STAFF (ROOMING LIST) — disponible via Festiflow Hébergement
-        </div>
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Régimes alimentaires
-        <span class="future-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--green)">✦ Bientôt</span>
-      </div>
-      <div style="border:1px dashed rgba(52,211,153,.2);border-radius:10px;padding:14px;opacity:.7">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-          ${[['🥗 Végétarien','—'],['🌱 Vegan','—'],['🚫 Allergie','—']].map(([l,v])=>`
-            <div style="background:var(--surface-2);border-radius:7px;padding:8px;text-align:center">
-              <div style="font-size:.75em;margin-bottom:3px">${l.split(' ')[0]}</div>
-              <div style="font-size:.62em;color:var(--text-dim);margin-bottom:4px">${l.split(' ').slice(1).join(' ')}</div>
-              <div style="font-size:.85em;font-weight:700;color:var(--text-dim)">${v}</div>
-            </div>`).join('')}
-        </div>
-        <div style="margin-top:8px;font-size:.62em;color:var(--text-dim);text-align:center">
-          Données issues des fiches contacts Festiflow
-        </div>
-      </div>
-    </div>
-  `;
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <table class="tbl"><tr class="trow" style="border-top:none!important">
+        <td style="font-size:14px;font-weight:700;color:var(--green)">TOTAL RECETTES</td>
+        <td><span class="cro" style="font-weight:700;color:var(--green)">${fe(totalEst)}</span></td>
+        <td><span class="cro" style="font-weight:700;color:var(--green)">${totalReel?fe(totalReel):'—'}</span></td>
+        <td>${ecH(totalEst-totalReel,false,totalReel>0)}</td>
+      </tr></table>
+    </div>`;
 
   document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
+
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
-  
-}
-
-function openVhrTransportDrawer() {
-  document.getElementById('drawer-title').innerHTML = '🚐 Planning transports';
-  document.getElementById('drawer-sub').innerHTML = `<span class="df-badge new">Paris XXL 2026</span> <span style="margin-left:6px">VHR · Transport</span>`;
-
-  document.getElementById('drawer-body').innerHTML = `
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Vue d'ensemble transports
-        <span class="future-badge" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--amber)">✦ Bientôt</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-        ${[
-          ['🚐 Navettes prévues','—','Gare → Site'],
-          ['✈️ Trajets aéroport','—','CDG / Orly'],
-          ['🚙 Locations véhicules','—','Camions / Vans'],
-          ['🎫 Cartes avantage SNCF','—','Staff éligible'],
-        ].map(([l,v,s])=>`
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
-            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
-            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
-          </div>`).join('')}
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <div class="drawer-section-title" style="display:flex;align-items:center;gap:8px">
-        Vue d'ensemble hébergement
-        <span class="future-badge">✦ Bientôt</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-        ${[
-          ['🏨 Hôtels contractualisés','—','Confirmés'],
-          ['🛏 Chambres réservées','—','Total'],
-          ['👥 Personnes à loger','— / 213','Staff confirmé'],
-          ['📅 Nuitées totales','—','J-2 à J+2'],
-          ['💶 Budget hébergement','—','Au budget'],
-          ['✓ Devis signés','—','Hôtels'],
-        ].map(([l,v,s])=>`
-          <div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">
-            <div style="font-size:.58em;color:var(--text-dim);margin-bottom:4px">${l}</div>
-            <div style="font-size:.9em;font-weight:700;color:var(--text-dim)">${v}</div>
-            <div style="font-size:.55em;color:var(--text-dim);margin-top:2px">${s}</div>
-          </div>`).join('')}
-      </div>
-    </div>
-  `;
-
-  document.getElementById('drawer-footer').style.display = 'flex';
-  document.getElementById('drawer-footer').innerHTML = `<button class="drawer-btn" onclick="closeDrawer()">Fermer</button>`;
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  
 }
 
 function closeDrawer() {
