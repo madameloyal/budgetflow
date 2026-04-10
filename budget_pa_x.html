@@ -26,8 +26,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .wrap{max-width:1020px;margin:0 auto;padding:0 20px 80px;overflow-x:hidden}
 
 /* ── NAV ─────────────────────────────── */
-.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,13,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0;margin-bottom:0}
-.nav-top{max-width:1020px;margin:0 auto;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.03)}
+.nav{position:sticky;top:0;z-index:100;background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:0;margin-bottom:0}
+.nav-top{max-width:1020px;margin:0 auto;display:flex;align-items:center;padding:0 20px}
 .nav-sw{display:flex;align-items:center;gap:8px;padding:8px 14px 8px 0;margin-right:8px;border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;cursor:pointer;transition:opacity .15s}
 .nav-sw:hover{opacity:.8}
 .nav-sw-av{width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px}
@@ -38,12 +38,12 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .nm.pl:hover{color:#333}
 .dept-trigger{display:none;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.03);cursor:pointer;border:none;font-family:inherit;font-size:12px;font-weight:600;color:#fff;margin-right:8px}
 .dept-trigger.visible{display:flex}
-.dept-grid-wrap{max-width:1020px;margin:0 auto;padding:6px 20px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+.dept-grid-wrap{max-width:1020px;margin:0 auto;padding:2px 20px 8px}
 .dept-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
 .dg{font-size:11px;padding:6px 8px;border-radius:6px;color:var(--text-dim);cursor:pointer;text-align:center;transition:all .12s;border:none;background:none;font-family:inherit}
 .dg:hover{background:rgba(255,255,255,.03);color:var(--text-muted)}
 .dg.on{background:rgba(255,255,255,.06);color:#fff;font-weight:600}
-.dept-toggle{max-width:1020px;margin:0 auto;padding:4px 20px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);font-size:10px;color:#333;transition:color .15s;font-family:inherit;border:none;background:none;display:block;width:100%}
+.dept-toggle{max-width:1020px;margin:0 auto;padding:3px 20px 6px;text-align:center;cursor:pointer;font-size:10px;color:#333;transition:color .15s;font-family:inherit;border:none;background:none;display:block;width:100%}
 .dept-toggle:hover{color:var(--text-dim)}
 
 /* ── HEADER ──────────────────────────── */
@@ -502,15 +502,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <!-- ═══════════ PAGE BILAN ═══════════ -->
 <div id="page-bilan" class="page on">
 
-  <!-- ── Bilan title ── -->
-  <div class="sdiv" style="align-items:center;margin:14px 0 16px">
-    <div class="sdl"></div>
-    <div class="sdt" style="white-space:nowrap">Bilan P&amp;L</div>
-    <div class="sdl"></div>
-  </div>
-
   <!-- ── ROW 1: 4 stat chips ── -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="bilan-chips">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;margin-top:18px" id="bilan-chips">
     <div class="bchip" id="chip-resultat">
       <div class="bchip-label">Résultat net HT</div>
       <div class="bchip-val" id="chip-res-val">—</div>
@@ -1518,10 +1511,8 @@ function renderDept(id){
   }).join('');
 
   cont.innerHTML=`
-    <div class="sdiv"><div class="sdl"></div><div class="sdt">${dept.name}</div><div class="sdl"></div></div>
-
     <!-- ── 4 stat chips ── -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;margin-top:18px">
       <div class="bchip">
         <div class="bchip-label">Au budget HT</div>
         <div class="bchip-val">${fe(tot.est)}</div>
