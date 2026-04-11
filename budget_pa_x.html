@@ -4007,17 +4007,14 @@ function checkPassword() {
   }
 })();
 </script>
-<footer style="max-width:1020px;margin:0 auto;padding:40px 20px 24px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:11px;color:var(--text-dim);letter-spacing:.3px">
-  <span style="font-family:'Space Grotesk',sans-serif;font-weight:600">Festiflow: Budget v2.8</span>
-  <span style="opacity:.3">·</span>
-  <span>Version Standalone HTML</span>
-  <span style="opacity:.3">·</span>
-  <span id="footer-sync">—</span>
+<footer style="max-width:1020px;margin:0 auto;padding:48px 20px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif">
+  <span style="font-weight:600;letter-spacing:.5px">Festiflow <span style="opacity:.5">·</span> Budget v2.9</span>
+  <span id="footer-sync" style="font-variant-numeric:tabular-nums">—</span>
 </footer>
 <script>
 (function(){
   const el=document.getElementById('footer-sync');
-  if(el) el.textContent='Chargé le '+new Date().toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(el) el.textContent='Chargé le '+new Date().toLocaleString('fr-FR',{day:'numeric',month:'short',year:'numeric'})+ ' à '+new Date().toLocaleString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const orig=window.refreshBudgetData;
   if(orig) window.refreshBudgetData=async function(){
     const r=await orig.apply(this,arguments);
