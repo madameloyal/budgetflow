@@ -3119,7 +3119,7 @@ function populateAssignLines(tabName) {
     const meta = DEPT_META[tabName];
     const dept = DEPTS.find(d => d.id === meta?.id);
     if (!dept) { wrap.style.display = 'none'; return; }
-    lines = dept.sections.flatMap(s => s.lines).filter(l => l.l && !l.l.startsWith('(ligne')).map(l => l.l);
+    lines = dept.sections.filter(s => s.s !== 'À TRIER').flatMap(s => s.lines).filter(l => l.l && !l.l.startsWith('(ligne')).map(l => l.l);
   }
 
   window._assignLines = lines;
@@ -3157,7 +3157,7 @@ function selectAssignDivers() {
   document.querySelectorAll('#assign-list > div').forEach(d => {
     d.style.background = ''; d.style.fontWeight = '';
   });
-  showToast('✓ À trier', `"${fourn}" sera classée dans « À TRIER » — à recatégoriser plus tard`, 'amber');
+  showToast('→ Ligne sélectionnée', `"${fourn}" → À TRIER · Clique Confirmer pour valider`, 'amber');
 }
 
 function renderAssignList(lines) {

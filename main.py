@@ -977,8 +977,8 @@ def assign_transaction(payload: AssignPayload):
         append_match_log(svc, tab, tx_section, ligne_val, tx_fourn, tx_note, tx_date, abs(ht_val), abs(ttc_val), "manual", ml_tab)
 
         # 3. Recalculate ALL réel from MATCH_LOG
-        recalc_reel_from_match_log(svc, sess)
         invalidate_cache()
+        recalc_reel_from_match_log(svc, sess)
 
         return {"status": "ok", "assigned": ligne_val, "dept": tab,
                 "ht_added": abs(ht_val), "ttc_added": abs(ttc_val)}
@@ -1014,8 +1014,8 @@ def assign_direct(payload: DirectAssignPayload):
         svc = get_sheets_service()
         ensure_match_log_tab(svc, ml_tab)
         append_match_log(svc, tab, "", ligne_val, payload.fourn, payload.note, payload.date, abs(payload.ht), abs(payload.ttc), "manual", ml_tab)
-        recalc_reel_from_match_log(svc, sess)
         invalidate_cache()
+        recalc_reel_from_match_log(svc, sess)
         return {"status": "ok", "assigned": ligne_val, "dept": tab, "ttc_added": abs(payload.ttc)}
     except HTTPException:
         raise
@@ -1094,8 +1094,8 @@ def dissociate_transaction(payload: DissociatePayload):
             ).execute()
 
         # 3. Recalculate ALL réel from MATCH_LOG
-        recalc_reel_from_match_log(svc, sess)
         invalidate_cache()
+        recalc_reel_from_match_log(svc, sess)
 
         return {"status": "ok", "dissociated": payload.ligne, "dept": tab,
                 "ht_removed": abs(payload.ht), "ttc_removed": abs(payload.ttc)}
@@ -1433,8 +1433,8 @@ async def import_qonto(file: UploadFile = File(...), session: str = None):
 
     # ── STEP 8: Recalculate ALL réel from MATCH_LOG ──
     try:
-        recalc_reel_from_match_log(svc, sess)
         invalidate_cache()
+        recalc_reel_from_match_log(svc, sess)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error recalculating RÉEL: {e}")
 
