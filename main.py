@@ -881,6 +881,7 @@ def recalc_reel_from_match_log(svc, sess):
             spreadsheetId=SHEET_ID,
             body={"valueInputOption": "RAW", "data": write_data}
         ).execute()
+        invalidate_cache()   # clear stale reads so next /api/budget returns fresh réel
 
 
 @app.get("/api/match-log")
@@ -909,8 +910,13 @@ def get_match_log(dept: str = "", ligne: str = "", session: str = None):
                 "source": str(row[8]).strip(),
                 "timestamp": str(row[9]).strip(),
             }
-            if dept and entry["dept"].upper() != dept.upper():
-                continue
+            if dept:
+                d_upper = dept.upper()
+                stored = entry["dept"].upper()
+                # Match both base name ("PRODUCTION") and prefixed ("PA_PRODUCTION")
+                prefixed = tab_name(sess, d_upper).upper() if d_upper in [t.upper() for t in sess["dept_tabs"]] + [RECETTES_TAB.upper()] else d_upper
+                if stored != d_upper and stored != prefixed:
+                    continue
             if ligne and entry["ligne"].strip() != ligne.strip():
                 continue
             rows.append(entry)
