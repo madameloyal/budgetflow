@@ -1047,8 +1047,8 @@ function renderBilan(){
   if(el('b-dep-wrapper')) {
     el('b-dep-wrapper').innerHTML = `
       <div class="card">
-        ${gr>0?`<div style="height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-bottom:14px">
-          <div style="width:${Math.min(depBurnPct,100)}%;height:100%;background:${depBurnColor};opacity:.7;border-radius:2px;transition:width .6s"></div>
+        ${gr>0?`<div style="height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:14px;display:flex;box-shadow:inset 0 1px 2px rgba(0,0,0,.2)">
+          ${DEPTS.map((d,i)=>{const dR=dtot(d).reel;if(dR<=0||ge<=0)return'';return`<div title="${d.name}: ${fe(dR)}" style="height:100%;width:${(dR/ge*100).toFixed(2)}%;background:${DEPT_COLORS[i]||'var(--indigo)'};flex-shrink:0"></div>`;}).join('')}
         </div>`:''}
         <div class="twrap">
           <table class="btbl" id="dep-table">
@@ -3149,11 +3149,14 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat, isReattribuer) {
       <div id="assign-divers-wrap" style="display:none;margin-bottom:14px">
         <button onclick="selectAssignDivers()" style="width:100%;padding:10px;border-radius:8px;border:1px dashed rgba(251,191,36,.25);background:rgba(251,191,36,.04);color:var(--amber);font-family:'DM Sans',sans-serif;font-size:.78em;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(251,191,36,.08)'" onmouseout="this.style.background='rgba(251,191,36,.04)'">Pas sûr ? → À trier</button>
       </div>
-      <div style="margin-top:18px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px">
-        <div style="font-size:.65em;color:var(--text-dim);display:flex;align-items:center;gap:6px">
-          <span style="color:var(--text-muted)">\u21C4</span> R\u00E9attribution vers une autre session (BDX, EPK\u2026) \u2014 <span style="color:var(--amber);font-weight:600">bient\u00F4t</span>
-        </div>
+    </div>
+    <div class="drawer-section" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;margin-bottom:8px">Déplacer vers une autre session</div>
+      <div style="display:flex;gap:8px">
+        ${SESSION!=='bdx'?'<div style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);opacity:.45;cursor:default"><div style="font-size:.72em;font-weight:600;color:var(--text-muted)">Bordeaux</div><div style="font-size:.58em;color:var(--text-dim)">ML × SONORA</div></div>':''}
+        ${SESSION!=='epk'?'<div style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);opacity:.45;cursor:default"><div style="font-size:.72em;font-weight:600;color:var(--text-muted)">Paris EPK</div><div style="font-size:.58em;color:var(--text-dim)">ML × Elektric Park</div></div>':''}
       </div>
+      <div style="font-size:.55em;color:var(--text-dim);margin-top:6px;text-align:center;font-style:italic">Bientôt disponible</div>
     </div>
   `;
 
