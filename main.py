@@ -318,7 +318,16 @@ def dept_from_note(note: str) -> str | None:
     return None
 
 def is_total_row(section: str, ligne: str) -> bool:
-    return "TOTAL" in (section + " " + ligne).upper()
+    s = section.strip().upper()
+    l = ligne.strip().upper()
+    # Section header like "TOTAL GÉNÉRAL" with no ligne
+    if "TOTAL" in s and not l:
+        return True
+    # Summary row: ligne is exactly "TOTAL" or starts with "TOTAL " (e.g. "TOTAL DEPT")
+    # But only when section is empty (real total rows don't have a section value)
+    if not s and l and (l == "TOTAL" or l.startswith("TOTAL ")):
+        return True
+    return False
 
 def parse_dept_rows(values: list, tab: str) -> list:
     rows = []
@@ -332,7 +341,7 @@ def parse_dept_rows(values: list, tab: str) -> list:
         if section_val and not ligne_val:
             current_section = section_val
             continue
-        if "TOTAL" in ligne_val.upper():
+        if is_total_row(section_val, ligne_val) and current_section.upper() != "À TRIER":
             continue
         if not ligne_val and not any(str(c).strip() for c in row[5:10]):
             continue
@@ -785,7 +794,7 @@ def get_recettes(session: str = None):
             if section_val and not ligne_val:
                 current_section = section_val
                 continue
-            if is_total_row(section_val, ligne_val):
+            if is_total_row(section_val, ligne_val) and current_section.upper() != "À TRIER":
                 continue
             if not ligne_val and not any(str(c).strip() for c in row[5:10]):
                 continue
@@ -906,13 +915,17 @@ def recalc_reel_from_match_log(svc, sess):
             continue
         vals = value_ranges[idx]
 
+        cur_sec = ""
         for i, row in enumerate(vals):
             if i < 2:
                 continue
             rp = list(row) + [""] * 12
             ligne = str(rp[COL["ligne"]]).strip()
             section = str(rp[COL["section"]]).strip()
-            if not ligne or ligne.startswith("(ligne") or is_total_row(section, ligne):
+            if section and not ligne:
+                cur_sec = section
+                continue
+            if not ligne or ligne.startswith("(ligne") or (is_total_row(section, ligne) and cur_sec.upper() != "À TRIER"):
                 continue
             # Look up in sums — try both with and without prefix
             key_full = (full_t, ligne)
@@ -1328,14 +1341,18 @@ def parse_qonto_file(file_bytes: bytes, filename: str) -> list:
 
 def find_budget_line(dept_vals: list, note: str, fourn: str, ref: str):
     candidates = []
+    cur_sec = ""
     for i, row in enumerate(dept_vals):
         row = list(row) + [""] * 12
         ligne   = str(row[COL["ligne"]]).strip()
         section = str(row[COL["section"]]).strip()
         obs     = str(row[COL["observations"]]).strip()
-        if not ligne or ligne.startswith("(ligne") or is_total_row(section, ligne):
+        if section and not ligne:
+            cur_sec = section
             continue
-        candidates.append({"row": i + 1, "ligne": ligne, "section": section, "obs": obs})
+        if not ligne or ligne.startswith("(ligne") or (is_total_row(section, ligne) and cur_sec.upper() != "À TRIER"):
+            continue
+        candidates.append({"row": i + 1, "ligne": ligne, "section": cur_sec or section, "obs": obs})
 
     if not candidates:
         return None
