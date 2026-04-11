@@ -26,11 +26,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 .wrap{max-width:1020px;margin:0 auto;padding:12px 20px 80px;overflow-x:hidden}
 
 /* ── NAV ─────────────────────────────── */
-.nav{position:sticky;top:0;z-index:100;background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:0;margin-bottom:0}
+.nav{position:-webkit-sticky;position:sticky;top:0;z-index:100;background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:0;margin-bottom:0}
 .nav-top{max-width:1020px;margin:0 auto;display:flex;align-items:center;padding:0 20px}
 .nav-sw{display:flex;align-items:center;gap:8px;padding:8px 14px 8px 0;margin-right:8px;border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;cursor:pointer;transition:opacity .15s}
 .nav-sw:hover{opacity:.8}
-.nav-sw-av{width:28px;height:28px;border-radius:50%;background:var(--surface-2);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;overflow:hidden}
+.nav-sw-av{width:36px;height:36px;border-radius:50%;background:var(--surface-2);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;overflow:hidden}
 .nm{font-size:12px;font-weight:500;padding:8px 12px;color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:color .15s;border:none;background:none;font-family:inherit}
 .nm:hover{color:var(--text-muted)}
 .nm.on{color:#fff;font-weight:600}
@@ -208,9 +208,14 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .hdr{padding:10px 14px;gap:6px;font-size:.9em}
 
   /* ── nav ── */
+  .nav{position:-webkit-sticky;position:sticky;top:0;z-index:100;background:var(--surface)}
   .nav-sw{padding:6px 10px 6px 0;margin-right:4px}
-  .nm{font-size:11px;padding:6px 8px}
-  .dt{font-size:11px;padding:6px 10px}
+  .nav-sw-av{width:30px;height:30px}
+  .nm{font-size:12px;padding:8px 10px}
+  .nav-top{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;mask-image:linear-gradient(to right,#000 85%,transparent);-webkit-mask-image:linear-gradient(to right,#000 85%,transparent)}
+  .nav-top::-webkit-scrollbar{display:none}
+  .dt{font-size:13px;padding:10px 14px}
+  .dept-tabs{mask-image:linear-gradient(to right,#000 85%,transparent);-webkit-mask-image:linear-gradient(to right,#000 85%,transparent)}
 
   /* ── P&L result table ── */
   .btbl th,.btbl td{padding:5px 6px;font-size:.68em}
@@ -454,10 +459,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       </select>
     </div>
     <button class="nm on" onclick="go('bilan',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bilan P&L</button>
+    <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
     <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
     <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
-    <span style="flex:1"></span>
-    <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
   </div>
   <div class="dept-tabs-bg">
   <div id="dept-tabs" class="dept-tabs">
