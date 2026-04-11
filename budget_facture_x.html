@@ -710,23 +710,23 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         </div>
         <!-- Right: key figures from budget -->
         <div style="padding:24px 28px;background:rgba(255,255,255,.01)">
-          <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:12px">Résumé financier</div>
+          <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:12px">Détails</div>
           <div style="display:grid;gap:14px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.75em;color:var(--text-muted)">Budget total</span>
-              <span id="fiche-budget" style="font-size:.95em;font-weight:700;color:#fff">—</span>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.75em;color:var(--text-muted)">Coproduction</span>
+              <span id="fiche-coprod-badge" style="font-size:.7em;padding:3px 10px;border-radius:4px;font-weight:600">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.75em;color:var(--text-muted)">Recettes prévues</span>
-              <span id="fiche-recettes" style="font-size:.95em;font-weight:700;color:var(--green)">—</span>
+              <span style="font-size:.75em;color:var(--text-muted)">Structure juridique</span>
+              <span id="fiche-structure" style="font-size:.82em;font-weight:600;color:#fff">SASU</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.75em;color:var(--text-muted)">Consommé</span>
-              <span id="fiche-consomme" style="font-size:.95em;font-weight:700;color:var(--amber)">—</span>
+              <span style="font-size:.75em;color:var(--text-muted)">Licence spectacles</span>
+              <span id="fiche-licence" style="font-size:.82em;font-weight:600;color:#fff">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.75em;color:var(--text-muted)">Départements</span>
-              <span id="fiche-depts" style="font-size:.95em;font-weight:700;color:#fff">—</span>
+              <span style="font-size:.75em;color:var(--text-muted)">Billetterie</span>
+              <span id="fiche-billetterie" style="font-size:.82em;font-weight:600;color:#fff">DICE + Shotgun</span>
             </div>
           </div>
         </div>
@@ -771,6 +771,26 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       <div class="sdl"></div>
       <div class="sdt" style="white-space:nowrap">Prestataires & Partenaires</div>
       <div class="sdl"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="fiche-presta-count" style="font-size:.7em;color:var(--text-dim)">0 prestataires</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <!-- Grid toggle -->
+        <div style="display:flex;border:1px solid var(--border);border-radius:5px;overflow:hidden">
+          <button onclick="setPrestaGrid(2)" id="presta-grid-2" style="padding:5px 8px;border:none;background:none;color:var(--text-dim);cursor:pointer;font-size:10px;transition:all .15s" title="2 colonnes">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="0" y="7" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="7" width="5" height="5" rx="1" fill="currentColor"/></svg>
+          </button>
+          <button onclick="setPrestaGrid(3)" id="presta-grid-3" style="padding:5px 8px;border:none;border-left:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:10px;transition:all .15s" title="3 colonnes">
+            <svg width="14" height="12" viewBox="0 0 14 12"><rect x="0" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="5" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="10" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="0" y="7" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="5" y="7" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="10" y="7" width="3.5" height="5" rx="1" fill="currentColor"/></svg>
+          </button>
+          <button onclick="setPrestaGrid(1)" id="presta-grid-1" style="padding:5px 8px;border:none;border-left:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer;font-size:10px;transition:all .15s" title="Liste">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="12" height="3" rx="1" fill="currentColor"/><rect x="0" y="4.5" width="12" height="3" rx="1" fill="currentColor"/><rect x="0" y="9" width="12" height="3" rx="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="fiche-presta-container" style="margin-bottom:24px">
@@ -2574,9 +2594,9 @@ function handleDriveUrlInput(url) {
 // ════════════════════════════════════════════════════
 
 const EVENT_DATA = {
-  pa: { name:'Paris XXL 2026', sub:'Madame Loyal · Édition 2026', dates:'13-14 mars 2026', lieu:'Paris Expo · Porte de Versailles', capacite:'35 000', edition:'#4', coprod:false },
-  bdx: { name:'Bordeaux ML × SONORA 2026', sub:'Madame Loyal · Édition 2026', dates:'12-13 juin 2026', lieu:'Bordeaux · TBC', capacite:'15 000', edition:'#1', coprod:false },
-  epk: { name:'ML × Elektric Park 2026', sub:'Madame Loyal × EPK · Édition 2026', dates:'5-6 sept 2026', lieu:'Domaine de Saint-Cloud', capacite:'25 000', edition:'#1', coprod:true, coprodName:'ML × Elektric Park', coprodEntity:'Elektric Park SAS', coprodContact:'—', coprodSplit:'50 / 50' },
+  pa: { name:'Paris XXL 2026', sub:'Madame Loyal · Édition 2026', dates:'13-14 mars 2026', lieu:'Paris Expo · Porte de Versailles', capacite:'35 000', edition:'#4', structure:'SASU', licence:'—', billetterie:'DICE + Shotgun', coprod:false },
+  bdx: { name:'Bordeaux ML × SONORA 2026', sub:'Madame Loyal · Édition 2026', dates:'12-13 juin 2026', lieu:'Bordeaux · TBC', capacite:'15 000', edition:'#1', structure:'SASU', licence:'—', billetterie:'DICE', coprod:false },
+  epk: { name:'ML × Elektric Park 2026', sub:'Madame Loyal × EPK · Édition 2026', dates:'5-6 sept 2026', lieu:'Domaine de Saint-Cloud', capacite:'25 000', edition:'#1', structure:'Coproduction', licence:'—', billetterie:'DICE + Shotgun', coprod:true, coprodName:'ML × Elektric Park', coprodEntity:'Elektric Park SAS', coprodContact:'—', coprodSplit:'50 / 50' },
 };
 
 const PRESTA_DATA = [
@@ -2612,19 +2632,26 @@ function renderFiche() {
   if(el('fiche-capacite')) el('fiche-capacite').textContent = ev.capacite;
   if(el('fiche-edition')) el('fiche-edition').textContent = ev.edition;
 
-  // Financial summary from DEPTS
-  if (typeof DEPTS !== 'undefined' && DEPTS.length) {
-    const tE = DEPTS.reduce((a,d) => a+dtot(d).est, 0);
-    const tR = DEPTS.reduce((a,d) => a+dtot(d).reel, 0);
-    const p = tE > 0 ? Math.round(tR/tE*100) : 0;
-    if(el('fiche-budget')) el('fiche-budget').textContent = fe(tE);
-    if(el('fiche-consomme')) el('fiche-consomme').textContent = p + '%';
-    if(el('fiche-depts')) el('fiche-depts').textContent = DEPTS.length;
+  // Details panel
+  const coprodBadge = el('fiche-coprod-badge');
+  if (coprodBadge) {
+    if (ev.coprod) {
+      coprodBadge.textContent = 'Oui';
+      coprodBadge.style.background = 'rgba(168,85,247,.1)';
+      coprodBadge.style.color = '#c4b5fd';
+    } else {
+      coprodBadge.textContent = 'Non';
+      coprodBadge.style.background = 'rgba(255,255,255,.04)';
+      coprodBadge.style.color = 'var(--text-dim)';
+    }
   }
-  if (typeof REC !== 'undefined' && REC.length) {
-    const totalRec = REC.reduce((a,c) => a + c.rows.reduce((b,r) => b + (r.ht||0), 0), 0);
-    if(el('fiche-recettes')) el('fiche-recettes').textContent = fe(totalRec);
-  }
+  if(el('fiche-structure')) el('fiche-structure').textContent = ev.structure || '—';
+  if(el('fiche-licence')) el('fiche-licence').textContent = ev.licence || '—';
+  if(el('fiche-billetterie')) el('fiche-billetterie').textContent = ev.billetterie || '—';
+
+  // Presta count
+  const totalPrestas = PRESTA_DATA.reduce((a,c) => a + c.items.length, 0);
+  if(el('fiche-presta-count')) el('fiche-presta-count').textContent = `${totalPrestas} prestataire${totalPrestas > 1 ? 's' : ''}`;
 
   // Coproduction — visible for testing
   const coprodWrap = document.getElementById('fiche-coprod-wrap');
@@ -2669,7 +2696,7 @@ function renderFiche() {
             <span style="font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim)">${cat.cat}</span>
             <span style="font-size:.65em;color:var(--text-dim)">${cat.items.length}</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px" class="presta-cat-grid">
+          <div style="display:grid;grid-template-columns:repeat(${_prestaGridCols},1fr);gap:10px" class="presta-cat-grid">
             ${cards}
           </div>
         </div>`;
@@ -2791,6 +2818,21 @@ function openPrestaDrawer(catIdx, itemIdx) {
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
+}
+
+let _prestaGridCols = 3;
+function setPrestaGrid(cols) {
+  _prestaGridCols = cols;
+  document.querySelectorAll('.presta-cat-grid').forEach(g => {
+    g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  });
+  [1,2,3].forEach(n => {
+    const btn = document.getElementById('presta-grid-'+n);
+    if (btn) {
+      btn.style.background = n === cols ? 'rgba(255,255,255,.05)' : 'none';
+      btn.style.color = n === cols ? '#fff' : 'var(--text-dim)';
+    }
+  });
 }
 
 window.renderPrestaTab = function(tab, ci, pi) {
