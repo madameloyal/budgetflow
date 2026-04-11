@@ -158,13 +158,14 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
 @media(max-width:720px){
   /* ── layout ── */
+  html,body{overflow-x:hidden}
   body{font-size:15px}
   .wrap{padding:0 12px 60px}
   .hdr{flex-wrap:wrap;padding:12px 14px;gap:8px}
   .mb{margin-bottom:10px}
 
-  /* ── tables: hide non-essential cols, allow horizontal scroll only inside .twrap ── */
-  .twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+  /* ── tables: horizontal scroll inside container ── */
+  .twrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tbl th:nth-child(3),.tbl td:nth-child(3),.obs{display:none}
   .tbl th,.tbl td{padding:6px 7px;font-size:.72em}
   .tbl td:first-child{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -183,8 +184,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   /* ── imprévues badges: horizontal scroll ── */
   #b-imp-bars{grid-template-columns:repeat(10,minmax(70px,1fr))!important;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
 
-  /* ── bilan dept table + P&L: horizontal scroll wrapper ── */
-  #b-dep-wrapper,#b-resultat-net{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+  /* ── bilan dept table + P&L + recettes: horizontal scroll ── */
+  #b-dep-wrapper,#b-resultat-net,#b-rec-summary,#b-rec-expanded{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
   /* ── toast ── */
   #import-toast{min-width:260px;max-width:calc(100vw - 32px);left:50%;font-size:.9em}
@@ -218,6 +219,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   /* ── dept tables ── */
   .tbl th,.tbl td{padding:5px 6px;font-size:.68em}
   .tbl td:first-child{max-width:100px}
+  .tbl th:first-child,.btbl th:first-child{min-width:auto!important}
   .edit-ligne-btn{display:none}
   .tbl th:nth-child(4),.tbl td:nth-child(4),
   .tbl th:nth-child(5),.tbl td:nth-child(5){display:none}
