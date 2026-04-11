@@ -223,7 +223,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
   /* ── dept tables ── */
   .tbl th,.tbl td{padding:5px 6px;font-size:.68em}
-  .tbl td:first-child{max-width:100px}
+  .tbl td:first-child{max-width:none;white-space:normal}
   .tbl th:first-child,.btbl th:first-child{min-width:auto!important}
   .edit-ligne-btn{display:none}
   .tbl th:nth-child(4),.tbl td:nth-child(4),
@@ -233,7 +233,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .sec-hdr{font-size:.78em!important;padding:10px 14px!important}
 
   /* ── unmatched transactions cards ── */
-  .unm-row{flex-direction:column!important;align-items:flex-start!important;gap:6px!important}
+  .unm-note{display:none!important}
+  .unm-grid{grid-template-columns:70px 1.5fr 80px 60px!important}
+
+  /* ── hide type badges on mobile ── */
+  .chip{display:none!important}
 
   /* ── drawer ── */
   #drawer{height:90vh}
@@ -1461,8 +1465,8 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
     const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
     const rowsHtml = deptRows.length ? `
-      <div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:12px;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
-        <span>Date</span><span style="padding-left:8px">Fournisseur</span><span>Note</span><span style="text-align:right">Montant</span><span></span>
+      <div class="unm-grid" style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:12px;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
+        <span>Date</span><span style="padding-left:8px">Fournisseur</span><span class="unm-note">Note</span><span style="text-align:right">Montant</span><span></span>
       </div>
       <div style="max-height:260px;overflow-y:auto">
         ${deptRows.map(r => {
@@ -1472,16 +1476,16 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
             if (match) dateRaw = match.date || '';
           }
           const dateShort = dateRaw.split(' ')[0] || '—';
-          return `<div style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.02)">
+          return `<div class="unm-grid" style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.02)">
           <span style="font-size:13px;color:var(--text-dim);white-space:nowrap">${dateShort}</span>
           <span style="font-size:13px;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:8px">${r.fourn||'—'}</span>
-          <span style="font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
+          <span class="unm-note" style="font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
           <span style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;text-align:right">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
           <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:10px;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
         </div>`}).join('')}
       </div>` : `<div style="font-size:13px;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
     return `
-    <div class="card" style="padding:16px">
+    <div class="card unm-card" style="padding:16px">
       ${rowsHtml}
     </div>`;
   };
