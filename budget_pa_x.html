@@ -3270,12 +3270,16 @@ async function ensureDiversLine(dept, ligneName) {
   }
   // Create À TRIER section (if needed) + line
   try {
-    await fetch(`${API}/api/budget/add-ligne`, {
+    const resp = await fetch(`${API}/api/budget/add-ligne`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({session: SESSION, dept, section: 'À TRIER', ligne: ligneName, est_ht: 0, statut: 'ESTIMATION'})
     });
-  } catch(e) { console.warn('ensureDiversLine failed:', e); }
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      showToast('⚠ À TRIER échoué', `${dept}: ${err.detail || resp.status}`, 'red');
+    }
+  } catch(e) { showToast('⚠ À TRIER échoué', `${dept}: ${e.message}`, 'red'); }
 }
 
 async function confirmOrphanAssign() {
