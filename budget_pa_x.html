@@ -3037,7 +3037,7 @@ function closeDrawer() {
 }
 let _drawerScrollY = 0;
 
-function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
+function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat, isReattribuer) {
   window._currentAssignFourn = fourn || 'Transaction';
   const deptOptions = Object.entries(DEPT_META).map(([tab, m]) => `<option value="${tab}">${m.name}</option>`).join('');
 
@@ -3099,6 +3099,7 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat) {
 
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
+    ${isReattribuer ? `<button class="drawer-btn" onclick="closeDrawer();refreshBudgetData();showToast('✓ Dissociée','Transaction retirée et non réassignée.','green')" style="color:var(--amber);border-color:rgba(251,191,36,.25)">Juste dissocier</button>` : ''}
     <button class="drawer-btn primary" onclick="confirmAssign(${unmatchedIdx})">Confirmer →</button>
   `;
 
@@ -3423,7 +3424,7 @@ async function reattribuerTx(dept, ligne, fourn, note, ht, ttc) {
       );
       hideToast();
       if (newRow) {
-        openAssignDrawer(newRow.idx, fourn, note, ttc, dept);
+        openAssignDrawer(newRow.idx, fourn, note, ttc, dept, true);
       } else {
         showToast('\u2713 Dissoci\u00E9e', `${fourn} retir\u00E9 de \u00AB ${ligne} \u00BB.`, 'amber');
       }
