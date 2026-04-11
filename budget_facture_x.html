@@ -2217,6 +2217,15 @@ function openFactureDrawer(preDept, preLigne) {
           <button onclick="clearFacturePDF()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px">✕</button>
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:.6em;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">ou coller un lien</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <input id="fact-drive-url" type="url" placeholder="https://drive.google.com/file/d/..." style="${inputSt}" oninput="handleDriveUrlInput(this.value)">
+      <div id="fact-drive-preview" style="display:none;margin-top:8px;border-radius:6px;overflow:hidden;border:1px solid var(--border)">
+        <iframe id="fact-drive-iframe" style="width:100%;height:180px;border:none" src=""></iframe>
+      </div>
     </div>
   `;
 
@@ -2255,7 +2264,34 @@ function populateFactureLines(tabName) {
   const dept = meta ? DEPTS.find(d => d.id === meta.id) : null;
   if (!dept) { sel.innerHTML = '<option value="">— Aucune ligne —</option>'; return; }
   const lines = dept.sections.filter(s => s.s !== 'À TRIER').flatMap(s => s.lines).filter(l => l.l && !l.l.startsWith('(ligne')).map(l => l.l);
-  sel.innerHTML = '<option value="">— Optionnel —</option>' + lines.map(l => `<option value="${l}">${l}</option>`).join('');
+  const sections = [...new Set(dept.sections.map(s => s.s))].filter(s => s !== 'À TRIER');
+  sel.innerHTML = '<option value="">— Optionnel —</option>'
+    + lines.map(l => `<option value="${l}">${l}</option>`).join('')
+    + '<option value="__NEW__" style="color:#34d399;font-weight:600">＋ Nouvelle ligne budgétaire</option>';
+  sel.onchange = function() {
+    const newWrap = document.getElementById('fact-new-ligne-wrap');
+    if (this.value === '__NEW__') {
+      if (!newWrap) {
+        const div = document.createElement('div');
+        div.id = 'fact-new-ligne-wrap';
+        div.style.cssText = 'margin-top:10px;padding:12px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.15);border-radius:6px';
+        const labelSt = 'font-size:.7em;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px';
+        const inputSt = 'width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:#fff;font-family:inherit;font-size:.85em;outline:none';
+        div.innerHTML = `
+          <div style="margin-bottom:10px">
+            <label style="${labelSt}">Nom de la ligne *</label>
+            <input id="fact-new-ligne-name" type="text" placeholder="Ex: LOIC HANNEZO - TEASER" style="${inputSt}">
+          </div>
+          <div>
+            <label style="${labelSt}">Section</label>
+            <select id="fact-new-ligne-section" style="${inputSt}">
+              ${sections.map(s => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>`;
+        wrap.appendChild(div);
+      } else { newWrap.style.display = ''; }
+    } else if (newWrap) { newWrap.style.display = 'none'; }
+  };
 }
 
 function calcFactureTTC() {
@@ -2283,6 +2319,20 @@ function clearFacturePDF() {
   document.getElementById('fact-pdf-input').value = '';
 }
 
+function handleDriveUrlInput(url) {
+  const preview = document.getElementById('fact-drive-preview');
+  const iframe = document.getElementById('fact-drive-iframe');
+  if (!url || !url.includes('drive.google.com')) { preview.style.display = 'none'; return; }
+  // Extract file ID from various Drive URL formats
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    iframe.src = `https://drive.google.com/file/d/${match[1]}/preview`;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 async function saveFacture(action) {
   const dept = document.getElementById('fact-dept')?.value;
   const ligne = document.getElementById('fact-ligne')?.value;
@@ -2298,11 +2348,29 @@ async function saveFacture(action) {
   if (!fourn) { showToast('⚠ Champ manquant', 'Renseigne le fournisseur.', 'amber'); return; }
   if (!ht) { showToast('⚠ Champ manquant', 'Renseigne le montant HT.', 'amber'); return; }
 
+  // Handle new ligne creation
+  let finalLigne = ligne;
+  if (ligne === '__NEW__') {
+    const newName = document.getElementById('fact-new-ligne-name')?.value?.trim();
+    const newSection = document.getElementById('fact-new-ligne-section')?.value || '';
+    if (!newName) { showToast('⚠ Champ manquant', 'Nom de la nouvelle ligne requis.', 'amber'); return; }
+    try {
+      const resp = await fetch(`${API}/api/budget/add-ligne`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({session: SESSION, dept, section: newSection, ligne: newName, est_ht: ht, tva: String(tva), statut: 'EN COURS'})
+      });
+      if (!resp.ok) { const err = await resp.json().catch(()=>({})); throw new Error(err.detail || resp.status); }
+      finalLigne = newName;
+      showToast('✅ Ligne créée', `"${newName}" ajoutée à ${dept}`, 'green');
+    } catch(e) { showToast('⚠ Erreur', `Création ligne: ${e.message}`, 'red'); return; }
+  }
+
   const statut = action === 'envoye' ? 'ENVOYÉ À QONTO' : 'BROUILLON';
 
   // For now: show toast with summary + copy-to-clipboard for Qonto
   const ref = `FACT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
-  const summary = `Demande de paiement — Paris XXL 2026\nFournisseur: ${fourn}\nMontant HT: ${fmtAmt(ht)} €\nMontant TTC: ${fmtAmt(ttc)} €\nÉchéance: ${echeance || 'Non définie'}\nDépartement: ${dept}${ligne ? '\nLigne: '+ligne : ''}\nRéf: ${ref}${notes ? '\nNote: '+notes : ''}`;
+  const summary = `Demande de paiement — Paris XXL 2026\nFournisseur: ${fourn}\nMontant HT: ${fmtAmt(ht)} €\nMontant TTC: ${fmtAmt(ttc)} €\nÉchéance: ${echeance || 'Non définie'}\nDépartement: ${dept}${finalLigne && finalLigne !== '__NEW__' ? '\nLigne: '+finalLigne : ''}\nRéf: ${ref}${notes ? '\nNote: '+notes : ''}`;
 
   if (action === 'envoye') {
     try {
@@ -2323,7 +2391,8 @@ async function saveFacture(action) {
   }
 
   // TODO: POST /api/facture to persist in FACTURES sheet + upload PDF to Drive
-  console.log('FACTURE:', { dept, ligne, fourn, ht, ttc, tva, dateFact, echeance, statut, ref, notes, hasPdf: !!_facturePdfFile });
+  const driveUrl = document.getElementById('fact-drive-url')?.value?.trim() || '';
+  console.log('FACTURE:', { dept, ligne: finalLigne, fourn, ht, ttc, tva, dateFact, echeance, statut, ref, notes, hasPdf: !!_facturePdfFile, driveUrl });
 }
 
 async function handleQontoFile(event) {
