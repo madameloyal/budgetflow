@@ -323,9 +323,8 @@ def is_total_row(section: str, ligne: str) -> bool:
     # Section header like "TOTAL GÉNÉRAL" with no ligne
     if "TOTAL" in s and not l:
         return True
-    # Summary row: ligne is exactly "TOTAL" or starts with "TOTAL " (e.g. "TOTAL DEPT")
-    # But only when section is empty (real total rows don't have a section value)
-    if not s and l and (l == "TOTAL" or l.startswith("TOTAL ")):
+    # Ligne starts with "TOTAL" — summary row (e.g. "TOTAL", "TOTAL PRODUCTION")
+    if l == "TOTAL" or l.startswith("TOTAL "):
         return True
     return False
 
