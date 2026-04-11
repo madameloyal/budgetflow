@@ -951,7 +951,69 @@ def recalc_reel_from_match_log(svc, sess):
             spreadsheetId=SHEET_ID,
             body={"valueInputOption": "RAW", "data": write_data}
         ).execute()
-        invalidate_cache()   # clear stale reads so next /api/budget returns fresh réel
+
+    # 6. Auto-cleanup: delete empty "À TRIER" lines (0 budget + 0 réel)
+    for idx, base_t in enumerate(sess["dept_tabs"]):
+        full_t = f"{s_prefix}{base_t}"
+        if idx >= len(value_ranges):
+            continue
+        vals = value_ranges[idx]
+        atrier_header = None
+        atrier_lines = []
+        in_atrier = False
+        for i, row in enumerate(vals):
+            if i < 2:
+                continue
+            rp = list(row) + [""] * 12
+            section = str(rp[COL["section"]]).strip().upper()
+            ligne = str(rp[COL["ligne"]]).strip()
+            # Detect À TRIER section header
+            if section == "À TRIER" and not ligne:
+                in_atrier = True
+                atrier_header = i
+                continue
+            # Left the section
+            if in_atrier and section and section != "À TRIER" and not ligne:
+                break
+            if in_atrier and ligne and not ligne.startswith("(ligne"):
+                est = safe_float(rp[COL["est_ht"]])
+                key_full = (full_t, ligne)
+                key_base = (base_t, ligne)
+                reel_total = sums.get(key_full) or sums.get(key_base) or [0.0, 0.0]
+                if est == 0 and reel_total[0] == 0 and reel_total[1] == 0:
+                    atrier_lines.append(i)
+        # Delete ghost lines (+ header if section becomes empty)
+        if atrier_lines:
+            sheet_id = get_sheet_id(svc, full_t)
+            if sheet_id is not None:
+                # If ALL lines in section are ghosts, also delete the header
+                rows_to_del = list(atrier_lines)
+                # Check if there are any remaining (non-ghost) lines in À TRIER
+                has_remaining = False
+                if atrier_header is not None:
+                    for j in range(atrier_header + 1, len(vals)):
+                        rj = list(vals[j]) + [""] * 12
+                        sj = str(rj[COL["section"]]).strip().upper()
+                        lj = str(rj[COL["ligne"]]).strip()
+                        # Hit next section → stop
+                        if sj and sj != "À TRIER" and not lj:
+                            break
+                        if lj and not lj.startswith("(ligne") and j not in atrier_lines:
+                            has_remaining = True
+                            break
+                if not has_remaining and atrier_header is not None:
+                    rows_to_del.append(atrier_header)
+                # Delete in reverse order
+                requests = [{"deleteDimension": {"range": {
+                    "sheetId": sheet_id, "dimension": "ROWS",
+                    "startIndex": r, "endIndex": r + 1
+                }}} for r in sorted(rows_to_del, reverse=True)]
+                svc.batchUpdate(
+                    spreadsheetId=SHEET_ID,
+                    body={"requests": requests}
+                ).execute()
+
+    invalidate_cache()   # clear stale reads so next /api/budget returns fresh réel
 
 
 @app.get("/api/match-log")
