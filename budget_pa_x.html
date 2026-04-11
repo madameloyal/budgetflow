@@ -3099,7 +3099,7 @@ function openAssignDrawer(unmatchedIdx, fourn, note, ttc, cat, isReattribuer) {
 
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
-    ${isReattribuer ? `<button class="drawer-btn" onclick="closeDrawer();refreshBudgetData();showToast('✓ Dissociée','Transaction retirée et non réassignée.','green')" style="color:var(--amber);border-color:rgba(251,191,36,.25)">Juste dissocier</button>` : ''}
+    ${isReattribuer ? `<button class="drawer-btn" onclick="closeDrawer();refreshBudgetData().then(()=>renderReleve());showToast('✓ Dissociée','Transaction retirée et non réassignée.','green')" style="color:var(--amber);border-color:rgba(251,191,36,.25)">Juste dissocier</button>` : ''}
     <button class="drawer-btn primary" onclick="confirmAssign(${unmatchedIdx})">Confirmer →</button>
   `;
 
@@ -3261,12 +3261,16 @@ function openOrphanAssign(fourn, note, ht, ttc, cat, date) {
 }
 
 async function ensureDiversLine(dept, ligneName) {
+  showToast('🔧 DEBUG', `ensureDiversLine: dept=${dept}, ligne=${ligneName}`, 'amber');
   // Check if this line already exists in "À TRIER" section
   const meta = DEPT_META[dept];
   const deptData = meta ? DEPTS.find(d => d.id === meta.id) : null;
   if (deptData) {
     const aTrierSection = deptData.sections.find(s => s.s === 'À TRIER');
-    if (aTrierSection && aTrierSection.lines.some(l => l.l === ligneName)) return;
+    if (aTrierSection && aTrierSection.lines.some(l => l.l === ligneName)) {
+      showToast('🔧 DEBUG', 'Line already exists — skipping', 'amber');
+      return;
+    }
   }
   // Create À TRIER section (if needed) + line
   try {
@@ -3278,6 +3282,8 @@ async function ensureDiversLine(dept, ligneName) {
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       showToast('⚠ À TRIER échoué', `${dept}: ${err.detail || resp.status}`, 'red');
+    } else {
+      showToast('✅ DEBUG', `À TRIER line created in ${dept}`, 'green');
     }
   } catch(e) { showToast('⚠ À TRIER échoué', `${dept}: ${e.message}`, 'red'); }
 }
@@ -3335,6 +3341,7 @@ async function confirmAssign(unmatchedIdx) {
   const btn = document.querySelector('#drawer-footer .primary');
   if (btn) { btn.textContent = 'En cours…'; btn.disabled = true; }
 
+  showToast('🔧 DEBUG', `_isAtrier=${window._isAtrier}, dept=${dept}, ligne=${ligne}`, 'amber');
   if (window._isAtrier) await ensureDiversLine(dept, ligne);
 
   try {
