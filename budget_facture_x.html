@@ -246,7 +246,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   /* ── fiche événement ── */
   #fiche-identity > div{grid-template-columns:1fr!important}
   #fiche-identity > div > div:first-child{border-right:none;border-bottom:1px solid var(--border)}
-  #fiche-presta-grid{grid-template-columns:1fr!important}
+  .presta-cat-grid{grid-template-columns:1fr!important}
 
   /* ── factures ── */
   #factures-kpis{grid-template-columns:repeat(2,1fr)!important}
@@ -773,21 +773,8 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       <div class="sdl"></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px" id="fiche-presta-grid">
-      <!-- Demo data — will be populated dynamically -->
-    </div>
-
-    <!-- ── CONTACTS CLÉS ── -->
-    <div class="sdiv" style="align-items:center;margin-bottom:4px">
-      <div class="sdl"></div>
-      <div class="sdt" style="white-space:nowrap">Contacts clés</div>
-      <div class="sdl"></div>
-    </div>
-
-    <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
-      <div id="fiche-contacts-list">
-        <!-- Populated by JS -->
-      </div>
+    <div id="fiche-presta-container" style="margin-bottom:24px">
+      <!-- Populated by renderFiche() with categories -->
     </div>
 
     <!-- ── DOCUMENTS LIÉS ── -->
@@ -2593,20 +2580,24 @@ const EVENT_DATA = {
 };
 
 const PRESTA_DATA = [
-  { name:'Pallas Sécurité', role:'Sécurité générale', dept:'PRODUCTION', color:'#fbbf24', contact:'—', statut:'confirmed', hasContract:true },
-  { name:'Viparis', role:'Location lieu + services', dept:'PRODUCTION', color:'#fbbf24', contact:'—', statut:'confirmed', hasContract:true },
-  { name:'DPS Médical', role:'Dispositif prévisionnel de secours', dept:'PRODUCTION', color:'#fbbf24', contact:'—', statut:'pending', hasContract:false },
-  { name:'AP2 - PCO', role:'Poste commandement opérationnel', dept:'PRODUCTION', color:'#fbbf24', contact:'JF', statut:'confirmed', hasContract:false },
-  { name:'Cashless Provider', role:'Système cashless bracelets', dept:'PRODUCTION', color:'#fbbf24', contact:'—', statut:'pending', hasContract:false },
-  { name:'Sono / Lumière', role:'Prestation scénique', dept:'TECHNIQUE', color:'#60a5fa', contact:'—', statut:'pending', hasContract:false },
-];
-
-const CONTACTS_DATA = [
-  { name:'Geoffrey Roth', role:'Directeur de production', tel:'', email:'', dept:'Direction' },
-  { name:'—', role:'Chargé·e de sécurité', tel:'', email:'', dept:'Sécurité' },
-  { name:'—', role:'Régisseur·e général·e', tel:'', email:'', dept:'Régie' },
-  { name:'—', role:'Responsable bar', tel:'', email:'', dept:'Bar' },
-  { name:'—', role:'Comptabilité', tel:'', email:'', dept:'Compta' },
+  { cat:'Sécurité & Prévention', items:[
+    { name:'Pallas Sécurité', role:'Sécurité générale', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'confirmed', hasContract:true, notes:'60 544€ en 2025. Contrat annuel.' },
+    { name:'AP2 - PCO', role:'Poste commandement opérationnel', dept:'PRODUCTION', color:'#fbbf24', contact:'JF', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+    { name:'DPS Médical', role:'Dispositif prévisionnel de secours', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+    { name:'Chargé de sécurité', role:'Coordination sécurité', dept:'PRODUCTION', color:'#fbbf24', contact:'Yoann', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+  ]},
+  { cat:'Lieu & Infrastructure', items:[
+    { name:'Viparis', role:'Location lieu + services techniques', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'confirmed', hasContract:true, notes:'155 826€ HT locatif. Inclut électricité, eau, nettoyage.' },
+  ]},
+  { cat:'Technique & Scène', items:[
+    { name:'Sono / Lumière', role:'Prestation scénique complète', dept:'TECHNIQUE', color:'#60a5fa', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+  ]},
+  { cat:'Production & Logistique', items:[
+    { name:'Cashless Provider', role:'Bracelets cashless', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+  ]},
+  { cat:'Direction', items:[
+    { name:'Geoffrey Roth', role:'Directeur de production / CEO', dept:'Direction', color:'var(--purple)', contact:'Geoffrey Roth', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+  ]},
 ];
 
 function renderFiche() {
@@ -2635,57 +2626,242 @@ function renderFiche() {
     if(el('fiche-recettes')) el('fiche-recettes').textContent = fe(totalRec);
   }
 
-  // Coproduction
-  const coprodWrap = el('fiche-coprod-wrap');
+  // Coproduction — visible for testing
+  const coprodWrap = document.getElementById('fiche-coprod-wrap');
   if (coprodWrap) {
-    coprodWrap.style.display = ev.coprod ? '' : 'none';
+    coprodWrap.style.display = '';
     if (ev.coprod) {
       if(el('fiche-coprod-name')) el('fiche-coprod-name').textContent = ev.coprodName;
       if(el('fiche-coprod-entity')) el('fiche-coprod-entity').textContent = ev.coprodEntity;
       if(el('fiche-coprod-contact')) el('fiche-coprod-contact').textContent = ev.coprodContact;
       if(el('fiche-coprod-split')) el('fiche-coprod-split').textContent = ev.coprodSplit;
+    } else {
+      if(el('fiche-coprod-name')) el('fiche-coprod-name').textContent = 'Aucune coproduction';
     }
   }
 
-  // Prestataires grid
-  const prestaGrid = document.getElementById('fiche-presta-grid');
-  if (prestaGrid) {
-    prestaGrid.innerHTML = PRESTA_DATA.map(p => {
-      const statusBadge = p.statut === 'confirmed'
-        ? '<span style="font-size:.6em;padding:2px 6px;border-radius:3px;background:rgba(52,211,153,.1);color:var(--green);font-weight:600">Confirmé</span>'
-        : '<span style="font-size:.6em;padding:2px 6px;border-radius:3px;background:rgba(251,191,36,.08);color:var(--amber);font-weight:600">En attente</span>';
-      const contractBadge = p.hasContract
-        ? '<span style="font-size:.55em;padding:2px 5px;border-radius:3px;background:rgba(99,102,241,.1);color:#818cf8;font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Contrat</span>'
-        : '';
-      return `<div class="card" style="padding:16px;border-left:3px solid ${p.color};cursor:default">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:.82em;font-weight:600;color:#fff">${p.name}</div>
-          ${statusBadge}
-        </div>
-        <div style="font-size:.7em;color:var(--text-muted);margin-bottom:8px">${p.role}</div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:.58em;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.04);color:var(--text-dim);font-weight:600">${p.dept}</span>
-          ${contractBadge}
-        </div>
-      </div>`;
-    }).join('');
-  }
+  // Prestataires — categorized
+  const prestaContainer = document.getElementById('fiche-presta-container');
+  if (prestaContainer) {
+    prestaContainer.innerHTML = PRESTA_DATA.map((cat, ci) => {
+      const cards = cat.items.map((p, pi) => {
+        const statusBadge = p.statut === 'confirmed'
+          ? '<span style="font-size:.58em;padding:2px 6px;border-radius:3px;background:rgba(52,211,153,.1);color:var(--green);font-weight:600">Confirmé</span>'
+          : '<span style="font-size:.58em;padding:2px 6px;border-radius:3px;background:rgba(251,191,36,.08);color:var(--amber);font-weight:600">En attente</span>';
+        const contractIcon = p.hasContract
+          ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+          : '';
+        return `<div class="card" onclick="openPrestaDrawer(${ci},${pi})" style="padding:14px 16px;border-left:3px solid ${p.color};cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:.82em;font-weight:600;color:#fff">${p.name}</span>
+              ${contractIcon}
+            </div>
+            ${statusBadge}
+          </div>
+          <div style="font-size:.7em;color:var(--text-muted)">${p.role}</div>
+        </div>`;
+      }).join('');
 
-  // Contacts list
-  const contactsList = document.getElementById('fiche-contacts-list');
-  if (contactsList) {
-    contactsList.innerHTML = CONTACTS_DATA.map((c, i) => `
-      <div style="display:flex;align-items:center;gap:14px;padding:12px 20px;${i < CONTACTS_DATA.length-1 ? 'border-bottom:1px solid var(--border)':''}">
-        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-muted);flex-shrink:0">${c.name === '—' ? '?' : c.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.82em;font-weight:500;color:${c.name === '—' ? 'var(--text-dim)' : '#fff'}">${c.name}</div>
-          <div style="font-size:.68em;color:var(--text-dim)">${c.role}</div>
-        </div>
-        <span style="font-size:.6em;padding:2px 8px;border-radius:3px;background:rgba(255,255,255,.03);color:var(--text-dim);font-weight:500">${c.dept}</span>
-      </div>
-    `).join('');
+      return `
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim)">${cat.cat}</span>
+            <span style="font-size:.65em;color:var(--text-dim)">${cat.items.length}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px" class="presta-cat-grid">
+            ${cards}
+          </div>
+        </div>`;
+    }).join('') + `
+      <button onclick="showToast('🚧 Bientôt','Ajout de prestataire — prochaine version','amber')" style="width:100%;padding:12px;border-radius:8px;border:2px dashed var(--border);background:none;color:var(--text-dim);font-family:inherit;font-size:.78em;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s" onmouseover="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='var(--text-muted)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un prestataire
+      </button>`;
   }
 }
+
+function openPrestaDrawer(catIdx, itemIdx) {
+  const cat = PRESTA_DATA[catIdx];
+  if (!cat) return;
+  const p = cat.items[itemIdx];
+  if (!p) return;
+
+  const statusBadge = p.statut === 'confirmed'
+    ? '<span style="font-size:.65em;padding:3px 8px;border-radius:4px;background:rgba(52,211,153,.1);color:var(--green);font-weight:600">Confirmé</span>'
+    : '<span style="font-size:.65em;padding:3px 8px;border-radius:4px;background:rgba(251,191,36,.08);color:var(--amber);font-weight:600">En attente</span>';
+
+  const phoneIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const emailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>`;
+  const waIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+
+  const actionBtnSt = 'display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--text-muted);cursor:pointer;transition:all .15s';
+
+  let _activeTab = 'overview';
+
+  function renderTab(tab) {
+    _activeTab = tab;
+    const tabContent = document.getElementById('presta-tab-content');
+    if (!tabContent) return;
+
+    if (tab === 'overview') {
+      tabContent.innerHTML = `
+        <div class="drawer-section">
+          <div class="drawer-section-title">Résumé</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Catégorie</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500">${cat.cat}</div>
+            </div>
+            <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Département</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500">${p.dept}</div>
+            </div>
+          </div>
+          ${p.notes ? `<div style="font-size:.75em;color:var(--text-muted);padding:10px 12px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3);margin-bottom:14px">${p.notes}</div>` : ''}
+          <div class="drawer-section-title" style="margin-top:10px">Factures liées</div>
+          <div style="font-size:.75em;color:var(--text-dim);font-style:italic;padding:8px 0">Aucune facture liée — <span style="color:var(--green);cursor:pointer;font-style:normal;font-weight:600" onclick="closeDrawer();openFactureDrawer('${p.dept}','')">Créer une facture</span></div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-section-title">Notes</div>
+          <textarea placeholder="Ajouter des notes…" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;font-family:inherit;font-size:.78em;resize:vertical;min-height:60px;outline:none">${p.notes || ''}</textarea>
+        </div>`;
+    } else {
+      tabContent.innerHTML = `
+        <div class="drawer-section">
+          <div class="drawer-section-title">Contact principal</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px;background:var(--surface-2);border-radius:8px">
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text-muted);flex-shrink:0">${p.contact === '—' ? '?' : p.contact.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+            <div style="flex:1">
+              <div style="font-size:.85em;font-weight:600;color:${p.contact === '—' ? 'var(--text-dim)' : '#fff'}">${p.contact || '—'}</div>
+              <div style="font-size:.7em;color:var(--text-dim)">${p.role}</div>
+            </div>
+          </div>
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+              <span style="color:var(--text-dim)">${emailIcon}</span>
+              <span style="font-size:.78em;color:${p.email ? '#fff' : 'var(--text-dim)'}">${p.email || 'Non renseigné'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+              <span style="color:var(--text-dim)">${phoneIcon}</span>
+              <span style="font-size:.78em;color:${p.tel ? '#fff' : 'var(--text-dim)'}">${p.tel || 'Non renseigné'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-section-title">Contrat</div>
+          ${p.hasContract
+            ? `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1">
+                  <div style="font-size:.78em;font-weight:600;color:#818cf8">Contrat disponible</div>
+                  <div style="font-size:.65em;color:var(--text-dim)">Cliquer pour voir le document</div>
+                </div>
+              </div>`
+            : `<div style="font-size:.75em;color:var(--text-dim);font-style:italic">Aucun contrat enregistré</div>`
+          }
+        </div>`;
+    }
+  }
+
+  document.getElementById('drawer-title').innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px">${p.name} ${statusBadge}</span>`;
+  document.getElementById('drawer-sub').textContent = p.role;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+      <div onclick="${p.tel ? `window.open('tel:${p.tel}')` : ''}" style="${actionBtnSt};${p.tel ? '' : 'opacity:.3;cursor:default'}" title="Appeler">${phoneIcon}</div>
+      <div onclick="${p.email ? `window.open('mailto:${p.email}')` : ''}" style="${actionBtnSt};${p.email ? '' : 'opacity:.3;cursor:default'}" title="Email">${emailIcon}</div>
+      <div onclick="${p.tel ? `window.open('https://wa.me/${(p.tel||'').replace(/[^0-9]/g,'')}')` : ''}" style="${actionBtnSt};${p.tel ? '' : 'opacity:.3;cursor:default'}" title="WhatsApp">${waIcon}</div>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px">
+      <button id="presta-tab-overview" onclick="document.getElementById('presta-tab-overview').style.borderBottom='2px solid #fff';document.getElementById('presta-tab-overview').style.color='#fff';document.getElementById('presta-tab-contact').style.borderBottom='2px solid transparent';document.getElementById('presta-tab-contact').style.color='var(--text-dim)';document.getElementById('presta-tab-content').dataset.tab='overview';renderPrestaTab('overview',${catIdx},${itemIdx})" style="flex:1;padding:10px;border:none;background:none;font-family:inherit;font-size:.78em;font-weight:600;color:#fff;cursor:pointer;border-bottom:2px solid #fff;transition:all .15s">Résumé</button>
+      <button id="presta-tab-contact" onclick="document.getElementById('presta-tab-contact').style.borderBottom='2px solid #fff';document.getElementById('presta-tab-contact').style.color='#fff';document.getElementById('presta-tab-overview').style.borderBottom='2px solid transparent';document.getElementById('presta-tab-overview').style.color='var(--text-dim)';document.getElementById('presta-tab-content').dataset.tab='contact';renderPrestaTab('contact',${catIdx},${itemIdx})" style="flex:1;padding:10px;border:none;background:none;font-family:inherit;font-size:.78em;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s">Contact & Contrat</button>
+    </div>
+    <div id="presta-tab-content" data-tab="overview"></div>
+  `;
+
+  renderTab('overview');
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
+    <button class="drawer-btn" onclick="closeDrawer();openFactureDrawer('${p.dept}','')" style="display:inline-flex;align-items:center;justify-content:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Facture</button>
+    <button class="drawer-btn primary" onclick="showToast('🚧','Édition prestataire — bientôt','amber')">Éditer</button>
+  `;
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+window.renderPrestaTab = function(tab, ci, pi) {
+  const cat = PRESTA_DATA[ci];
+  const p = cat?.items[pi];
+  if (!p) return;
+  const tabContent = document.getElementById('presta-tab-content');
+  if (!tabContent) return;
+
+  const emailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>`;
+  const phoneIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+
+  if (tab === 'overview') {
+    tabContent.innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title">Résumé</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Catégorie</div>
+            <div style="font-size:.82em;color:#fff;font-weight:500">${cat.cat}</div>
+          </div>
+          <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Département</div>
+            <div style="font-size:.82em;color:#fff;font-weight:500">${p.dept}</div>
+          </div>
+        </div>
+        ${p.notes ? `<div style="font-size:.75em;color:var(--text-muted);padding:10px 12px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3);margin-bottom:14px">${p.notes}</div>` : ''}
+        <div class="drawer-section-title" style="margin-top:10px">Factures liées</div>
+        <div style="font-size:.75em;color:var(--text-dim);font-style:italic;padding:8px 0">Aucune facture liée — <span style="color:var(--green);cursor:pointer;font-style:normal;font-weight:600" onclick="closeDrawer();openFactureDrawer('${p.dept}','')">Créer une facture</span></div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">Notes</div>
+        <textarea placeholder="Ajouter des notes…" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;font-family:inherit;font-size:.78em;resize:vertical;min-height:60px;outline:none">${p.notes || ''}</textarea>
+      </div>`;
+  } else {
+    tabContent.innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title">Contact principal</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px;background:var(--surface-2);border-radius:8px">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text-muted);flex-shrink:0">${p.contact === '—' ? '?' : p.contact.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div style="flex:1">
+            <div style="font-size:.85em;font-weight:600;color:${p.contact === '—' ? 'var(--text-dim)' : '#fff'}">${p.contact || '—'}</div>
+            <div style="font-size:.7em;color:var(--text-dim)">${p.role}</div>
+          </div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+            <span style="color:var(--text-dim)">${emailIcon}</span>
+            <span style="font-size:.78em;color:${p.email ? '#fff' : 'var(--text-dim)'}">${p.email || 'Non renseigné'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+            <span style="color:var(--text-dim)">${phoneIcon}</span>
+            <span style="font-size:.78em;color:${p.tel ? '#fff' : 'var(--text-dim)'}">${p.tel || 'Non renseigné'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">Contrat</div>
+        ${p.hasContract
+          ? `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;cursor:pointer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div style="flex:1">
+                <div style="font-size:.78em;font-weight:600;color:#818cf8">Contrat disponible</div>
+                <div style="font-size:.65em;color:var(--text-dim)">Cliquer pour voir le document</div>
+              </div>
+            </div>`
+          : `<div style="font-size:.75em;color:var(--text-dim);font-style:italic">Aucun contrat enregistré</div>`
+        }
+      </div>`;
+  }
+};
 
 function toggleFactureSendMenu() {
   const menu = document.getElementById('fact-send-menu');
