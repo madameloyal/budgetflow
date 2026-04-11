@@ -583,12 +583,79 @@ def delete_ligne(payload: DeleteLigne):
     if base_tab not in valid_tabs:
         raise HTTPException(status_code=404, detail=f"Dept '{base_tab}' not found")
     tab = tab_name(sess, base_tab)
+    is_recette = (base_tab == RECETTES_TAB)
+    ml_tab = tab_name(sess, MATCH_LOG_TAB)
+    unmatched_tab = tab_name(sess, UNMATCHED_TAB)
     try:
         svc = get_sheets_service()
         sheet_id = get_sheet_id(svc, tab)
         if sheet_id is None:
             raise HTTPException(status_code=404, detail=f"Sheet '{tab}' not found")
-        # Delete the row (0-based index = row - 1)
+
+        # 1. Read the ligne name before deleting the row
+        row_data = cached_get(svc, f"{tab}!A:L")
+        ligne_name = ""
+        if payload.row - 1 < len(row_data):
+            rp = list(row_data[payload.row - 1]) + [""] * 12
+            ligne_name = str(rp[COL["ligne"]]).strip()
+
+        # 2. Clean up MATCH_LOG entries for this ligne
+        orphaned_tx = []
+        if ligne_name:
+            ensure_match_log_tab(svc, ml_tab)
+            log_rows = svc.values().get(
+                spreadsheetId=SHEET_ID,
+                range=f"{ml_tab}!A:J",
+                valueRenderOption="UNFORMATTED_VALUE"
+            ).execute().get("values", [])
+            # Find matching rows (reverse order for safe deletion)
+            rows_to_delete = []
+            for i, row in enumerate(log_rows):
+                if i == 0:
+                    continue
+                row = list(row) + [""] * 10
+                stored_dept = str(row[0]).strip().upper()
+                stored_ligne = str(row[2]).strip()
+                if stored_dept == tab.upper() and stored_ligne == ligne_name:
+                    rows_to_delete.append(i)
+                    orphaned_tx.append({
+                        "fourn": str(row[3]).strip(),
+                        "note": str(row[4]).strip(),
+                        "date": str(row[5]).strip(),
+                        "ht": abs(safe_float(row[6])),
+                        "ttc": abs(safe_float(row[7])),
+                    })
+            # Delete MATCH_LOG rows (reverse order to keep indices valid)
+            if rows_to_delete:
+                log_sheet_id = get_sheet_id(svc, ml_tab)
+                if log_sheet_id is not None:
+                    requests = [{"deleteDimension": {"range": {
+                        "sheetId": log_sheet_id, "dimension": "ROWS",
+                        "startIndex": r, "endIndex": r + 1
+                    }}} for r in reversed(rows_to_delete)]
+                    svc.batchUpdate(
+                        spreadsheetId=SHEET_ID,
+                        body={"requests": requests}
+                    ).execute()
+
+            # 3. Re-add orphaned transactions to QONTO_UNMATCHED (skip for recettes)
+            if orphaned_tx and not is_recette:
+                new_rows = []
+                for tx in orphaned_tx:
+                    new_rows.append([
+                        base_tab, "", tx["fourn"], tx["note"], tx["date"],
+                        tx["ht"], tx["ttc"], "",
+                        "Ligne supprimée", "", "", "PENDING", "", ""
+                    ])
+                svc.values().append(
+                    spreadsheetId=SHEET_ID,
+                    range=f"{unmatched_tab}!A:N",
+                    valueInputOption="RAW",
+                    insertDataOption="INSERT_ROWS",
+                    body={"values": new_rows}
+                ).execute()
+
+        # 4. Delete the actual row
         svc.batchUpdate(
             spreadsheetId=SHEET_ID,
             body={"requests": [{"deleteDimension": {"range": {
@@ -598,7 +665,10 @@ def delete_ligne(payload: DeleteLigne):
             }}}]}
         ).execute()
         invalidate_cache()
-        return {"status": "ok", "deleted_row": payload.row, "dept": tab}
+        # 5. Recalc réel from MATCH_LOG (now without the deleted entries)
+        recalc_reel_from_match_log(svc, sess)
+        return {"status": "ok", "deleted_row": payload.row, "dept": tab,
+                "orphaned_tx": len(orphaned_tx)}
     except HTTPException:
         raise
     except Exception as e:
@@ -910,6 +980,10 @@ def get_match_log(dept: str = "", ligne: str = "", session: str = None):
                 "source": str(row[8]).strip(),
                 "timestamp": str(row[9]).strip(),
             }
+            # Normalize dept: strip session prefix so frontend always gets base name
+            s_prefix = sess["prefix"]
+            if s_prefix and entry["dept"].upper().startswith(s_prefix.upper()):
+                entry["dept"] = entry["dept"][len(s_prefix):]
             if dept:
                 d_upper = dept.upper()
                 stored = entry["dept"].upper()
