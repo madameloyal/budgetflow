@@ -176,7 +176,64 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   /* ── cards ── */
   .card{padding:18px 16px}
 
+  /* ── bilan chips 4→2 cols ── */
+  #bilan-chips{grid-template-columns:repeat(2,1fr)!important}
+  #releve-kpis{grid-template-columns:repeat(2,1fr)!important}
+
+  /* ── imprévues badges: horizontal scroll ── */
+  #b-imp-bars{grid-template-columns:repeat(10,minmax(70px,1fr))!important;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+
+  /* ── bilan dept table + P&L: horizontal scroll wrapper ── */
+  #b-dep-wrapper,#b-resultat-net{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+
+  /* ── toast ── */
+  #import-toast{min-width:260px;max-width:calc(100vw - 32px);left:50%;font-size:.9em}
+
   /* ── nav brand hidden on small screens ── */
+}
+@media(max-width:480px){
+  body{font-size:15px}
+
+  /* ── dept page inline 4-col grids → 2 cols ── */
+  .bchip{padding:12px 14px}
+  .bchip-val{font-size:1.15em}
+  .wrap .bchip:first-child{grid-column:span 1}
+
+  /* ── force all inline 4-col grids to 2-col ── */
+  .wrap > div > div[style*="repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+  div[style*="repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important}
+
+  /* ── header ── */
+  .hdr{padding:10px 14px;gap:6px;font-size:.9em}
+
+  /* ── nav ── */
+  .nav-sw{padding:6px 10px 6px 0;margin-right:4px}
+  .nm{font-size:11px;padding:6px 8px}
+  .dt{font-size:11px;padding:6px 10px}
+
+  /* ── P&L result table ── */
+  .btbl th,.btbl td{padding:5px 6px;font-size:.68em}
+  .btbl th:nth-child(4),.btbl td:nth-child(4){display:none}
+
+  /* ── dept tables ── */
+  .tbl th,.tbl td{padding:5px 6px;font-size:.68em}
+  .tbl td:first-child{max-width:100px}
+  .edit-ligne-btn{display:none}
+  .tbl th:nth-child(4),.tbl td:nth-child(4),
+  .tbl th:nth-child(5),.tbl td:nth-child(5){display:none}
+
+  /* ── section headers ── */
+  .sec-hdr{font-size:.78em!important;padding:10px 14px!important}
+
+  /* ── unmatched transactions cards ── */
+  .unm-row{flex-direction:column!important;align-items:flex-start!important;gap:6px!important}
+
+  /* ── drawer ── */
+  #drawer{height:90vh}
+  .drawer-kpi-row{grid-template-columns:1fr!important;gap:8px}
+
+  /* ── footer ── */
+  footer{flex-wrap:wrap;gap:8px!important;font-size:10px!important}
 }
 @media(max-width:400px){
   .tbl th:nth-child(5),.tbl td:nth-child(5),
