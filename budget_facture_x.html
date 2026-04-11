@@ -465,7 +465,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="nm on" onclick="go('bilan',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bilan P&L</button>
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
     <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
-    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
+    <button class="nm" onclick="go('documents',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
     <span style="flex:1"></span>
     <button class="nm" onclick="openFactureDrawer()" style="border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 12px;flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Nouvelle facture</button>
   </div>
@@ -658,6 +658,29 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <tbody id="releve-body"></tbody>
       </table>
       <div id="releve-count" style="padding:10px 14px;font-size:.7em;color:var(--text-dim);border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DOCUMENTS PAGE ═══════════ -->
+<div id="page-documents" class="page">
+  <div style="padding:24px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:1.1em;font-weight:700;color:#fff;margin-bottom:4px">Documents</h2>
+        <div style="font-size:.75em;color:var(--text-dim)">Factures, devis et pièces justificatives</div>
+      </div>
+      <button onclick="openFactureDrawer()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Nouvelle facture
+      </button>
+    </div>
+    <div id="documents-list">
+      <div style="text-align:center;padding:60px 20px">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1" style="margin-bottom:16px;opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="font-size:.85em;color:var(--text-dim);margin-bottom:8px">Aucun document</div>
+        <div style="font-size:.72em;color:var(--text-dim);opacity:.6">Les factures enregistrées apparaîtront ici</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1884,6 +1907,8 @@ function go(id,tabEl){
   } else if(id==='releve') {
     if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'releve'")); if(b) b.classList.add('on'); }
     renderReleve();
+  } else if(id==='documents') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'documents'")); if(b) b.classList.add('on'); }
   } else {
     // Dept navigation — highlight matching tab strip button
     const dtMatch = [...document.querySelectorAll('.dt')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));
@@ -2248,7 +2273,19 @@ function openFactureDrawer(preDept, preLigne) {
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Annuler</button>
     <button class="drawer-btn" onclick="saveFacture('brouillon')" style="color:var(--text-muted);border-color:rgba(255,255,255,.1)">Brouillon</button>
-    <button class="drawer-btn primary" onclick="saveFacture('envoye')" style="background:var(--green);border-color:var(--green);color:#000">Envoyer à Qonto →</button>
+    <div style="position:relative;display:inline-block" id="fact-send-wrap">
+      <button class="drawer-btn primary" onclick="toggleFactureSendMenu()" style="background:var(--green);border-color:var(--green);color:#000;display:flex;align-items:center;gap:4px">Envoyer <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div id="fact-send-menu" style="display:none;position:absolute;bottom:100%;right:0;margin-bottom:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:10">
+        <button onclick="saveFacture('qonto')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;color:#fff;font-family:inherit;font-size:13px;cursor:pointer;text-align:left;transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Copier pour Qonto
+        </button>
+        <button onclick="saveFacture('email')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;color:#fff;font-family:inherit;font-size:13px;cursor:pointer;text-align:left;border-top:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='none'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+          Envoyer par email
+        </button>
+      </div>
+    </div>
   `;
 
   document.getElementById('drawer-overlay').classList.add('open');
@@ -2333,6 +2370,11 @@ function handleDriveUrlInput(url) {
   }
 }
 
+function toggleFactureSendMenu() {
+  const menu = document.getElementById('fact-send-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
 async function saveFacture(action) {
   const dept = document.getElementById('fact-dept')?.value;
   const ligne = document.getElementById('fact-ligne')?.value;
@@ -2366,25 +2408,33 @@ async function saveFacture(action) {
     } catch(e) { showToast('⚠ Erreur', `Création ligne: ${e.message}`, 'red'); return; }
   }
 
-  const statut = action === 'envoye' ? 'ENVOYÉ À QONTO' : 'BROUILLON';
+  const statut = action === 'qonto' ? 'ENVOYÉ À QONTO' : action === 'email' ? 'ENVOYÉ PAR EMAIL' : 'BROUILLON';
 
-  // For now: show toast with summary + copy-to-clipboard for Qonto
+  // Build summary text
   const ref = `FACT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
   const summary = `Demande de paiement — Paris XXL 2026\nFournisseur: ${fourn}\nMontant HT: ${fmtAmt(ht)} €\nMontant TTC: ${fmtAmt(ttc)} €\nÉchéance: ${echeance || 'Non définie'}\nDépartement: ${dept}${finalLigne && finalLigne !== '__NEW__' ? '\nLigne: '+finalLigne : ''}\nRéf: ${ref}${notes ? '\nNote: '+notes : ''}`;
 
-  if (action === 'envoye') {
+  // Hide send menu
+  const menu = document.getElementById('fact-send-menu');
+  if (menu) menu.style.display = 'none';
+
+  if (action === 'qonto') {
     try {
       await navigator.clipboard.writeText(summary);
-      showToast('✅ Copié + enregistré', `${fourn} · ${fmtAmt(ttc)} € TTC — texte copié dans le presse-papier`, 'green');
+      showToast('✅ Copié pour Qonto', `${fourn} · ${fmtAmt(ttc)} € TTC — texte dans le presse-papier`, 'green');
     } catch(e) {
-      // Fallback: show in a selectable textarea
-      showToast('📋 Texte prêt', `Sélectionne et copie le texte ci-dessous`, 'amber');
+      showToast('📋 Texte prêt', 'Sélectionne et copie ci-dessous', 'amber');
       document.getElementById('drawer-body').innerHTML += `
         <div class="drawer-section" style="margin-top:16px">
           <div class="drawer-section-title">Texte à copier pour Qonto</div>
           <textarea readonly style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;font-family:monospace;font-size:.78em;resize:none;min-height:120px" onclick="this.select()">${summary}</textarea>
         </div>`;
     }
+  } else if (action === 'email') {
+    const subject = encodeURIComponent(`Demande de paiement — ${fourn} · ${fmtAmt(ttc)} € TTC`);
+    const body = encodeURIComponent(summary);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    showToast('✅ Email ouvert', `${fourn} · ${fmtAmt(ttc)} € TTC`, 'green');
   } else {
     showToast('✅ Brouillon enregistré', `${fourn} · ${fmtAmt(ttc)} € TTC`, 'green');
     closeDrawer();
@@ -3002,6 +3052,10 @@ async function openReelDrawer(deptId, sectionIdx, lineIdx) {
   document.getElementById('drawer-footer').style.display = 'flex';
   document.getElementById('drawer-footer').innerHTML = `
     <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
+    <button class="drawer-btn" onclick="closeDrawer();openFactureDrawer('${tabName}','${(line.l||'').replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:4px">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Facture
+    </button>
     <button class="drawer-btn primary" onclick="closeDrawer();openEditLigne('${deptId}',${sectionIdx},${lineIdx})">Éditer la ligne</button>
   `;
 
