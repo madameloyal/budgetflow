@@ -1485,6 +1485,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
   const unmatchedCard = (deptId) => {
     const deptRows = unmatchedForDept(deptId);
     const count = deptRows.length;
+    const unmTabName = Object.keys(DEPT_META).find(k => DEPT_META[k].id === deptId) || deptId.toUpperCase();
     const rowsHtml = deptRows.length ? `
       <div class="unm-grid" style="display:grid;grid-template-columns:90px 1.2fr 1fr 90px 64px;gap:0 16px;font-size:12px;padding:8px 14px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border)">
         <span>Date</span><span style="padding-left:8px">Fournisseur</span><span class="unm-note">Note</span><span style="text-align:right">Montant</span><span></span>
@@ -1502,7 +1503,7 @@ function buildDeptG3Cards(id, dept, tot, allL, p) {
           <span style="font-size:13px;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:8px">${r.fourn||'—'}${r._matchSource==='note'?'<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(99,102,241,.15);color:#818cf8;margin-left:6px;font-weight:600;vertical-align:middle">via note</span>':''}</span>
           <span class="unm-note" style="font-size:13px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</span>
           <span style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;text-align:right">${r.ttc?'−'+fmtAmt(Math.abs(r.ttc)):'—'}</span>
-          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||'').replace(/'/g,"\\'")}')" style="font-size:10px;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
+          <button onclick="event.stopPropagation();openAssignDrawer(${r.idx},'${(r.fourn||'').replace(/'/g,"\\'")}','${(r.note||'').replace(/'/g,"\\'")}',${r.ttc||0},'${(r.dept||unmTabName).replace(/'/g,"\\'")}')" style="font-size:10px;padding:0 6px;height:20px;line-height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text-muted);font-family:'DM Sans',-apple-system,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Assigner</button>
         </div>`}).join('')}
       </div>` : `<div style="font-size:13px;color:var(--green);padding:9px 14px">Toutes les transactions sont assignées</div>`;
     return `
