@@ -244,8 +244,11 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .drawer-kpi-row{grid-template-columns:1fr!important;gap:8px}
 
   /* ── fiche événement ── */
-  #fiche-identity > div{grid-template-columns:1fr!important}
-  #fiche-identity > div > div:first-child{border-right:none;border-bottom:1px solid var(--border)}
+  #fiche-identity-grid{grid-template-columns:1fr!important}
+  #fiche-identity-grid > div:first-child{border-right:none!important}
+  #fiche-details-toggle{display:flex!important}
+  #fiche-details-content{display:none}
+  #fiche-poster{width:70px!important;height:95px!important}
   .presta-cat-grid{grid-template-columns:1fr!important}
 
   /* ── factures ── */
@@ -688,12 +691,19 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 
     <!-- ── EVENT IDENTITY CARD ── -->
     <div id="fiche-identity" class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-        <!-- Left: identity -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0" id="fiche-identity-grid">
+        <!-- Left: identity + poster -->
         <div style="padding:24px 28px;border-right:1px solid var(--border)">
           <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:12px">Événement</div>
-          <div id="fiche-event-name" style="font-size:1.4em;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.3px">Paris XXL 2026</div>
-          <div id="fiche-event-sub" style="font-size:.78em;color:var(--text-muted);margin-bottom:16px">Madame Loyal · Édition 2026</div>
+          <div style="display:flex;gap:18px;margin-bottom:16px">
+            <div style="flex:1">
+              <div id="fiche-event-name" style="font-size:1.4em;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.3px">Paris XXL 2026</div>
+              <div id="fiche-event-sub" style="font-size:.78em;color:var(--text-muted)">Madame Loyal · Édition 2026</div>
+            </div>
+            <div id="fiche-poster" style="width:90px;height:120px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--surface-2);border:1px solid var(--border)">
+              <img src="https://img.mailinblue.com/7370363/images/content_library/original/69c679765f4fbd3325e46811.png" alt="Affiche" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;font-size:.6em;color:var(--text-dim)\'>Affiche</div>'">
+            </div>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
               <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Dates</div>
@@ -713,38 +723,39 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
             </div>
           </div>
         </div>
-        <!-- Right: entity & details -->
-        <div style="padding:24px 28px;background:rgba(255,255,255,.01)">
-          <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:14px">Entités & Détails</div>
-          <div style="display:grid;gap:12px">
-            <!-- Producteur -->
-            <div>
-              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Producteur</div>
-              <select id="fiche-producteur" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
-                <option value="episode" selected>EPISODE (Madame Loyal)</option>
-                <option value="other">Autre structure…</option>
-              </select>
-            </div>
-            <!-- Coproduction -->
-            <div>
-              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Coproduction</div>
-              <select id="fiche-coprod-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
-                <option value="">Aucune</option>
-                <option value="epk">Elektric Park (EPK)</option>
-                <option value="__add__">＋ Ajouter un co-producteur</option>
-              </select>
-            </div>
-            <!-- Divider -->
-            <div style="height:1px;background:var(--border);margin:2px 0"></div>
-            <!-- Licence -->
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.72em;color:var(--text-muted)">Licence spectacles</span>
-              <span id="fiche-licence" style="font-size:.78em;font-weight:600;color:#fff">—</span>
-            </div>
-            <!-- Billetterie -->
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <span style="font-size:.72em;color:var(--text-muted)">Billetterie</span>
-              <span id="fiche-billetterie" style="font-size:.78em;font-weight:600;color:#fff">DICE + Shotgun</span>
+        <!-- Right: entity & details (collapsible on mobile) -->
+        <div id="fiche-details-panel">
+          <button id="fiche-details-toggle" onclick="document.getElementById('fiche-details-content').style.display=document.getElementById('fiche-details-content').style.display==='none'?'':'none';this.querySelector('.det-arrow').style.transform=document.getElementById('fiche-details-content').style.display==='none'?'':'rotate(180deg)'" style="display:none;width:100%;padding:12px 20px;border:none;background:rgba(255,255,255,.02);border-top:1px solid var(--border);color:var(--text-muted);font-family:inherit;font-size:.72em;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;justify-content:space-between;align-items:center">
+            <span>Entités & Détails</span>
+            <svg class="det-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="fiche-details-content" style="padding:24px 28px;background:rgba(255,255,255,.01)">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:14px">Entités & Détails</div>
+            <div style="display:grid;gap:12px">
+              <div>
+                <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Producteur</div>
+                <select id="fiche-producteur" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
+                  <option value="episode" selected>EPISODE (Madame Loyal)</option>
+                  <option value="other">Autre structure…</option>
+                </select>
+              </div>
+              <div>
+                <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Coproduction</div>
+                <select id="fiche-coprod-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
+                  <option value="">Aucune</option>
+                  <option value="epk">Elektric Park (EPK)</option>
+                  <option value="__add__">＋ Ajouter un co-producteur</option>
+                </select>
+              </div>
+              <div style="height:1px;background:var(--border);margin:2px 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:.72em;color:var(--text-muted)">Licence spectacles</span>
+                <span id="fiche-licence" style="font-size:.78em;font-weight:600;color:#fff">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:.72em;color:var(--text-muted)">Billetterie</span>
+                <span id="fiche-billetterie" style="font-size:.78em;font-weight:600;color:#fff">DICE + Shotgun</span>
+              </div>
             </div>
           </div>
         </div>
@@ -2639,8 +2650,8 @@ const PRESTA_DATA = [
 ];
 
 const ENTITY_LOGOS = {
-  episode: { name:'EPISODE', sub:'Madame Loyal', logo:'https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png' },
-  epk: { name:'Elektric Park', sub:'EPK', logo:'' }, // Replace with real EPK logo
+  episode: { name:'EPISODE', sub:'Madame Loyal', logo:'https://img.mailinblue.com/7370363/images/content_library/original/698dcb3d187dda7445a86760.png' },
+  epk: { name:'Elektric Park', sub:'EPK', logo:'https://img.mailinblue.com/7370363/images/content_library/original/69c5a5c7b5f2e2dbde9e1980.png' }, // Replace with real EPK logo
 };
 
 function updateFicheEntities() {
