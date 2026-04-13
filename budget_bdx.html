@@ -409,29 +409,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   .drawer-hdr::before{content:'';display:block;width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px;position:absolute;top:10px;left:50%;transform:translateX(-50%)}
   .drawer-hdr{padding-top:24px}
 }
-/* ═══ FEEDBACK WIDGET — studio AI2K ═══ */
-.fb-w{position:relative;margin-left:auto;flex-shrink:0}
-.fb-w-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;border:1px solid rgba(0,255,170,.12);background:rgba(0,255,170,.04);cursor:pointer;transition:background .2s,border-color .2s}
-.fb-w-btn:hover{background:rgba(0,255,170,.08);border-color:rgba(0,255,170,.25)}
-.fb-w-btn.open{background:rgba(0,255,170,.1);border-color:rgba(0,255,170,.3)}
-.fb-w-logo{font-family:'DM Sans',sans-serif;font-weight:900;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:-.3px}
-.fb-w-logo em{font-style:normal;color:rgba(0,255,170,.5)}
-.fb-w-label{font-size:9px;font-weight:600;color:rgba(0,255,170,.6);text-transform:uppercase;letter-spacing:.5px}
-.fb-w-drop{position:absolute;top:calc(100% + 8px);right:0;z-index:9999;width:300px;background:var(--surface);border:1px solid var(--border-h);border-radius:10px;box-shadow:0 12px 48px rgba(0,0,0,.5);display:none}
-.fb-w-drop.open{display:block}
-.fb-w-hdr{padding:12px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.fb-w-hdr-logo{font-family:'DM Sans',sans-serif;font-weight:900;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:-.3px}
-.fb-w-hdr-logo em{font-style:normal;color:rgba(0,255,170,.5)}
-.fb-w-hdr-t{font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-left:auto}
-.fb-w-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px}
-.fb-w-ctx{font-size:10px;color:var(--text-dim)}
-.fb-w-ctx b{color:rgba(0,255,170,.6);font-weight:500}
-.fb-w-in{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:6px;padding:8px 10px;outline:none;transition:border-color .2s;width:100%;resize:none}
-.fb-w-in:focus{border-color:rgba(0,255,170,.25)}
-.fb-w-in::placeholder{color:var(--text-dim)}
-.fb-w-go{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:8px 14px;background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:6px;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;align-self:flex-start}
-.fb-w-go:hover{border-color:rgba(0,255,170,.3);color:#fff}
-.fb-w-ok{display:none;font-size:10px;color:var(--green);font-weight:500}
 </style>
 </head>
 <body>
@@ -489,26 +466,6 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
     <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
     <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
-    <!-- FEEDBACK WIDGET -->
-    <div class="fb-w">
-      <div class="fb-w-btn" id="fbWBtn" onclick="fbWToggle()">
-        <span class="fb-w-logo">AI<em>2K</em></span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>
-        <span class="fb-w-label">Retours</span>
-      </div>
-      <div class="fb-w-drop" id="fbWDrop">
-        <div class="fb-w-hdr"><span class="fb-w-hdr-logo">studio AI<em>2K</em></span><span class="fb-w-hdr-t">Retours</span></div>
-        <div class="fb-w-body">
-          <div class="fb-w-ctx">Session : <b id="fbWSession"></b> · Page : <b id="fbWPage"></b></div>
-          <input class="fb-w-in" type="text" id="fbWName" placeholder="Nom">
-          <textarea class="fb-w-in" id="fbWMsg" rows="3" placeholder="Ton feedback..."></textarea>
-          <div style="display:flex;align-items:center;gap:10px">
-            <button class="fb-w-go" onclick="fbWSend()">Envoyer</button>
-            <span class="fb-w-ok" id="fbWOk">✓ Envoyé</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   <div class="dept-tabs-bg">
   <div id="dept-tabs" class="dept-tabs">
@@ -3457,14 +3414,14 @@ async function ensureDiversLine(dept, ligneName) {
 
 async function confirmOrphanAssign() {
   const dept = document.getElementById('assign-dept')?.value;
-  const ligne = document.getElementById('assign-ligne')?.value;
+  let ligne = document.getElementById('assign-ligne')?.value;
   if (!dept) {
     showToast('\u26A0 Champ manquant', 'S\u00E9lectionne un d\u00E9partement.', 'amber');
     return;
   }
   if (!ligne) {
-    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne une ligne budg\u00E9taire.', 'amber');
-    return;
+    ligne = window._currentAssignFourn || 'Transaction';
+    window._isAtrier = true;
   }
   const btn = document.querySelector('#drawer-footer .primary');
   if (btn) { btn.textContent = 'En cours\u2026'; btn.disabled = true; }
@@ -3493,15 +3450,17 @@ async function confirmOrphanAssign() {
 
 async function confirmAssign(unmatchedIdx) {
   const dept = document.getElementById('assign-dept')?.value;
-  const ligne = document.getElementById('assign-ligne')?.value;
+  let ligne = document.getElementById('assign-ligne')?.value;
 
   if (!dept) {
     showToast('⚠ Champ manquant', 'Sélectionne un département.', 'amber');
     return;
   }
+
+  // No ligne selected → auto-route to À TRIER with fournisseur name
   if (!ligne) {
-    showToast('⚠ Champ manquant', 'Sélectionne une ligne budgétaire.', 'amber');
-    return;
+    ligne = window._currentAssignFourn || 'Transaction';
+    window._isAtrier = true;
   }
 
   // Update button to loading state
@@ -4110,52 +4069,6 @@ function checkPassword() {
     loadBudgetData();
   }
 })();
-
-/* ═══ FEEDBACK WIDGET — studio AI2K ═══ */
-var FB_URL='https://script.google.com/macros/s/AKfycbyFrUyjXeKXQE7SSVPlC_2pgfAHAVgpuLJxWdI768XQGDssdHe7YOwxx4w0YG2eEFhw/exec';
-var FB_SESSION_NAMES={pa:'Paris XXL',bdx:'Bordeaux',epk:'EPK',gen:'Général'};
-
-function fbWGetPage(){
-  var active=document.querySelector('.nm.on');
-  if(active){
-    var txt=active.textContent.trim();
-    if(txt.includes('Bilan')) return 'Bilan P&L';
-    if(txt.includes('Transactions')) return 'Transactions';
-  }
-  var dt=document.querySelector('.dt.on');
-  if(dt) return dt.textContent.trim();
-  return 'Bilan P&L';
-}
-
-function fbWToggle(){
-  var btn=document.getElementById('fbWBtn');
-  var drop=document.getElementById('fbWDrop');
-  var open=drop.classList.toggle('open');
-  btn.classList.toggle('open',open);
-  if(open){
-    document.getElementById('fbWSession').textContent=FB_SESSION_NAMES[SESSION]||SESSION;
-    document.getElementById('fbWPage').textContent=fbWGetPage();
-  }
-}
-
-function fbWSend(){
-  var name=document.getElementById('fbWName').value.trim();
-  var msg=document.getElementById('fbWMsg').value.trim();
-  if(!msg) return;
-  var page=fbWGetPage();
-  var payload={name:name||'Anonyme',module:'Budget',event:FB_SESSION_NAMES[SESSION]||SESSION,source:'budget-'+SESSION+'/'+page,message:msg,timestamp:new Date().toISOString()};
-  fetch(FB_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  document.getElementById('fbWMsg').value='';
-  document.getElementById('fbWOk').style.display='inline';
-  setTimeout(function(){document.getElementById('fbWOk').style.display='none'},2500);
-}
-
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.fb-w')){
-    document.getElementById('fbWDrop').classList.remove('open');
-    document.getElementById('fbWBtn').classList.remove('open');
-  }
-});
 </script>
 <footer style="max-width:1020px;margin:0 auto;padding:48px 20px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif">
   <span style="font-weight:600;letter-spacing:.5px">Festiflow <span style="opacity:.5">·</span> Budget v3.0</span>
