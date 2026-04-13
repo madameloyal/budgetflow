@@ -4336,14 +4336,14 @@ async function ensureDiversLine(dept, ligneName) {
 
 async function confirmOrphanAssign() {
   const dept = document.getElementById('assign-dept')?.value;
-  const ligne = document.getElementById('assign-ligne')?.value;
+  let ligne = document.getElementById('assign-ligne')?.value;
   if (!dept) {
     showToast('\u26A0 Champ manquant', 'S\u00E9lectionne un d\u00E9partement.', 'amber');
     return;
   }
   if (!ligne) {
-    showToast('\u26A0 Champ manquant', 'S\u00E9lectionne une ligne budg\u00E9taire.', 'amber');
-    return;
+    ligne = window._currentAssignFourn || 'Transaction';
+    window._isAtrier = true;
   }
   const btn = document.querySelector('#drawer-footer .primary');
   if (btn) { btn.textContent = 'En cours\u2026'; btn.disabled = true; }
@@ -4372,15 +4372,15 @@ async function confirmOrphanAssign() {
 
 async function confirmAssign(unmatchedIdx) {
   const dept = document.getElementById('assign-dept')?.value;
-  const ligne = document.getElementById('assign-ligne')?.value;
+  let ligne = document.getElementById('assign-ligne')?.value;
 
   if (!dept) {
     showToast('⚠ Champ manquant', 'Sélectionne un département.', 'amber');
     return;
   }
   if (!ligne) {
-    showToast('⚠ Champ manquant', 'Sélectionne une ligne budgétaire.', 'amber');
-    return;
+    ligne = window._currentAssignFourn || 'Transaction';
+    window._isAtrier = true;
   }
 
   // Update button to loading state
