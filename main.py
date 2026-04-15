@@ -107,13 +107,12 @@ SESSIONS = {
         ],
     },
     "gen": {
-        "name": "Général — Frais de structure",
+        "name": "Générale — Frais de structure",
         "prefix": "GEN_",
         "dept_tabs": [
-            "HUMAIN", "IMMOBILIER", "ASSURANCE", "JURIDIQUE",
-            "DIVERS", "TRANSPORT", "RESTAURATION", "VHR",
-            "COMMUNICATION", "URSAFF", "TAXES", "FOURNITURE_BUREAU",
-            "ATELIER"
+            "HUMAIN", "CHARGES_SOCIALES", "LOCAUX", "ASSURANCES",
+            "HONORAIRES", "DEPLACEMENTS", "ABONNEMENTS", "IMPOTS_TAXES",
+            "RESTAURATION", "DIVERS"
         ],
     },
 }
@@ -147,10 +146,10 @@ MATCH_LOG_HEADERS = [
 COL = {
     "section": 0, "ligne": 1, "observations": 2, "typ": 3, "tva": 4,
     "est_ht": 5, "est_ttc": 6, "rh": 7, "reel_ht": 8, "reel_ttc": 9,
-    "ecart": 10, "statut": 11
+    "ecart": 10, "statut": 11, "recurrence": 12
 }
 
-FIELD_TO_COL = {"est_ht": "F", "est_ttc": "G", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D", "rh": "H"}
+FIELD_TO_COL = {"est_ht": "F", "est_ttc": "G", "reel_ht": "I", "statut": "L", "observations": "C", "ligne": "B", "tva": "E", "typ": "D", "rh": "H", "recurrence": "M"}
 
 QC = {
     "cat": 0, "sous_cat": 1, "fourn": 2, "note": 3, "date": 4,
@@ -334,7 +333,7 @@ def parse_dept_rows(values: list, tab: str) -> list:
     for i, row in enumerate(values):
         if i < 2:
             continue
-        row = list(row) + [""] * (12 - len(row))
+        row = list(row) + [""] * (13 - len(row))
         section_val = str(row[COL["section"]]).strip()
         ligne_val   = str(row[COL["ligne"]]).strip()
         if section_val and not ligne_val:
@@ -354,6 +353,7 @@ def parse_dept_rows(values: list, tab: str) -> list:
             "rh":           str(row[COL["rh"]]).strip(),
             "reel_ht":      safe_float(row[COL["reel_ht"]]),
             "statut":       str(row[COL["statut"]]).strip(),
+            "recurrence":   str(row[COL["recurrence"]]).strip().upper() or "A",
             "_row":         i + 1
         })
     return rows
@@ -396,7 +396,7 @@ def get_budget(session: str = None):
     sess = get_session(session)
     try:
         svc = get_sheets_service()
-        ranges = [f"{tab_name(sess, base_tab)}!A:L" for base_tab in sess["dept_tabs"]]
+        ranges = [f"{tab_name(sess, base_tab)}!A:M" for base_tab in sess["dept_tabs"]]
         value_ranges = cached_batch_get(svc, ranges)
         result = {}
         for idx, base_tab in enumerate(sess["dept_tabs"]):
@@ -416,7 +416,7 @@ def get_dept(dept: str, session: str = None):
     try:
         svc = get_sheets_service()
         full_tab = tab_name(sess, base_tab)
-        values = cached_get(svc, f"{full_tab}!A:L")
+        values = cached_get(svc, f"{full_tab}!A:M")
         return {"status": "ok", "dept": base_tab, "data": parse_dept_rows(values, base_tab)}
     except HTTPException:
         raise
@@ -472,6 +472,7 @@ class AddLigne(BaseModel):
     tva:     str = ""
     est_ht:  float = 0.0
     statut:  str = "ESTIMATION"
+    recurrence: str = "A"
     session: str = None
 
 @app.post("/api/budget/add-ligne")
@@ -484,7 +485,7 @@ def add_ligne(payload: AddLigne):
     try:
         svc = get_sheets_service()
         # Read current sheet to find where to insert (after last row of the section)
-        values = cached_get(svc, f"{tab}!A:L")
+        values = cached_get(svc, f"{tab}!A:M")
 
         # Find the last row of the target section
         insert_after = len(values)  # default: append at end
@@ -508,8 +509,8 @@ def add_ligne(payload: AddLigne):
                     break
                 insert_after = i + 1
 
-        # Build the new row (12 cols: A-L)
-        new_row = [""] * 12
+        # Build the new row (13 cols: A-M)
+        new_row = [""] * 13
         new_row[COL["section"]]      = ""  # section is a header row, ligne rows leave it blank
         new_row[COL["ligne"]]        = payload.ligne
         new_row[COL["observations"]] = payload.obs
@@ -525,6 +526,7 @@ def add_ligne(payload: AddLigne):
         new_row[COL["reel_ht"]]      = 0
         new_row[COL["reel_ttc"]]     = 0
         new_row[COL["statut"]]       = payload.statut
+        new_row[COL["recurrence"]]   = payload.recurrence
 
         # Get sheet ID for insert
         sheet_id = get_sheet_id(svc, tab)
@@ -601,7 +603,7 @@ def delete_ligne(payload: DeleteLigne):
             raise HTTPException(status_code=404, detail=f"Sheet '{tab}' not found")
 
         # 1. Read the ligne name before deleting the row
-        row_data = cached_get(svc, f"{tab}!A:L")
+        row_data = cached_get(svc, f"{tab}!A:M")
         ligne_name = ""
         if payload.row - 1 < len(row_data):
             rp = list(row_data[payload.row - 1]) + [""] * 12
@@ -761,7 +763,7 @@ def get_qonto_raw(session: str = None):
 def get_recettes(session: str = None):
     """Return recettes data from the RECETTES tab.
 
-    Uses same column structure as dept tabs (A:L):
+    Uses same column structure as dept tabs (A:M):
     Section=cat (TICKETS/BAR/DIVERS/AUTRE), Ligne, Observations, Type, TVA,
     Est HT, Est TTC, RH (=QTE), Réel HT, Réel TTC, Écart, Statut.
 
@@ -774,7 +776,7 @@ def get_recettes(session: str = None):
         svc = get_sheets_service()
         resp = svc.values().get(
             spreadsheetId=SHEET_ID,
-            range=f"{rec_tab}!A:L",
+            range=f"{rec_tab}!A:M",
             valueRenderOption="UNFORMATTED_VALUE"
         ).execute()
         values = resp.get("values", [])
@@ -902,7 +904,7 @@ def recalc_reel_from_match_log(svc, sess):
 
     # 3. For each dept tab, read ALL rows in one batch call
     write_data = []
-    ranges = [f"{sess['prefix']}{base_t}!A:L" for base_t in sess["dept_tabs"]]
+    ranges = [f"{sess['prefix']}{base_t}!A:M" for base_t in sess["dept_tabs"]]
     try:
         value_ranges = cached_batch_get(svc, ranges)
     except Exception:
@@ -938,7 +940,7 @@ def recalc_reel_from_match_log(svc, sess):
     # 4. Also handle RECETTES tab — same column layout, Réel in I:J
     rec_tab = tab_name(sess, RECETTES_TAB)
     try:
-        rec_vals = cached_get(svc, f"{rec_tab}!A:L")
+        rec_vals = cached_get(svc, f"{rec_tab}!A:M")
     except Exception:
         rec_vals = []
     for i, row in enumerate(rec_vals):
@@ -1029,8 +1031,8 @@ def recalc_reel_from_match_log(svc, sess):
 
 
 @app.get("/api/match-log")
-def get_match_log(dept: str = "", ligne: str = "", session: str = None):
-    """Return match log rows, optionally filtered by dept and/or ligne."""
+def get_match_log(dept: str = "", ligne: str = "", session: str = None, month: str = ""):
+    """Return match log rows, optionally filtered by dept, ligne, and/or month (YYYY-MM)."""
     sess = get_session(session)
     ml_tab = tab_name(sess, MATCH_LOG_TAB)
     try:
@@ -1067,6 +1069,23 @@ def get_match_log(dept: str = "", ligne: str = "", session: str = None):
                     continue
             if ligne and entry["ligne"].strip() != ligne.strip():
                 continue
+            # Filter by month (format: YYYY-MM) — matches against date field
+            if month:
+                d = entry["date"]
+                # Handle both DD-MM-YYYY and YYYY-MM-DD date formats
+                if len(d) >= 10:
+                    if d[2] == "-" and d[5] == "-":
+                        # DD-MM-YYYY (Qonto format): extract YYYY-MM
+                        entry_month = f"{d[6:10]}-{d[3:5]}"
+                    elif d[4] == "-":
+                        # YYYY-MM-DD: extract YYYY-MM
+                        entry_month = d[:7]
+                    else:
+                        entry_month = ""
+                    if entry_month != month:
+                        continue
+                else:
+                    continue  # skip entries with no valid date when month filter is active
             rows.append(entry)
         return {"status": "ok", "count": len(rows), "data": rows}
     except Exception as e:
@@ -1101,7 +1120,7 @@ def assign_transaction(payload: AssignPayload):
 
         # Verify budget line exists (skip if no ligne specified)
         if ligne_val != "(non affecté)":
-            dept_values = cached_get(svc, f"{tab}!A:L")
+            dept_values = cached_get(svc, f"{tab}!A:M")
             line_exists = False
             for i, row in enumerate(dept_values):
                 row = list(row) + [""] * 12
@@ -1479,7 +1498,7 @@ async def import_qonto(file: UploadFile = File(...), session: str = None):
         for base_t in s_dept_tabs:
             full_t = f"{s_prefix}{base_t}"
             resp = svc.values().get(
-                spreadsheetId=SHEET_ID, range=f"{full_t}!A:L",
+                spreadsheetId=SHEET_ID, range=f"{full_t}!A:M",
                 valueRenderOption="UNFORMATTED_VALUE"
             ).execute()
             dept_data_cache[base_t] = resp.get("values", [])
