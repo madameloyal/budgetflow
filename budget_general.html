@@ -243,6 +243,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   #drawer{height:90vh}
   .drawer-kpi-row{grid-template-columns:1fr!important;gap:8px}
 
+  /* ── factures ── */
+  #factures-kpis{grid-template-columns:repeat(2,1fr)!important}
+
   /* ── footer ── */
   footer{flex-wrap:wrap;gap:8px!important;font-size:10px!important}
 }
@@ -417,9 +420,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <!-- PASSWORD GATE -->
 <div class="db-overlay" id="pw-gate">
   <!-- Background image -->
-  <div style="position:fixed;inset:0;background:url('https://madameloyal.github.io/budgetflow/homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
+  <div style="position:fixed;inset:0;background:url('homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
   <div class="db-modal">
-    <img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" class="db-modal-logo">
+    <img src="LOGO_ROND_JAUNE.png" class="db-modal-logo">
     <div class="db-modal-title">Festiflow: Budget</div>
     <div class="db-modal-sub">Générale 2026 · Madame Loyal</div>
     <div class="db-pw-field" id="db-pw-field" onclick="document.getElementById('pw-input').focus()">
@@ -447,7 +450,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <nav class="nav">
   <div class="nav-top">
     <div class="nav-sw" style="position:relative">
-      <div class="nav-sw-av"><img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" alt="GEN" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="nav-sw-av"><img src="LOGO_ROND_JAUNE.png" alt="GEN" style="width:100%;height:100%;object-fit:cover"></div>
       <div>
         <div style="display:flex;align-items:center;gap:5px">
           <span style="font-size:13px;font-weight:600;color:#fff">Générale</span>
@@ -466,8 +469,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
     </div>
     <button class="nm on" onclick="go('bilan',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bilan P&L</button>
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
-    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
-    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
+    <button class="nm" onclick="go('factures',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Factures</button>
   </div>
   <div class="dept-tabs-bg">
   <div id="dept-tabs" class="dept-tabs">
@@ -666,6 +668,90 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       </table>
       <div id="releve-count" style="padding:10px 14px;font-size:.7em;color:var(--text-dim);border-top:1px solid var(--border)"></div>
     </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ FACTURES PAGE ═══════════ -->
+<div id="page-factures" class="page">
+  <div style="padding:24px 0">
+
+    <!-- ── HEADER ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:1.1em;font-weight:700;color:#fff;margin-bottom:4px">Factures & Devis</h2>
+        <div style="font-size:.75em;color:var(--text-dim)">Suivi des factures, devis et paiements Qonto</div>
+      </div>
+      <button onclick="openFactureDrawer()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Nouvelle facture
+      </button>
+    </div>
+
+    <!-- ── KPI CHIPS ── -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="factures-kpis">
+      <div class="bchip">
+        <div class="bchip-label">Total factures</div>
+        <div class="bchip-val" id="fact-kpi-count">0</div>
+        <div class="bchip-sub">enregistrées</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Montant total TTC</div>
+        <div class="bchip-val" id="fact-kpi-total">—</div>
+        <div class="bchip-sub">toutes factures</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">En attente</div>
+        <div class="bchip-val" style="color:var(--amber)" id="fact-kpi-pending">0</div>
+        <div class="bchip-sub">envoyées à Qonto</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Payées</div>
+        <div class="bchip-val" style="color:var(--green)" id="fact-kpi-paid">0</div>
+        <div class="bchip-sub">confirmées</div>
+      </div>
+    </div>
+
+    <!-- ── FILTERS ── -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" placeholder="Rechercher fournisseur…" style="flex:1;min-width:180px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:#fff;font-family:inherit;font-size:.78em;outline:none">
+      <select style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:inherit;font-size:.78em;outline:none">
+        <option>Tous départements</option>
+      </select>
+      <select style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:inherit;font-size:.78em;outline:none">
+        <option>Tous statuts</option>
+        <option>Brouillon</option>
+        <option>Envoyé à Qonto</option>
+        <option>Payée</option>
+      </select>
+    </div>
+
+    <!-- ── FACTURES TABLE ── -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="twrap">
+        <table class="btbl" id="factures-table">
+          <thead><tr>
+            <th class="tl">Date</th>
+            <th class="tl">Fournisseur</th>
+            <th class="tl">Département</th>
+            <th>Montant TTC</th>
+            <th>Échéance</th>
+            <th>Statut</th>
+            <th>PDF</th>
+          </tr></thead>
+          <tbody id="factures-tbody">
+          </tbody>
+        </table>
+      </div>
+      <!-- Empty state -->
+      <div id="factures-empty" style="text-align:center;padding:48px 20px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1" style="margin-bottom:12px;opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="font-size:.82em;color:var(--text-dim);margin-bottom:6px">Aucune facture enregistrée</div>
+        <div style="font-size:.68em;color:var(--text-dim);opacity:.6;margin-bottom:16px">Clique sur « Nouvelle facture » pour commencer</div>
+        <button onclick="openFactureDrawer()" style="font-size:.75em;padding:8px 20px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#fff;font-family:inherit;font-weight:600;cursor:pointer">+ Nouvelle facture</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1965,6 +2051,8 @@ function go(id,tabEl){
   } else if(id==='releve') {
     if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'releve'")); if(b) b.classList.add('on'); }
     renderReleve();
+  } else if(id==='factures') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'factures'")); if(b) b.classList.add('on'); }
   } else {
     // Dept navigation — highlight matching tab strip button
     const dtMatch = [...document.querySelectorAll('.dt')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));

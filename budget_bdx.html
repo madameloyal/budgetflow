@@ -243,6 +243,17 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
   #drawer{height:90vh}
   .drawer-kpi-row{grid-template-columns:1fr!important;gap:8px}
 
+  /* ── fiche événement ── */
+  #fiche-identity-grid{grid-template-columns:1fr!important}
+  #fiche-identity-grid > div:first-child{border-right:none!important}
+  #fiche-details-toggle{display:flex!important}
+  #fiche-details-content{display:none}
+  #fiche-poster{width:70px!important;height:95px!important}
+  .presta-cat-grid{grid-template-columns:1fr!important}
+
+  /* ── factures ── */
+  #factures-kpis{grid-template-columns:repeat(2,1fr)!important}
+
   /* ── footer ── */
   footer{flex-wrap:wrap;gap:8px!important;font-size:10px!important}
 }
@@ -415,9 +426,9 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <!-- PASSWORD GATE -->
 <div class="db-overlay" id="pw-gate">
   <!-- Background image -->
-  <div style="position:fixed;inset:0;background:url('https://madameloyal.github.io/budgetflow/homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
+  <div style="position:fixed;inset:0;background:url('homepage_background.jpg') center/cover no-repeat;z-index:0"></div>
   <div class="db-modal">
-    <img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" class="db-modal-logo">
+    <img src="LOGO_ROND_JAUNE.png" class="db-modal-logo">
     <div class="db-modal-title">Festiflow: Budget</div>
     <div class="db-modal-sub">Bordeaux ML × SONORA 2026 · Madame Loyal</div>
     <div class="db-pw-field" id="db-pw-field" onclick="document.getElementById('pw-input').focus()">
@@ -445,7 +456,7 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
 <nav class="nav">
   <div class="nav-top">
     <div class="nav-sw" style="position:relative">
-      <div class="nav-sw-av"><img src="https://madameloyal.github.io/budgetflow/LOGO_ROND_JAUNE.png" alt="PA" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="nav-sw-av"><img src="LOGO_ROND_JAUNE.png" alt="PA" style="width:100%;height:100%;object-fit:cover"></div>
       <div>
         <div style="display:flex;align-items:center;gap:5px">
           <span style="font-size:13px;font-weight:600;color:#fff">Bordeaux</span>
@@ -459,13 +470,13 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
         <option value="budget_pa.html">ML 130326 — Paris XXL</option>
         <option value="budget_bdx.html" selected>ML 120626 — Bordeaux</option>
         <option value="budget_epk.html">EPK 050926 — Paris</option>
-        <option value="" disabled data-soon="1">Général (à venir)</option>
+        <option value="budget_general.html">Générale — Frais de structure</option>
       </select>
     </div>
     <button class="nm on" onclick="go('bilan',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bilan P&L</button>
     <button class="nm" onclick="go('releve',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Transactions</button>
-    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
-    <button class="nm pl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents</button>
+    <button class="nm" onclick="go('fiche',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Fiche événement</button>
+    <button class="nm" onclick="go('factures',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;opacity:.7"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Factures</button>
   </div>
   <div class="dept-tabs-bg">
   <div id="dept-tabs" class="dept-tabs">
@@ -657,6 +668,262 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:v
       </table>
       <div id="releve-count" style="padding:10px 14px;font-size:.7em;color:var(--text-dim);border-top:1px solid var(--border)"></div>
     </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ FICHE ÉVÉNEMENT ═══════════ -->
+<div id="page-fiche" class="page">
+  <div style="padding:24px 0">
+
+    <!-- ── HEADER ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:1.1em;font-weight:700;color:#fff;margin-bottom:4px">Fiche événement</h2>
+        <div style="font-size:.75em;color:var(--text-dim)">Identité, prestataires, contacts et documents de l'événement</div>
+      </div>
+      <div id="fiche-entity-logos" style="display:flex;align-items:center;gap:10px">
+        <!-- Populated by renderFiche -->
+      </div>
+    </div>
+
+    <!-- ── EVENT IDENTITY CARD ── -->
+    <div id="fiche-identity" class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0" id="fiche-identity-grid">
+        <!-- Left: identity + poster -->
+        <div style="padding:24px 28px;border-right:1px solid var(--border)">
+          <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:12px">Événement</div>
+          <div style="display:flex;gap:18px;margin-bottom:16px">
+            <div style="flex:1">
+              <div id="fiche-event-name" style="font-size:1.4em;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.3px">Paris XXL 2026</div>
+              <div id="fiche-event-sub" style="font-size:.78em;color:var(--text-muted)">Madame Loyal · Édition 2026</div>
+            </div>
+            <div id="fiche-poster" style="width:90px;height:120px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--surface-2);border:1px solid var(--border)">
+              <img src="https://img.mailinblue.com/7370363/images/content_library/original/69c679765f4fbd3325e46811.png" alt="Affiche" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;font-size:.6em;color:var(--text-dim)\'>Affiche</div>'">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Dates</div>
+              <div id="fiche-dates" style="font-size:.82em;color:#fff;font-weight:500">13-14 mars 2026</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Lieu</div>
+              <div id="fiche-lieu" style="font-size:.82em;color:#fff;font-weight:500">Paris Expo · Porte de Versailles</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Capacité</div>
+              <div id="fiche-capacite" style="font-size:.82em;color:#fff;font-weight:500">35 000</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Édition</div>
+              <div id="fiche-edition" style="font-size:.82em;color:#fff;font-weight:500">#4</div>
+            </div>
+          </div>
+        </div>
+        <!-- Right: entity & details (collapsible on mobile) -->
+        <div id="fiche-details-panel">
+          <button id="fiche-details-toggle" onclick="document.getElementById('fiche-details-content').style.display=document.getElementById('fiche-details-content').style.display==='none'?'':'none';this.querySelector('.det-arrow').style.transform=document.getElementById('fiche-details-content').style.display==='none'?'':'rotate(180deg)'" style="display:none;width:100%;padding:12px 20px;border:none;background:rgba(255,255,255,.02);border-top:1px solid var(--border);color:var(--text-muted);font-family:inherit;font-size:.72em;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;justify-content:space-between;align-items:center">
+            <span>Entités & Détails</span>
+            <svg class="det-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="fiche-details-content" style="padding:24px 28px;background:rgba(255,255,255,.01)">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);font-weight:600;margin-bottom:14px">Entités & Détails</div>
+            <div style="display:grid;gap:12px">
+              <div>
+                <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Producteur</div>
+                <select id="fiche-producteur" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
+                  <option value="episode" selected>EPISODE (Madame Loyal)</option>
+                  <option value="other">Autre structure…</option>
+                </select>
+              </div>
+              <div>
+                <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px">Coproduction</div>
+                <select id="fiche-coprod-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-family:inherit;font-size:.82em;outline:none" onchange="updateFicheEntities()">
+                  <option value="">Aucune</option>
+                  <option value="epk">Elektric Park (EPK)</option>
+                  <option value="__add__">＋ Ajouter un co-producteur</option>
+                </select>
+              </div>
+              <div style="height:1px;background:var(--border);margin:2px 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:.72em;color:var(--text-muted)">Licence spectacles</span>
+                <span id="fiche-licence" style="font-size:.78em;font-weight:600;color:#fff">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:.72em;color:var(--text-muted)">Billetterie</span>
+                <span id="fiche-billetterie" style="font-size:.78em;font-weight:600;color:#fff">DICE + Shotgun</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COPRODUCTION (collapsible, hidden by default) ── -->
+    <div id="fiche-coprod-wrap" style="display:none;margin-bottom:20px">
+      <div class="card" style="border-color:rgba(168,85,247,.2);padding:0;overflow:hidden">
+        <div onclick="document.getElementById('fiche-coprod-body').style.display=document.getElementById('fiche-coprod-body').style.display==='none'?'':'none';this.querySelector('.coprod-arrow').style.transform=document.getElementById('fiche-coprod-body').style.display==='none'?'':'rotate(180deg)'" style="padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:.65em;padding:3px 8px;border-radius:4px;background:rgba(168,85,247,.1);color:#c4b5fd;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Coproduction</span>
+            <span style="font-size:.82em;font-weight:600;color:#fff" id="fiche-coprod-name">ML × Elektric Park</span>
+          </div>
+          <svg class="coprod-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" style="transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div id="fiche-coprod-body" style="display:none;padding:0 20px 20px;border-top:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:16px">
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Co-producteur</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500" id="fiche-coprod-entity">Elektric Park SAS</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Contact</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500" id="fiche-coprod-contact">—</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Répartition recettes</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500" id="fiche-coprod-split">50 / 50</div>
+            </div>
+            <div>
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Contrat</div>
+              <div style="font-size:.82em;color:var(--text-dim);font-style:italic">Aucun document</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRESTATAIRES & PARTENAIRES ── -->
+    <div class="sdiv" style="align-items:center;margin-bottom:4px">
+      <div class="sdl"></div>
+      <div class="sdt" style="white-space:nowrap">Prestataires & Partenaires</div>
+      <div class="sdl"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="fiche-presta-count" style="font-size:.7em;color:var(--text-dim)">0 prestataires</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <!-- Grid toggle -->
+        <div style="display:flex;border:1px solid var(--border);border-radius:5px;overflow:hidden">
+          <button onclick="setPrestaGrid(2)" id="presta-grid-2" style="padding:5px 8px;border:none;background:none;color:var(--text-dim);cursor:pointer;font-size:10px;transition:all .15s" title="2 colonnes">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="0" y="7" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="7" width="5" height="5" rx="1" fill="currentColor"/></svg>
+          </button>
+          <button onclick="setPrestaGrid(3)" id="presta-grid-3" style="padding:5px 8px;border:none;border-left:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:10px;transition:all .15s" title="3 colonnes">
+            <svg width="14" height="12" viewBox="0 0 14 12"><rect x="0" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="5" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="10" y="0" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="0" y="7" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="5" y="7" width="3.5" height="5" rx="1" fill="currentColor"/><rect x="10" y="7" width="3.5" height="5" rx="1" fill="currentColor"/></svg>
+          </button>
+          <button onclick="setPrestaGrid(1)" id="presta-grid-1" style="padding:5px 8px;border:none;border-left:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer;font-size:10px;transition:all .15s" title="Liste">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="0" y="0" width="12" height="3" rx="1" fill="currentColor"/><rect x="0" y="4.5" width="12" height="3" rx="1" fill="currentColor"/><rect x="0" y="9" width="12" height="3" rx="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fiche-presta-container" style="margin-bottom:24px">
+      <!-- Populated by renderFiche() with categories -->
+    </div>
+
+    <!-- ── DOCUMENTS LIÉS ── -->
+    <div class="sdiv" style="align-items:center;margin-bottom:4px">
+      <div class="sdl"></div>
+      <div class="sdt" style="white-space:nowrap">Documents de l'événement</div>
+      <div class="sdl"></div>
+    </div>
+
+    <div class="card" style="padding:16px">
+      <div id="fiche-docs-list" style="display:grid;gap:8px">
+        <div style="text-align:center;padding:32px 16px">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1" style="margin-bottom:10px;opacity:.4"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <div style="font-size:.78em;color:var(--text-dim)">Aucun document pour le moment</div>
+          <div style="font-size:.65em;color:var(--text-dim);opacity:.6;margin-top:4px">Contrats, assurances et documents administratifs apparaîtront ici</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ FACTURES PAGE ═══════════ -->
+<div id="page-factures" class="page">
+  <div style="padding:24px 0">
+
+    <!-- ── HEADER ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:1.1em;font-weight:700;color:#fff;margin-bottom:4px">Factures & Devis</h2>
+        <div style="font-size:.75em;color:var(--text-dim)">Suivi des factures, devis et paiements Qonto</div>
+      </div>
+      <button onclick="openFactureDrawer()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Nouvelle facture
+      </button>
+    </div>
+
+    <!-- ── KPI CHIPS ── -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="factures-kpis">
+      <div class="bchip">
+        <div class="bchip-label">Total factures</div>
+        <div class="bchip-val" id="fact-kpi-count">0</div>
+        <div class="bchip-sub">enregistrées</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Montant total TTC</div>
+        <div class="bchip-val" id="fact-kpi-total">—</div>
+        <div class="bchip-sub">toutes factures</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">En attente</div>
+        <div class="bchip-val" style="color:var(--amber)" id="fact-kpi-pending">0</div>
+        <div class="bchip-sub">envoyées à Qonto</div>
+      </div>
+      <div class="bchip">
+        <div class="bchip-label">Payées</div>
+        <div class="bchip-val" style="color:var(--green)" id="fact-kpi-paid">0</div>
+        <div class="bchip-sub">confirmées</div>
+      </div>
+    </div>
+
+    <!-- ── FILTERS ── -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" placeholder="Rechercher fournisseur…" style="flex:1;min-width:180px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:#fff;font-family:inherit;font-size:.78em;outline:none">
+      <select style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:inherit;font-size:.78em;outline:none">
+        <option>Tous départements</option>
+      </select>
+      <select style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text-muted);font-family:inherit;font-size:.78em;outline:none">
+        <option>Tous statuts</option>
+        <option>Brouillon</option>
+        <option>Envoyé à Qonto</option>
+        <option>Payée</option>
+      </select>
+    </div>
+
+    <!-- ── FACTURES TABLE ── -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="twrap">
+        <table class="btbl" id="factures-table">
+          <thead><tr>
+            <th class="tl">Date</th>
+            <th class="tl">Fournisseur</th>
+            <th class="tl">Département</th>
+            <th>Montant TTC</th>
+            <th>Échéance</th>
+            <th>Statut</th>
+            <th>PDF</th>
+          </tr></thead>
+          <tbody id="factures-tbody">
+          </tbody>
+        </table>
+      </div>
+      <!-- Empty state -->
+      <div id="factures-empty" style="text-align:center;padding:48px 20px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1" style="margin-bottom:12px;opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="font-size:.82em;color:var(--text-dim);margin-bottom:6px">Aucune facture enregistrée</div>
+        <div style="font-size:.68em;color:var(--text-dim);opacity:.6;margin-bottom:16px">Clique sur « Nouvelle facture » pour commencer</div>
+        <button onclick="openFactureDrawer()" style="font-size:.75em;padding:8px 20px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#fff;font-family:inherit;font-weight:600;cursor:pointer">+ Nouvelle facture</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1883,6 +2150,11 @@ function go(id,tabEl){
   } else if(id==='releve') {
     if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'releve'")); if(b) b.classList.add('on'); }
     renderReleve();
+  } else if(id==='fiche') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'fiche'")); if(b) b.classList.add('on'); }
+    renderFiche();
+  } else if(id==='factures') {
+    if(!tabEl) { const b=[...document.querySelectorAll('.nm')].find(l=>(l.getAttribute('onclick')||'').includes("'factures'")); if(b) b.classList.add('on'); }
   } else {
     // Dept navigation — highlight matching tab strip button
     const dtMatch = [...document.querySelectorAll('.dt')].find(d=>(d.getAttribute('onclick')||'').includes(`'${id}'`));
@@ -4069,6 +4341,361 @@ function checkPassword() {
     loadBudgetData();
   }
 })();
+
+// ════════════════════════════════════════════════════
+// FICHE ÉVÉNEMENT
+// ════════════════════════════════════════════════════
+
+const EVENT_DATA = {
+  pa: { name:'Paris XXL 2026', sub:'Madame Loyal · Édition 2026', dates:'13-14 mars 2026', lieu:'Paris Expo · Porte de Versailles', capacite:'35 000', edition:'#4', structure:'SASU', licence:'—', billetterie:'DICE + Shotgun', coprod:false },
+  bdx: { name:'Bordeaux ML × SONORA 2026', sub:'Madame Loyal · Édition 2026', dates:'12-13 juin 2026', lieu:'Bordeaux · TBC', capacite:'15 000', edition:'#1', structure:'SASU', licence:'—', billetterie:'DICE', coprod:false },
+  epk: { name:'ML × Elektric Park 2026', sub:'Madame Loyal × EPK · Édition 2026', dates:'5-6 sept 2026', lieu:'Domaine de Saint-Cloud', capacite:'25 000', edition:'#1', structure:'Coproduction', licence:'—', billetterie:'DICE + Shotgun', coprod:true, coprodName:'ML × Elektric Park', coprodEntity:'Elektric Park SAS', coprodContact:'—', coprodSplit:'50 / 50' },
+};
+
+const PRESTA_DATA = [
+  { cat:'Sécurité & Prévention', items:[
+    { name:'Pallas Sécurité', role:'Sécurité générale', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'confirmed', hasContract:true, notes:'60 544€ en 2025. Contrat annuel.' },
+    { name:'AP2 - PCO', role:'Poste commandement opérationnel', dept:'PRODUCTION', color:'#fbbf24', contact:'JF', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+    { name:'DPS Médical', role:'Dispositif prévisionnel de secours', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+    { name:'Chargé de sécurité', role:'Coordination sécurité', dept:'PRODUCTION', color:'#fbbf24', contact:'Yoann', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+  ]},
+  { cat:'Lieu & Infrastructure', items:[
+    { name:'Viparis', role:'Location lieu + services techniques', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'confirmed', hasContract:true, notes:'155 826€ HT locatif. Inclut électricité, eau, nettoyage.' },
+  ]},
+  { cat:'Technique & Scène', items:[
+    { name:'Sono / Lumière', role:'Prestation scénique complète', dept:'TECHNIQUE', color:'#60a5fa', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+  ]},
+  { cat:'Production & Logistique', items:[
+    { name:'Cashless Provider', role:'Bracelets cashless', dept:'PRODUCTION', color:'#fbbf24', contact:'—', email:'', tel:'', statut:'pending', hasContract:false, notes:'' },
+  ]},
+  { cat:'Direction', items:[
+    { name:'Geoffrey Roth', role:'Directeur de production / CEO', dept:'Direction', color:'var(--purple)', contact:'Geoffrey Roth', email:'', tel:'', statut:'confirmed', hasContract:false, notes:'' },
+  ]},
+];
+
+const ENTITY_LOGOS = {
+  episode: { name:'EPISODE', sub:'Madame Loyal', logo:'https://img.mailinblue.com/7370363/images/content_library/original/698dcb3d187dda7445a86760.png' },
+  epk: { name:'Elektric Park', sub:'EPK', logo:'https://img.mailinblue.com/7370363/images/content_library/original/69c5a5c7b5f2e2dbde9e1980.png' }, // Replace with real EPK logo
+};
+
+function updateFicheEntities() {
+  const prod = document.getElementById('fiche-producteur')?.value || 'episode';
+  const coprod = document.getElementById('fiche-coprod-select')?.value || '';
+  const logosWrap = document.getElementById('fiche-entity-logos');
+
+  if (coprod === '__add__') {
+    showToast('🚧 Bientôt', 'Ajout de co-producteur — prochaine version', 'amber');
+    document.getElementById('fiche-coprod-select').value = '';
+    return;
+  }
+
+  // Toggle coproduction section visibility
+  const coprodWrap = document.getElementById('fiche-coprod-wrap');
+  if (coprodWrap) coprodWrap.style.display = coprod ? '' : 'none';
+
+  if (!logosWrap) return;
+
+  const prodEntity = ENTITY_LOGOS[prod] || ENTITY_LOGOS.episode;
+  const logoHtml = (entity, borderColor) => entity.logo
+    ? `<img src="${entity.logo}" alt="${entity.name}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${borderColor}">`
+    : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid ${borderColor};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;letter-spacing:-.3px;flex-shrink:0">${entity.sub || entity.name.slice(0,3)}</div>`;
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:8px">
+      ${logoHtml(prodEntity, 'rgba(255,255,255,.08)')}
+      <div>
+        <div style="font-size:.72em;font-weight:700;color:#fff">${prodEntity.name}</div>
+        <div style="font-size:.58em;color:var(--text-dim)">${prodEntity.sub}</div>
+      </div>
+    </div>`;
+
+  if (coprod && ENTITY_LOGOS[coprod]) {
+    const coEntity = ENTITY_LOGOS[coprod];
+    html += `
+      <div style="font-size:.7em;color:var(--text-dim);font-weight:600">×</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${logoHtml(coEntity, 'rgba(168,85,247,.2)')}
+        <div>
+          <div style="font-size:.72em;font-weight:700;color:#fff">${coEntity.name}</div>
+          <div style="font-size:.58em;color:var(--text-dim)">${coEntity.sub}</div>
+        </div>
+      </div>`;
+  }
+
+  logosWrap.innerHTML = html;
+}
+
+function renderFiche() {
+  const ev = EVENT_DATA[SESSION] || EVENT_DATA.pa;
+
+  // Identity
+  const el = id => document.getElementById(id);
+  if(el('fiche-event-name')) el('fiche-event-name').textContent = ev.name;
+  if(el('fiche-event-sub')) el('fiche-event-sub').textContent = ev.sub;
+  if(el('fiche-dates')) el('fiche-dates').textContent = ev.dates;
+  if(el('fiche-lieu')) el('fiche-lieu').textContent = ev.lieu;
+  if(el('fiche-capacite')) el('fiche-capacite').textContent = ev.capacite;
+  if(el('fiche-edition')) el('fiche-edition').textContent = ev.edition;
+
+  // Entity dropdowns + logos
+  const coprodSelect = el('fiche-coprod-select');
+  if (coprodSelect && ev.coprod) coprodSelect.value = 'epk';
+  if(el('fiche-licence')) el('fiche-licence').textContent = ev.licence || '—';
+  if(el('fiche-billetterie')) el('fiche-billetterie').textContent = ev.billetterie || '—';
+  updateFicheEntities();
+
+  // Presta count
+  const totalPrestas = PRESTA_DATA.reduce((a,c) => a + c.items.length, 0);
+  if(el('fiche-presta-count')) el('fiche-presta-count').textContent = `${totalPrestas} prestataire${totalPrestas > 1 ? 's' : ''}`;
+
+  // Coproduction data (visibility controlled by dropdown via updateFicheEntities)
+  if (ev.coprod) {
+    if(el('fiche-coprod-name')) el('fiche-coprod-name').textContent = ev.coprodName;
+    if(el('fiche-coprod-entity')) el('fiche-coprod-entity').textContent = ev.coprodEntity;
+    if(el('fiche-coprod-contact')) el('fiche-coprod-contact').textContent = ev.coprodContact;
+    if(el('fiche-coprod-split')) el('fiche-coprod-split').textContent = ev.coprodSplit;
+  } else {
+    if(el('fiche-coprod-name')) el('fiche-coprod-name').textContent = 'Aucune coproduction';
+  }
+
+  // Prestataires — categorized
+  const prestaContainer = document.getElementById('fiche-presta-container');
+  if (prestaContainer) {
+    prestaContainer.innerHTML = PRESTA_DATA.map((cat, ci) => {
+      const cards = cat.items.map((p, pi) => {
+        const statusBadge = p.statut === 'confirmed'
+          ? '<span style="font-size:.58em;padding:2px 6px;border-radius:3px;background:rgba(52,211,153,.1);color:var(--green);font-weight:600">Confirmé</span>'
+          : '<span style="font-size:.58em;padding:2px 6px;border-radius:3px;background:rgba(251,191,36,.08);color:var(--amber);font-weight:600">En attente</span>';
+        const contractIcon = p.hasContract
+          ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+          : '';
+        return `<div class="card" onclick="openPrestaDrawer(${ci},${pi})" style="padding:14px 16px;border-left:3px solid ${p.color};cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:.82em;font-weight:600;color:#fff">${p.name}</span>
+              ${contractIcon}
+            </div>
+            ${statusBadge}
+          </div>
+          <div style="font-size:.7em;color:var(--text-muted)">${p.role}</div>
+        </div>`;
+      }).join('');
+
+      return `
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim)">${cat.cat}</span>
+            <span style="font-size:.65em;color:var(--text-dim)">${cat.items.length}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${_prestaGridCols},1fr);gap:10px" class="presta-cat-grid">
+            ${cards}
+          </div>
+        </div>`;
+    }).join('') + `
+      <button onclick="showToast('🚧 Bientôt','Ajout de prestataire — prochaine version','amber')" style="width:100%;padding:12px;border-radius:8px;border:2px dashed var(--border);background:none;color:var(--text-dim);font-family:inherit;font-size:.78em;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s" onmouseover="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='var(--text-muted)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter un prestataire
+      </button>`;
+  }
+}
+
+function openPrestaDrawer(catIdx, itemIdx) {
+  const cat = PRESTA_DATA[catIdx];
+  if (!cat) return;
+  const p = cat.items[itemIdx];
+  if (!p) return;
+
+  const statusBadge = p.statut === 'confirmed'
+    ? '<span style="font-size:.65em;padding:3px 8px;border-radius:4px;background:rgba(52,211,153,.1);color:var(--green);font-weight:600">Confirmé</span>'
+    : '<span style="font-size:.65em;padding:3px 8px;border-radius:4px;background:rgba(251,191,36,.08);color:var(--amber);font-weight:600">En attente</span>';
+
+  const phoneIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const emailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>`;
+  const waIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+
+  const actionBtnSt = 'display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--text-muted);cursor:pointer;transition:all .15s';
+
+  let _activeTab = 'overview';
+
+  function renderTab(tab) {
+    _activeTab = tab;
+    const tabContent = document.getElementById('presta-tab-content');
+    if (!tabContent) return;
+
+    if (tab === 'overview') {
+      tabContent.innerHTML = `
+        <div class="drawer-section">
+          <div class="drawer-section-title">Résumé</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Catégorie</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500">${cat.cat}</div>
+            </div>
+            <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+              <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Département</div>
+              <div style="font-size:.82em;color:#fff;font-weight:500">${p.dept}</div>
+            </div>
+          </div>
+          ${p.notes ? `<div style="font-size:.75em;color:var(--text-muted);padding:10px 12px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3);margin-bottom:14px">${p.notes}</div>` : ''}
+          <div class="drawer-section-title" style="margin-top:10px">Factures liées</div>
+          <div style="font-size:.75em;color:var(--text-dim);font-style:italic;padding:8px 0">Aucune facture liée — <span style="color:var(--green);cursor:pointer;font-style:normal;font-weight:600" onclick="closeDrawer();openFactureDrawer('${p.dept}','')">Créer une facture</span></div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-section-title">Notes</div>
+          <textarea placeholder="Ajouter des notes…" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;font-family:inherit;font-size:.78em;resize:vertical;min-height:60px;outline:none">${p.notes || ''}</textarea>
+        </div>`;
+    } else {
+      tabContent.innerHTML = `
+        <div class="drawer-section">
+          <div class="drawer-section-title">Contact principal</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px;background:var(--surface-2);border-radius:8px">
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text-muted);flex-shrink:0">${p.contact === '—' ? '?' : p.contact.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+            <div style="flex:1">
+              <div style="font-size:.85em;font-weight:600;color:${p.contact === '—' ? 'var(--text-dim)' : '#fff'}">${p.contact || '—'}</div>
+              <div style="font-size:.7em;color:var(--text-dim)">${p.role}</div>
+            </div>
+          </div>
+          <div style="display:grid;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+              <span style="color:var(--text-dim)">${emailIcon}</span>
+              <span style="font-size:.78em;color:${p.email ? '#fff' : 'var(--text-dim)'}">${p.email || 'Non renseigné'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+              <span style="color:var(--text-dim)">${phoneIcon}</span>
+              <span style="font-size:.78em;color:${p.tel ? '#fff' : 'var(--text-dim)'}">${p.tel || 'Non renseigné'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-section-title">Contrat</div>
+          ${p.hasContract
+            ? `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1">
+                  <div style="font-size:.78em;font-weight:600;color:#818cf8">Contrat disponible</div>
+                  <div style="font-size:.65em;color:var(--text-dim)">Cliquer pour voir le document</div>
+                </div>
+              </div>`
+            : `<div style="font-size:.75em;color:var(--text-dim);font-style:italic">Aucun contrat enregistré</div>`
+          }
+        </div>`;
+    }
+  }
+
+  document.getElementById('drawer-title').innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px">${p.name} ${statusBadge}</span>`;
+  document.getElementById('drawer-sub').textContent = p.role;
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+      <div onclick="${p.tel ? `window.open('tel:${p.tel}')` : ''}" style="${actionBtnSt};${p.tel ? '' : 'opacity:.3;cursor:default'}" title="Appeler">${phoneIcon}</div>
+      <div onclick="${p.email ? `window.open('mailto:${p.email}')` : ''}" style="${actionBtnSt};${p.email ? '' : 'opacity:.3;cursor:default'}" title="Email">${emailIcon}</div>
+      <div onclick="${p.tel ? `window.open('https://wa.me/${(p.tel||'').replace(/[^0-9]/g,'')}')` : ''}" style="${actionBtnSt};${p.tel ? '' : 'opacity:.3;cursor:default'}" title="WhatsApp">${waIcon}</div>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px">
+      <button id="presta-tab-overview" onclick="document.getElementById('presta-tab-overview').style.borderBottom='2px solid #fff';document.getElementById('presta-tab-overview').style.color='#fff';document.getElementById('presta-tab-contact').style.borderBottom='2px solid transparent';document.getElementById('presta-tab-contact').style.color='var(--text-dim)';document.getElementById('presta-tab-content').dataset.tab='overview';renderPrestaTab('overview',${catIdx},${itemIdx})" style="flex:1;padding:10px;border:none;background:none;font-family:inherit;font-size:.78em;font-weight:600;color:#fff;cursor:pointer;border-bottom:2px solid #fff;transition:all .15s">Résumé</button>
+      <button id="presta-tab-contact" onclick="document.getElementById('presta-tab-contact').style.borderBottom='2px solid #fff';document.getElementById('presta-tab-contact').style.color='#fff';document.getElementById('presta-tab-overview').style.borderBottom='2px solid transparent';document.getElementById('presta-tab-overview').style.color='var(--text-dim)';document.getElementById('presta-tab-content').dataset.tab='contact';renderPrestaTab('contact',${catIdx},${itemIdx})" style="flex:1;padding:10px;border:none;background:none;font-family:inherit;font-size:.78em;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s">Contact & Contrat</button>
+    </div>
+    <div id="presta-tab-content" data-tab="overview"></div>
+  `;
+
+  renderTab('overview');
+
+  document.getElementById('drawer-footer').style.display = 'flex';
+  document.getElementById('drawer-footer').innerHTML = `
+    <button class="drawer-btn" onclick="closeDrawer()">Fermer</button>
+    <button class="drawer-btn" onclick="closeDrawer();openFactureDrawer('${p.dept}','')" style="display:inline-flex;align-items:center;justify-content:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Facture</button>
+    <button class="drawer-btn primary" onclick="showToast('🚧','Édition prestataire — bientôt','amber')">Éditer</button>
+  `;
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+let _prestaGridCols = 3;
+function setPrestaGrid(cols) {
+  _prestaGridCols = cols;
+  document.querySelectorAll('.presta-cat-grid').forEach(g => {
+    g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  });
+  [1,2,3].forEach(n => {
+    const btn = document.getElementById('presta-grid-'+n);
+    if (btn) {
+      btn.style.background = n === cols ? 'rgba(255,255,255,.05)' : 'none';
+      btn.style.color = n === cols ? '#fff' : 'var(--text-dim)';
+    }
+  });
+}
+
+window.renderPrestaTab = function(tab, ci, pi) {
+  const cat = PRESTA_DATA[ci];
+  const p = cat?.items[pi];
+  if (!p) return;
+  const tabContent = document.getElementById('presta-tab-content');
+  if (!tabContent) return;
+
+  const emailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>`;
+  const phoneIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+
+  if (tab === 'overview') {
+    tabContent.innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title">Résumé</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Catégorie</div>
+            <div style="font-size:.82em;color:#fff;font-weight:500">${cat.cat}</div>
+          </div>
+          <div style="background:var(--surface-2);border-radius:6px;padding:10px 12px">
+            <div style="font-size:.6em;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px">Département</div>
+            <div style="font-size:.82em;color:#fff;font-weight:500">${p.dept}</div>
+          </div>
+        </div>
+        ${p.notes ? `<div style="font-size:.75em;color:var(--text-muted);padding:10px 12px;background:var(--surface-2);border-radius:6px;border-left:2px solid rgba(99,102,241,.3);margin-bottom:14px">${p.notes}</div>` : ''}
+        <div class="drawer-section-title" style="margin-top:10px">Factures liées</div>
+        <div style="font-size:.75em;color:var(--text-dim);font-style:italic;padding:8px 0">Aucune facture liée — <span style="color:var(--green);cursor:pointer;font-style:normal;font-weight:600" onclick="closeDrawer();openFactureDrawer('${p.dept}','')">Créer une facture</span></div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">Notes</div>
+        <textarea placeholder="Ajouter des notes…" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;color:#fff;font-family:inherit;font-size:.78em;resize:vertical;min-height:60px;outline:none">${p.notes || ''}</textarea>
+      </div>`;
+  } else {
+    tabContent.innerHTML = `
+      <div class="drawer-section">
+        <div class="drawer-section-title">Contact principal</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px;background:var(--surface-2);border-radius:8px">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text-muted);flex-shrink:0">${p.contact === '—' ? '?' : p.contact.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div style="flex:1">
+            <div style="font-size:.85em;font-weight:600;color:${p.contact === '—' ? 'var(--text-dim)' : '#fff'}">${p.contact || '—'}</div>
+            <div style="font-size:.7em;color:var(--text-dim)">${p.role}</div>
+          </div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+            <span style="color:var(--text-dim)">${emailIcon}</span>
+            <span style="font-size:.78em;color:${p.email ? '#fff' : 'var(--text-dim)'}">${p.email || 'Non renseigné'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:6px">
+            <span style="color:var(--text-dim)">${phoneIcon}</span>
+            <span style="font-size:.78em;color:${p.tel ? '#fff' : 'var(--text-dim)'}">${p.tel || 'Non renseigné'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">Contrat</div>
+        ${p.hasContract
+          ? `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;cursor:pointer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div style="flex:1">
+                <div style="font-size:.78em;font-weight:600;color:#818cf8">Contrat disponible</div>
+                <div style="font-size:.65em;color:var(--text-dim)">Cliquer pour voir le document</div>
+              </div>
+            </div>`
+          : `<div style="font-size:.75em;color:var(--text-dim);font-style:italic">Aucun contrat enregistré</div>`
+        }
+      </div>`;
+  }
+};
+
 </script>
 <footer style="max-width:1020px;margin:0 auto;padding:48px 20px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif">
   <span style="font-weight:600;letter-spacing:.5px">Festiflow <span style="opacity:.5">·</span> Budget v3.0</span>
